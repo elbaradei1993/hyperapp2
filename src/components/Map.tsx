@@ -95,42 +95,46 @@ const Map = ({ radiusKm = 10, pins = [], initialCenter }: MapProps) => {
     return <div className="h-full w-full bg-gray-200 rounded-xl flex items-center justify-center">Loading map...</div>;
   }
 
+  // Explicitly type userPos as a LatLngExpression for Leaflet
+  const position = userPos as L.LatLngExpression;
+  
   return (
-    <MapContainer
-      className="rounded-xl shadow-lg"
-      style={{ height: "100%", width: "100%" }}
-      // For react-leaflet v3+, use the center and zoom props directly during the initial render only
-      center={userPos as L.LatLngExpression}
-      zoom={13}
-      scrollWheelZoom={true}
-    >
-      <TileLayer url={darkTileLayer} />
-      <LocateControl />
-      
-      <Marker position={userPos as L.LatLngExpression}>
-        <Popup>You are here</Popup>
-      </Marker>
-      
-      <Circle
-        center={userPos as L.LatLngExpression}
-        pathOptions={{ color: "blue", fillColor: "blue", fillOpacity: 0.1 }}
-        radius={radiusKm * 1000}
-      />
-      
-      {pins.map((pin) => (
-        <Marker
-          key={pin.id}
-          position={[pin.lat, pin.lng] as L.LatLngExpression}
-          icon={pin.type === "sos" ? sosIcon : vibeIcon}
-        >
-          <Popup>
-            <strong>{pin.type.toUpperCase()}</strong>
-            <br />
-            {pin.description}
-          </Popup>
+    <div className="h-full w-full">
+      <MapContainer
+        className="rounded-xl shadow-lg"
+        style={{ height: "100%", width: "100%" }}
+        center={position}
+        zoom={13}
+        scrollWheelZoom={true}
+      >
+        <TileLayer url={darkTileLayer} />
+        <LocateControl />
+        
+        <Marker position={position}>
+          <Popup>You are here</Popup>
         </Marker>
-      ))}
-    </MapContainer>
+        
+        <Circle
+          center={position}
+          pathOptions={{ color: "blue", fillColor: "blue", fillOpacity: 0.1 }}
+          radius={radiusKm * 1000}
+        />
+        
+        {pins.map((pin) => (
+          <Marker
+            key={pin.id}
+            position={[pin.lat, pin.lng] as L.LatLngExpression}
+            icon={pin.type === "sos" ? sosIcon : vibeIcon}
+          >
+            <Popup>
+              <strong>{pin.type.toUpperCase()}</strong>
+              <br />
+              {pin.description}
+            </Popup>
+          </Marker>
+        ))}
+      </MapContainer>
+    </div>
   );
 };
 
