@@ -5,7 +5,6 @@ import React, { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { Circle } from "react-leaflet";
 
 // Fix default icon issues with Leaflet + Webpack/Vite
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -59,40 +58,6 @@ const MapView = ({ center }: { center: [number, number] }) => {
   return null;
 };
 
-// A wrapper for Circle component to fix TypeScript issues
-const CircleMarker = ({ 
-  center, 
-  radius, 
-  pathOptions 
-}: { 
-  center: [number, number]; 
-  radius: number; 
-  pathOptions: { color: string; fillColor: string; fillOpacity: number } 
-}) => {
-  return (
-    // @ts-ignore - type definitions in react-leaflet are incomplete
-    <Circle center={center} radius={radius} pathOptions={pathOptions} />
-  );
-};
-
-// A wrapper for Marker component to fix TypeScript issues
-const PinMarker = ({
-  position,
-  icon,
-  children
-}: {
-  position: [number, number];
-  icon: L.Icon;
-  children: React.ReactNode;
-}) => {
-  return (
-    // @ts-ignore - type definitions in react-leaflet are incomplete
-    <Marker position={position} icon={icon}>
-      {children}
-    </Marker>
-  );
-};
-
 const Map = ({ radiusKm = 10, pins = [], initialCenter }: MapProps) => {
   const [userPos, setUserPos] = useState<[number, number] | null>(null);
 
@@ -126,23 +91,19 @@ const Map = ({ radiusKm = 10, pins = [], initialCenter }: MapProps) => {
       <MapContainer
         className="rounded-xl shadow-lg h-full w-full"
         style={{ height: "100%", width: "100%" }}
+        zoom={13}
+        center={userPos}
       >
         <TileLayer url={darkTileLayer} />
         
-        <MapView center={userPos} />
-        
-        <PinMarker position={userPos} icon={new L.Icon.Default()}>
+        {/* User position marker */}
+        <Marker position={userPos}>
           <Popup>You are here</Popup>
-        </PinMarker>
+        </Marker>
         
-        <CircleMarker
-          center={userPos}
-          pathOptions={{ color: "blue", fillColor: "blue", fillOpacity: 0.1 }}
-          radius={radiusKm * 1000}
-        />
-        
+        {/* Add pins from props */}
         {pins.map((pin) => (
-          <PinMarker
+          <Marker
             key={pin.id}
             position={[pin.lat, pin.lng]}
             icon={pin.type === "sos" ? sosIcon : vibeIcon}
@@ -152,7 +113,7 @@ const Map = ({ radiusKm = 10, pins = [], initialCenter }: MapProps) => {
               <br />
               {pin.description}
             </Popup>
-          </PinMarker>
+          </Marker>
         ))}
       </MapContainer>
     </div>
