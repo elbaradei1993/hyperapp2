@@ -28,11 +28,13 @@ const Index = () => {
   return (
     <div className="flex flex-col min-h-screen pb-16">
       {/* Map area */}
-      <div className="flex-grow h-[70vh]">
+      <div className="flex-grow h-[65vh]">
         <Map radiusKm={10} pins={samplePins} />
       </div>
       {/* SOS button below map, centered */}
-      <SosButton />
+      <div className="mt-4 mb-2">
+        <SosButton />
+      </div>
       {/* Navbar at the bottom */}
       <Navbar />
     </div>

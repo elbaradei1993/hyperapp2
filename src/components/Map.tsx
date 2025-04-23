@@ -53,7 +53,8 @@ const Map = ({ pins = [], initialCenter }: MapProps) => {
 
       mapRef.current = new maplibregl.Map({
         container: mapContainer.current!,
-        style: "https://tiles.stadiamaps.com/styles/alidade_smooth_dark.json",
+        // Use OpenStreetMap style that shows actual places
+        style: "https://api.maptiler.com/maps/streets/style.json?key=get_your_own_key", 
         center: [center[1], center[0]],
         zoom: 13,
         attributionControl: false,
@@ -106,4 +107,3 @@ const Map = ({ pins = [], initialCenter }: MapProps) => {
 };
 
 export default Map;
-
