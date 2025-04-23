@@ -2,7 +2,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { Label, Select, Slider, Switch } from "@/components/ui";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
+import { Select } from "@/components/ui/select";
 import Navbar from "@/components/Navbar";
 
 const languages = [
@@ -23,10 +26,8 @@ const Settings = () => {
       <div>
         <Label htmlFor="language">Language</Label>
         <Select
-          id="language"
           value={language}
-          onChange={(e) => setLanguage(e.target.value)}
-          className="max-w-xs"
+          onValueChange={setLanguage}
         >
           {languages.map((lang) => (
             <option key={lang.value} value={lang.value}>
@@ -52,12 +53,10 @@ const Settings = () => {
       <div className="flex items-center space-x-2">
         <Switch id="theme" checked={darkTheme} onCheckedChange={setDarkTheme} />
         <Label htmlFor="theme" className="select-none">
-          Dark Theme (toggle disabled in this lite version)
+          Dark Theme
         </Label>
       </div>
-      <p className="text-sm text-muted-foreground">
-        Dark/Light theme toggle feature is not fully implemented.
-      </p>
+      
       <Navbar />
     </div>
   );
