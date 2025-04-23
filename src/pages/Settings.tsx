@@ -19,6 +19,10 @@ const Settings = () => {
   const [radius, setRadius] = useState<number>(10);
   const [darkTheme, setDarkTheme] = useState(true);
 
+  const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setLanguage(e.target.value);
+  };
+
   return (
     <div className="max-w-md mx-auto p-4 min-h-screen pb-16 space-y-8">
       <h1 className="text-3xl font-bold mb-6">Settings</h1>
@@ -26,8 +30,9 @@ const Settings = () => {
       <div>
         <Label htmlFor="language">Language</Label>
         <Select
+          id="language"
           value={language}
-          onValueChange={setLanguage}
+          onChange={handleLanguageChange}
         >
           {languages.map((lang) => (
             <option key={lang.value} value={lang.value}>
