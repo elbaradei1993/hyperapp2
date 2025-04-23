@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Circle } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -32,27 +32,6 @@ interface MapProps {
   initialCenter?: [number, number];
 }
 
-const LocateControl = () => {
-  const map = useMap();
-  
-  useEffect(() => {
-    if (!map) return;
-    map.locate({ setView: true, maxZoom: 15 });
-    
-    function onLocationFound(e: L.LocationEvent) {
-      map.setView(e.latlng, 15);
-    }
-    
-    map.on("locationfound", onLocationFound);
-    
-    return () => {
-      map.off("locationfound", onLocationFound);
-    };
-  }, [map]);
-
-  return null;
-};
-
 // Custom icons with proper typing
 const sosIcon = new L.Icon({
   iconUrl: "https://cdn-icons-png.flaticon.com/512/564/564619.png",
@@ -67,6 +46,27 @@ const vibeIcon = new L.Icon({
   iconAnchor: [15, 30],
   popupAnchor: [0, -30],
 });
+
+// Map location control as a separate component
+const LocateControl = () => {
+  // Instead of using useMap and context, we'll use a simpler approach
+  // This helps avoid the context consumer errors
+  useEffect(() => {
+    // Handle location finding outside of the context consumer
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          console.log("Located user at:", position.coords.latitude, position.coords.longitude);
+        },
+        (error) => {
+          console.log("Geolocation error:", error.message);
+        }
+      );
+    }
+  }, []);
+
+  return null;
+};
 
 const Map = ({ radiusKm = 10, pins = [], initialCenter }: MapProps) => {
   const [userPos, setUserPos] = useState<[number, number] | null>(null);
@@ -95,47 +95,54 @@ const Map = ({ radiusKm = 10, pins = [], initialCenter }: MapProps) => {
     return <div className="h-full w-full bg-gray-200 rounded-xl flex items-center justify-center">Loading map...</div>;
   }
 
-  // Fix type errors by creating a container div and pass proper props
+  // Using a simpler rendering approach to avoid Context Consumer issues
   return (
     <div className="h-full w-full">
-      <MapContainer
-        className="rounded-xl shadow-lg"
-        style={{ height: "100%", width: "100%" }}
-        // For react-leaflet v5+, we need to pass default props using the following properties
-        zoom={13}
-        scrollWheelZoom
-        // Instead of center, we'll set the view after the component mounts
-        center={userPos}
-      >
-        <TileLayer url={darkTileLayer} />
-        <LocateControl />
-        
-        <Marker position={userPos}>
-          <Popup>You are here</Popup>
-        </Marker>
-        
-        {/* Fix Circle props by using a different approach */}
-        <Circle
-          center={userPos}
-          pathOptions={{ color: "blue", fillColor: "blue", fillOpacity: 0.1 }}
-          radius={radiusKm * 1000}
-        />
-        
-        {pins.map((pin) => (
-          <Marker
-            key={pin.id}
-            position={[pin.lat, pin.lng]}
-            // Use as any to bypass the TypeScript error for icon
-            icon={pin.type === "sos" ? sosIcon : vibeIcon as any}
+      <div className="h-full w-full rounded-xl">
+        {/* Using the MapContainer with only necessary props */}
+        <MapContainer
+          className="rounded-xl shadow-lg h-full w-full"
+          whenCreated={(mapInstance) => {
+            // Set the view manually to avoid using center prop
+            mapInstance.setView(userPos, 13);
+            // Enable scroll wheel zoom
+            mapInstance.scrollWheelZoom.enable();
+          }}
+        >
+          <TileLayer url={darkTileLayer} />
+          
+          <LocateControl />
+          
+          {/* Manually add marker with proper typing */}
+          <Marker 
+            position={userPos as [number, number]} 
           >
-            <Popup>
-              <strong>{pin.type.toUpperCase()}</strong>
-              <br />
-              {pin.description}
-            </Popup>
+            <Popup>You are here</Popup>
           </Marker>
-        ))}
-      </MapContainer>
+          
+          {/* Add circle with proper props */}
+          <Circle
+            center={userPos as [number, number]}
+            pathOptions={{ color: "blue", fillColor: "blue", fillOpacity: 0.1 }}
+            radius={radiusKm * 1000}
+          />
+          
+          {/* Map all pins with proper typing */}
+          {pins.map((pin) => (
+            <Marker
+              key={pin.id}
+              position={[pin.lat, pin.lng] as [number, number]}
+              icon={(pin.type === "sos" ? sosIcon : vibeIcon) as unknown as L.Icon}
+            >
+              <Popup>
+                <strong>{pin.type.toUpperCase()}</strong>
+                <br />
+                {pin.description}
+              </Popup>
+            </Marker>
+          ))}
+        </MapContainer>
+      </div>
     </div>
   );
 };
