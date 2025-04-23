@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup, Circle } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -47,9 +47,17 @@ const vibeIcon = new L.Icon({
   popupAnchor: [0, -30],
 });
 
+// Helper component to handle map view setting
+const MapView = ({ center }: { center: [number, number] }) => {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(center, 13);
+  }, [center, map]);
+  return null;
+};
+
 const Map = ({ radiusKm = 10, pins = [], initialCenter }: MapProps) => {
   const [userPos, setUserPos] = useState<[number, number] | null>(null);
-  const [map, setMap] = useState<L.Map | null>(null);
 
   useEffect(() => {
     if (initialCenter) {
@@ -72,13 +80,6 @@ const Map = ({ radiusKm = 10, pins = [], initialCenter }: MapProps) => {
     }
   }, [initialCenter]);
 
-  // Set map view when userPos or map changes
-  useEffect(() => {
-    if (map && userPos) {
-      map.setView(userPos, 13);
-    }
-  }, [map, userPos]);
-
   if (!userPos) {
     return <div className="h-full w-full bg-gray-200 rounded-xl flex items-center justify-center">Loading map...</div>;
   }
@@ -87,17 +88,17 @@ const Map = ({ radiusKm = 10, pins = [], initialCenter }: MapProps) => {
     <div className="h-full w-full">
       <MapContainer
         className="rounded-xl shadow-lg h-full w-full"
-        whenReady={(mapInstance) => {
-          setMap(mapInstance.target);
-        }}
         zoom={13}
         scrollWheelZoom={true}
         style={{ height: "100%", width: "100%" }}
+        center={[0, 0]} // Dummy center, will be overridden by MapView
       >
         <TileLayer url={darkTileLayer} />
         
         {userPos && (
           <>
+            <MapView center={userPos} />
+            
             <Marker position={userPos}>
               <Popup>You are here</Popup>
             </Marker>
@@ -106,6 +107,7 @@ const Map = ({ radiusKm = 10, pins = [], initialCenter }: MapProps) => {
               center={userPos}
               pathOptions={{ color: "blue", fillColor: "blue", fillOpacity: 0.1 }}
               radius={radiusKm * 1000}
+              // @ts-ignore - the typing for react-leaflet is incomplete
             />
           </>
         )}
@@ -114,6 +116,7 @@ const Map = ({ radiusKm = 10, pins = [], initialCenter }: MapProps) => {
           <Marker
             key={pin.id}
             position={[pin.lat, pin.lng]}
+            // @ts-ignore - the typing for react-leaflet is incomplete
             icon={pin.type === "sos" ? sosIcon : vibeIcon}
           >
             <Popup>
