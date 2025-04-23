@@ -86,14 +86,12 @@ const Map = ({ radiusKm = 10, pins = [], initialCenter }: MapProps) => {
     return <div className="h-full w-full bg-gray-200 rounded-xl flex items-center justify-center">Loading map...</div>;
   }
 
-  // Default center for initial render - will be overridden by MapView
-  const defaultCenter: [number, number] = [0, 0];
-
   return (
     <div className="h-full w-full">
       <MapContainer
         className="rounded-xl shadow-lg h-full w-full"
-        center={defaultCenter}
+        zoom={13}
+        scrollWheelZoom={true}
         style={{ height: "100%", width: "100%" }}
       >
         <TileLayer url={darkTileLayer} />
@@ -108,6 +106,7 @@ const Map = ({ radiusKm = 10, pins = [], initialCenter }: MapProps) => {
               <Popup>You are here</Popup>
             </Marker>
             
+            {/* @ts-ignore - react-leaflet type definitions are incomplete */}
             <Circle
               center={userPos}
               pathOptions={{ color: "blue", fillColor: "blue", fillOpacity: 0.1 }}
@@ -117,6 +116,7 @@ const Map = ({ radiusKm = 10, pins = [], initialCenter }: MapProps) => {
         )}
         
         {pins.map((pin) => (
+          // @ts-ignore - react-leaflet type definitions are incomplete
           <Marker
             key={pin.id}
             position={[pin.lat, pin.lng]}
