@@ -13,7 +13,7 @@ const languages = [
 
 const Settings = () => {
   const [language, setLanguage] = useState("en");
-  const [radius, setRadius] = useState(10);
+  const [radius, setRadius] = useState<number>(10);
   const [darkTheme, setDarkTheme] = useState(true);
 
   return (
@@ -43,8 +43,8 @@ const Settings = () => {
           min={5}
           max={20}
           step={1}
-          value={radius}
-          onValueChange={(value) => setRadius(value as number)}
+          value={[radius]}
+          onValueChange={(value) => setRadius(value[0])}
           className="max-w-xs"
         />
       </div>
@@ -64,4 +64,3 @@ const Settings = () => {
 };
 
 export default Settings;
-

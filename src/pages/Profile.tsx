@@ -2,14 +2,7 @@
 "use client";
 
 import React, { useState } from "react";
-import {
-  Avatar,
-  Button,
-  Input,
-  Label,
-  Switch,
-  Textarea,
-} from "@/components/ui";
+import { Avatar, AvatarFallback, AvatarImage, Input, Label, Switch, Textarea } from "@/components/ui";
 import Navbar from "@/components/Navbar";
 
 const Profile = () => {
@@ -20,8 +13,18 @@ const Profile = () => {
   const [location, setLocation] = useState("Unknown");
   const [notifications, setNotifications] = useState(true);
   const [reports] = useState([
-    { id: 1, type: "sos", desc: "Violence Alert reported", date: "2025-01-01" },
-    { id: 2, type: "vibe", desc: "Happy Vibe posted", date: "2025-01-15" },
+    {
+      id: 1,
+      type: "sos",
+      desc: "Violence Alert reported",
+      date: "2025-01-01"
+    },
+    {
+      id: 2,
+      type: "vibe",
+      desc: "Happy Vibe posted",
+      date: "2025-01-15"
+    }
   ]);
 
   return (
@@ -29,8 +32,15 @@ const Profile = () => {
       <h1 className="text-3xl font-bold mb-6">Profile</h1>
 
       <div className="flex justify-center mb-4">
-        <Avatar className="w-24 h-24" src={avatarUrl} alt="Avatar" />
+        <Avatar className="w-24 h-24">
+          {avatarUrl ? (
+            <AvatarImage src={avatarUrl} alt="User avatar" />
+          ) : (
+            <AvatarFallback>User</AvatarFallback>
+          )}
+        </Avatar>
       </div>
+
       <input
         type="text"
         placeholder="Avatar URL"
@@ -41,16 +51,29 @@ const Profile = () => {
 
       <div className="mb-4">
         <Label htmlFor="role">Role</Label>
-        <Input id="role" value={role} onChange={(e) => setRole(e.target.value)} />
+        <Input
+          id="role"
+          value={role}
+          onChange={(e) => setRole(e.target.value)}
+        />
       </div>
+
       <div className="mb-4">
         <Label htmlFor="location">Location</Label>
-        <Input id="location" value={location} onChange={(e) => setLocation(e.target.value)} />
+        <Input
+          id="location"
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
+        />
       </div>
 
       <div className="mb-4">
         <Label htmlFor="bio">Bio</Label>
-        <Textarea id="bio" value={bio} onChange={(e) => setBio(e.target.value)} />
+        <Textarea
+          id="bio"
+          value={bio}
+          onChange={(e) => setBio(e.target.value)}
+        />
       </div>
 
       <div className="flex items-center mb-6 space-x-2">
@@ -76,10 +99,10 @@ const Profile = () => {
           ))}
         </ul>
       </div>
+
       <Navbar />
     </div>
   );
 };
 
 export default Profile;
-

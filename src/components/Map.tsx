@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -38,13 +38,17 @@ interface MapProps {
 
 const LocateControl = () => {
   const map = useMap();
+  
   useEffect(() => {
     if (!map) return;
     map.locate({ setView: true, maxZoom: 15 });
+    
     function onLocationFound(e: L.LocationEvent) {
       map.setView(e.latlng, 15);
     }
+    
     map.on("locationfound", onLocationFound);
+    
     return () => {
       map.off("locationfound", onLocationFound);
     };
@@ -92,9 +96,13 @@ const Map = ({ radiusKm = 10, pins, center }: MapProps) => {
     }
   }, [center]);
 
+  if (!userPos) {
+    return <div className="h-full w-full bg-gray-200 rounded-xl flex items-center justify-center">Loading map...</div>;
+  }
+
   return (
     <MapContainer
-      defaultCenter={userPos || [40.73061, -73.935242]}
+      center={userPos}
       zoom={13}
       scrollWheelZoom={true}
       style={{ height: "100%", width: "100%" }}
@@ -102,17 +110,17 @@ const Map = ({ radiusKm = 10, pins, center }: MapProps) => {
     >
       <TileLayer url={darkTileLayer} />
       <LocateControl />
-      {userPos && (
-        <>
-          <Marker position={userPos}>
-            <Popup>You are here</Popup>
-          </Marker>
-          <Circle
-            center={userPos}
-            pathOptions={{ color: "blue", dashArray: "5,10", radius: radiusKm * 1000 }}
-          />
-        </>
-      )}
+      
+      <Marker position={userPos}>
+        <Popup>You are here</Popup>
+      </Marker>
+      
+      <Circle
+        center={userPos}
+        pathOptions={{ color: "blue", fillColor: "blue", fillOpacity: 0.1 }}
+        radius={radiusKm * 1000}
+      />
+      
       {pins.map((pin) => (
         <Marker
           key={pin.id}
