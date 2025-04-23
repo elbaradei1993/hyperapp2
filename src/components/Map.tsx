@@ -99,19 +99,20 @@ const Map = ({ radiusKm = 10, pins = [], initialCenter }: MapProps) => {
     <MapContainer
       className="rounded-xl shadow-lg"
       style={{ height: "100%", width: "100%" }}
-      center={userPos}
+      // For react-leaflet v3+, use the center and zoom props directly during the initial render only
+      center={userPos as L.LatLngExpression}
       zoom={13}
       scrollWheelZoom={true}
     >
       <TileLayer url={darkTileLayer} />
       <LocateControl />
       
-      <Marker position={userPos}>
+      <Marker position={userPos as L.LatLngExpression}>
         <Popup>You are here</Popup>
       </Marker>
       
       <Circle
-        center={userPos}
+        center={userPos as L.LatLngExpression}
         pathOptions={{ color: "blue", fillColor: "blue", fillOpacity: 0.1 }}
         radius={radiusKm * 1000}
       />
@@ -119,7 +120,7 @@ const Map = ({ radiusKm = 10, pins = [], initialCenter }: MapProps) => {
       {pins.map((pin) => (
         <Marker
           key={pin.id}
-          position={[pin.lat, pin.lng]}
+          position={[pin.lat, pin.lng] as L.LatLngExpression}
           icon={pin.type === "sos" ? sosIcon : vibeIcon}
         >
           <Popup>
