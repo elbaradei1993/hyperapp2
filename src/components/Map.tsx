@@ -57,17 +57,16 @@ const LocateControl = () => {
   return null;
 };
 
+// Custom icons with proper typing
 const sosIcon = new L.Icon({
-  iconUrl:
-    "https://cdn-icons-png.flaticon.com/512/564/564619.png",
+  iconUrl: "https://cdn-icons-png.flaticon.com/512/564/564619.png",
   iconSize: [30, 30],
   iconAnchor: [15, 30],
   popupAnchor: [0, -30],
 });
 
 const vibeIcon = new L.Icon({
-  iconUrl:
-    "https://cdn-icons-png.flaticon.com/512/833/833472.png",
+  iconUrl: "https://cdn-icons-png.flaticon.com/512/833/833472.png",
   iconSize: [30, 30],
   iconAnchor: [15, 30],
   popupAnchor: [0, -30],
