@@ -20,8 +20,6 @@ L.Icon.Default.mergeOptions({
 const darkTileLayer =
   "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png";
 
-const radiusInMeters = 10000; // 10 KM default
-
 type PinType = "sos" | "vibe";
 
 interface Pin {
@@ -96,7 +94,7 @@ const Map = ({ radiusKm = 10, pins, center }: MapProps) => {
 
   return (
     <MapContainer
-      center={userPos || [40.73061, -73.935242]}
+      defaultCenter={userPos || [40.73061, -73.935242]}
       zoom={13}
       scrollWheelZoom={true}
       style={{ height: "100%", width: "100%" }}
@@ -111,8 +109,7 @@ const Map = ({ radiusKm = 10, pins, center }: MapProps) => {
           </Marker>
           <Circle
             center={userPos}
-            radius={radiusKm * 1000}
-            pathOptions={{ color: "blue", dashArray: "5,10" }}
+            pathOptions={{ color: "blue", dashArray: "5,10", radius: radiusKm * 1000 }}
           />
         </>
       )}
@@ -134,4 +131,3 @@ const Map = ({ radiusKm = 10, pins, center }: MapProps) => {
 };
 
 export default Map;
-

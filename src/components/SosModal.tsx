@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from "@/components/ui";
 import { useToast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
@@ -20,16 +20,16 @@ const sosTypes = [
   { id: "medical", label: "Medical" },
 ];
 
+interface SosData {
+  type: string;
+  anonymous: boolean;
+}
+
 const SosModal = ({ onReport }: { onReport: (data: SosData) => void }) => {
   const [open, setOpen] = useState(false);
   const [alertType, setAlertType] = useState<string>("violence");
   const [anonymous, setAnonymous] = useState(false);
   const { toast } = useToast();
-
-  interface SosData {
-    type: string;
-    anonymous: boolean;
-  }
 
   const handleSubmit = () => {
     onReport({ type: alertType, anonymous });
@@ -84,4 +84,3 @@ const SosModal = ({ onReport }: { onReport: (data: SosData) => void }) => {
 };
 
 export default SosModal;
-

@@ -10,13 +10,19 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  Input,
   Label,
   Textarea,
 } from "@/components/ui";
 import { useToast } from "@/hooks/use-toast";
 
 const vibeTypes = ["Happy", "Chill", "Excited", "Sad", "Neutral"];
+
+interface VibeData {
+  type: string;
+  description: string;
+  anonymous: boolean;
+  location: { lat: number; lng: number } | null;
+}
 
 const VibeModal = ({ onReport }: { onReport: (data: VibeData) => void }) => {
   const [open, setOpen] = useState(false);
@@ -27,13 +33,6 @@ const VibeModal = ({ onReport }: { onReport: (data: VibeData) => void }) => {
     null
   );
   const { toast } = useToast();
-
-  interface VibeData {
-    type: string;
-    description: string;
-    anonymous: boolean;
-    location: { lat: number; lng: number } | null;
-  }
 
   useEffect(() => {
     if (!open) return;
@@ -136,4 +135,3 @@ const VibeModal = ({ onReport }: { onReport: (data: VibeData) => void }) => {
 };
 
 export default VibeModal;
-
