@@ -1,20 +1,9 @@
 
 "use client";
 
-import React, { useEffect, useState } from "react";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
-
-// Fix default icon issues with Leaflet
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
-});
-
-const darkTileLayer = "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png";
+import React, { useEffect, useRef } from "react";
+import maplibregl from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
 
 type PinType = "sos" | "vibe";
 
@@ -32,102 +21,89 @@ interface MapProps {
   initialCenter?: [number, number];
 }
 
-// Custom icons
-const sosIcon = new L.Icon({
-  iconUrl: "https://cdn-icons-png.flaticon.com/512/564/564619.png",
-  iconSize: [30, 30],
-  iconAnchor: [15, 30],
-  popupAnchor: [0, -30],
-});
+const DEFAULT_CENTER: [number, number] = [40.73061, -73.935242]; // NYC fallback
 
-const vibeIcon = new L.Icon({
-  iconUrl: "https://cdn-icons-png.flaticon.com/512/833/833472.png",
-  iconSize: [30, 30],
-  iconAnchor: [15, 30],
-  popupAnchor: [0, -30],
-});
-
-// Helper component to set map view
-const MapView = ({ center }: { center: [number, number] }) => {
-  const map = useMap();
-  
-  useEffect(() => {
-    map.setView(center, 13);
-  }, [center, map]);
-  
-  return null;
-};
-
-// Helper component for pins
-const PinMarker = ({ pin }: { pin: Pin }) => {
-  const icon = pin.type === "sos" ? sosIcon : vibeIcon;
-  
-  return (
-    <Marker
-      key={pin.id}
-      position={[pin.lat, pin.lng]}
-      icon={icon}
-    >
-      <Popup>
-        <strong>{pin.type.toUpperCase()}</strong>
-        <br />
-        {pin.description}
-      </Popup>
-    </Marker>
-  );
-};
-
-const Map = ({ radiusKm = 10, pins = [], initialCenter }: MapProps) => {
-  const [userPos, setUserPos] = useState<[number, number] | null>(null);
+const Map = ({ pins = [], initialCenter }: MapProps) => {
+  const mapContainer = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<maplibregl.Map | null>(null);
 
   useEffect(() => {
-    if (initialCenter) {
-      setUserPos(initialCenter);
-      return;
-    }
-    
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setUserPos([pos.coords.latitude, pos.coords.longitude]);
-        },
-        () => {
-          // Fallback coords (NYC)
-          setUserPos([40.73061, -73.935242]);
+    let mapCenter = DEFAULT_CENTER;
+
+    const getUserLocation = () =>
+      new Promise<[number, number]>((resolve) => {
+        if (initialCenter) {
+          resolve(initialCenter);
+        } else if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (pos) => resolve([pos.coords.latitude, pos.coords.longitude]),
+            () => resolve(DEFAULT_CENTER)
+          );
+        } else {
+          resolve(DEFAULT_CENTER);
         }
-      );
-    } else {
-      setUserPos([40.73061, -73.935242]);
-    }
-  }, [initialCenter]);
+      });
 
-  if (!userPos) {
-    return <div className="h-full w-full bg-gray-200 rounded-xl flex items-center justify-center">Loading map...</div>;
-  }
+    getUserLocation().then((center) => {
+      // Remove duplicate maps if remounting
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+
+      mapRef.current = new maplibregl.Map({
+        container: mapContainer.current!,
+        style: "https://tiles.stadiamaps.com/styles/alidade_smooth_dark.json",
+        center: [center[1], center[0]],
+        zoom: 13,
+        attributionControl: false,
+      });
+
+      // Add user marker
+      const userMarker = new maplibregl.Marker({ color: "#2563eb" })
+        .setLngLat([center[1], center[0]])
+        .setPopup(
+          new maplibregl.Popup({ offset: 20 }).setText("You are here")
+        )
+        .addTo(mapRef.current!);
+
+      // Add any pins
+      pins.forEach((pin) => {
+        const iconUrl = pin.type === "sos"
+          ? "https://cdn-icons-png.flaticon.com/512/564/564619.png"
+          : "https://cdn-icons-png.flaticon.com/512/833/833472.png";
+        const markerDiv = document.createElement("div");
+        markerDiv.innerHTML = `<img src="${iconUrl}" alt="pin" style="width:30px;height:30px;" />`;
+
+        new maplibregl.Marker({ element: markerDiv })
+          .setLngLat([pin.lng, pin.lat])
+          .setPopup(
+            new maplibregl.Popup({ offset: 20 }).setHTML(
+              `<strong>${pin.type.toUpperCase()}</strong><br/>${pin.description || ""}`
+            )
+          )
+          .addTo(mapRef.current!);
+      });
+
+      // Clean up
+      return () => {
+        mapRef.current?.remove();
+        mapRef.current = null;
+      };
+    });
+
+    // Cleanup on unmount
+    return () => {
+      mapRef.current?.remove();
+      mapRef.current = null;
+    };
+    // eslint-disable-next-line
+  }, [pins, initialCenter]);
 
   return (
-    <div className="h-full w-full">
-      <MapContainer
-        style={{ height: "100%", width: "100%" }}
-        className="rounded-xl shadow-lg h-full w-full"
-        zoom={13}
-        center={[0, 0]} // Default center that will be overridden by MapView
-      >
-        <TileLayer url={darkTileLayer} />
-        <MapView center={userPos} />
-        
-        {/* User position marker */}
-        <Marker position={userPos}>
-          <Popup>You are here</Popup>
-        </Marker>
-        
-        {/* Display all pins */}
-        {pins.map((pin) => (
-          <PinMarker key={pin.id} pin={pin} />
-        ))}
-      </MapContainer>
-    </div>
+    <div ref={mapContainer} className="w-full h-full rounded-xl shadow-lg overflow-hidden" />
   );
 };
 
 export default Map;
+

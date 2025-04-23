@@ -14,23 +14,26 @@ const Index = () => {
       lat: 40.7128,
       lng: -74.006,
       type: "vibe" as const,
-      description: "Great vibes in NYC!"
+      description: "Great vibes in NYC!",
     },
     {
       id: "2",
       lat: 40.7328,
       lng: -73.986,
       type: "sos" as const,
-      description: "Help needed in Manhattan!"
-    }
+      description: "Help needed in Manhattan!",
+    },
   ];
 
   return (
     <div className="flex flex-col min-h-screen pb-16">
+      {/* Map area */}
       <div className="flex-grow h-[70vh]">
         <Map radiusKm={10} pins={samplePins} />
       </div>
+      {/* SOS button below map, centered */}
       <SosButton />
+      {/* Navbar at the bottom */}
       <Navbar />
     </div>
   );
