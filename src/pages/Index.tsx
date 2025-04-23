@@ -15,6 +15,13 @@ const Index = () => {
       lng: -74.006,
       type: "vibe" as const,
       description: "Great vibes in NYC!"
+    },
+    {
+      id: "2",
+      lat: 40.7328,
+      lng: -73.986,
+      type: "sos" as const,
+      description: "Help needed in Manhattan!"
     }
   ];
 

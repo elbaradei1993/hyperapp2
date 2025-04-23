@@ -91,13 +91,16 @@ const Map = ({ radiusKm = 10, pins = [], initialCenter }: MapProps) => {
       <MapContainer
         className="rounded-xl shadow-lg h-full w-full"
         style={{ height: "100%", width: "100%" }}
-        zoom={13}
-        center={userPos}
       >
         <TileLayer url={darkTileLayer} />
         
+        {/* Set the map view programmatically */}
+        <MapView center={userPos} />
+        
         {/* User position marker */}
-        <Marker position={userPos}>
+        <Marker 
+          position={userPos}
+        >
           <Popup>You are here</Popup>
         </Marker>
         
@@ -106,7 +109,6 @@ const Map = ({ radiusKm = 10, pins = [], initialCenter }: MapProps) => {
           <Marker
             key={pin.id}
             position={[pin.lat, pin.lng]}
-            icon={pin.type === "sos" ? sosIcon : vibeIcon}
           >
             <Popup>
               <strong>{pin.type.toUpperCase()}</strong>
