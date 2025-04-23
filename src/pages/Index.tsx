@@ -7,6 +7,17 @@ import SosButton from "@/components/SosButton";
 import Navbar from "@/components/Navbar";
 
 const Index = () => {
+  // Sample pins data
+  const samplePins = [
+    {
+      id: "1",
+      lat: 40.7128,
+      lng: -74.006,
+      type: "vibe" as const,
+      description: "Great vibes in NYC!"
+    }
+  ];
+
   return (
     <div className="flex flex-col min-h-screen pb-16">
       <div className="flex-grow h-[70vh]">

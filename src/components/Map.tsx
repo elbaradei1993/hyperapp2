@@ -47,35 +47,16 @@ const vibeIcon = new L.Icon({
   popupAnchor: [0, -30],
 });
 
-// Map location control as a separate component
-const LocateControl = () => {
-  // Instead of using useMap and context, we'll use a simpler approach
-  // This helps avoid the context consumer errors
-  useEffect(() => {
-    // Handle location finding outside of the context consumer
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          console.log("Located user at:", position.coords.latitude, position.coords.longitude);
-        },
-        (error) => {
-          console.log("Geolocation error:", error.message);
-        }
-      );
-    }
-  }, []);
-
-  return null;
-};
-
 const Map = ({ radiusKm = 10, pins = [], initialCenter }: MapProps) => {
   const [userPos, setUserPos] = useState<[number, number] | null>(null);
+  const [map, setMap] = useState<L.Map | null>(null);
 
   useEffect(() => {
     if (initialCenter) {
       setUserPos(initialCenter);
       return;
     }
+    
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
@@ -91,58 +72,58 @@ const Map = ({ radiusKm = 10, pins = [], initialCenter }: MapProps) => {
     }
   }, [initialCenter]);
 
+  // Set map view when userPos or map changes
+  useEffect(() => {
+    if (map && userPos) {
+      map.setView(userPos, 13);
+    }
+  }, [map, userPos]);
+
   if (!userPos) {
     return <div className="h-full w-full bg-gray-200 rounded-xl flex items-center justify-center">Loading map...</div>;
   }
 
-  // Using a simpler rendering approach to avoid Context Consumer issues
   return (
     <div className="h-full w-full">
-      <div className="h-full w-full rounded-xl">
-        {/* Using the MapContainer with only necessary props */}
-        <MapContainer
-          className="rounded-xl shadow-lg h-full w-full"
-          whenCreated={(mapInstance) => {
-            // Set the view manually to avoid using center prop
-            mapInstance.setView(userPos, 13);
-            // Enable scroll wheel zoom
-            mapInstance.scrollWheelZoom.enable();
-          }}
-        >
-          <TileLayer url={darkTileLayer} />
-          
-          <LocateControl />
-          
-          {/* Manually add marker with proper typing */}
-          <Marker 
-            position={userPos as [number, number]} 
-          >
-            <Popup>You are here</Popup>
-          </Marker>
-          
-          {/* Add circle with proper props */}
-          <Circle
-            center={userPos as [number, number]}
-            pathOptions={{ color: "blue", fillColor: "blue", fillOpacity: 0.1 }}
-            radius={radiusKm * 1000}
-          />
-          
-          {/* Map all pins with proper typing */}
-          {pins.map((pin) => (
-            <Marker
-              key={pin.id}
-              position={[pin.lat, pin.lng] as [number, number]}
-              icon={(pin.type === "sos" ? sosIcon : vibeIcon) as unknown as L.Icon}
-            >
-              <Popup>
-                <strong>{pin.type.toUpperCase()}</strong>
-                <br />
-                {pin.description}
-              </Popup>
+      <MapContainer
+        className="rounded-xl shadow-lg h-full w-full"
+        whenReady={(mapInstance) => {
+          setMap(mapInstance.target);
+        }}
+        zoom={13}
+        scrollWheelZoom={true}
+        style={{ height: "100%", width: "100%" }}
+      >
+        <TileLayer url={darkTileLayer} />
+        
+        {userPos && (
+          <>
+            <Marker position={userPos}>
+              <Popup>You are here</Popup>
             </Marker>
-          ))}
-        </MapContainer>
-      </div>
+            
+            <Circle
+              center={userPos}
+              pathOptions={{ color: "blue", fillColor: "blue", fillOpacity: 0.1 }}
+              radius={radiusKm * 1000}
+            />
+          </>
+        )}
+        
+        {pins.map((pin) => (
+          <Marker
+            key={pin.id}
+            position={[pin.lat, pin.lng]}
+            icon={pin.type === "sos" ? sosIcon : vibeIcon}
+          >
+            <Popup>
+              <strong>{pin.type.toUpperCase()}</strong>
+              <br />
+              {pin.description}
+            </Popup>
+          </Marker>
+        ))}
+      </MapContainer>
     </div>
   );
 };
