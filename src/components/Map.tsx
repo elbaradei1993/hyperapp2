@@ -23,11 +23,15 @@ interface MapProps {
 
 const DEFAULT_CENTER: [number, number] = [40.73061, -73.935242]; // NYC fallback
 
+const MAPTILER_KEY = "QosEXQtxnqMVMLuCrptw";
+const MAPTILER_STYLE = `https://api.maptiler.com/maps/streets/style.json?key=${MAPTILER_KEY}`;
+
 const Map = ({ pins = [], initialCenter }: MapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
     let mapCenter = DEFAULT_CENTER;
 
     const getUserLocation = () =>
@@ -45,6 +49,8 @@ const Map = ({ pins = [], initialCenter }: MapProps) => {
       });
 
     getUserLocation().then((center) => {
+      if (!isMounted || !mapContainer.current) return;
+
       // Remove duplicate maps if remounting
       if (mapRef.current) {
         mapRef.current.remove();
@@ -53,26 +59,26 @@ const Map = ({ pins = [], initialCenter }: MapProps) => {
 
       mapRef.current = new maplibregl.Map({
         container: mapContainer.current!,
-        // Use OpenStreetMap style that shows actual places
-        style: "https://api.maptiler.com/maps/streets/style.json?key=get_your_own_key", 
+        style: MAPTILER_STYLE,
         center: [center[1], center[0]],
         zoom: 13,
-        attributionControl: false,
+        attributionControl: true,
       });
 
-      // Add user marker
-      const userMarker = new maplibregl.Marker({ color: "#2563eb" })
+      // Add user marker (blue)
+      new maplibregl.Marker({ color: "#2563eb" })
         .setLngLat([center[1], center[0]])
         .setPopup(
           new maplibregl.Popup({ offset: 20 }).setText("You are here")
         )
         .addTo(mapRef.current!);
 
-      // Add any pins
+      // Add pins (sos/vibe) as custom icons
       pins.forEach((pin) => {
-        const iconUrl = pin.type === "sos"
-          ? "https://cdn-icons-png.flaticon.com/512/564/564619.png"
-          : "https://cdn-icons-png.flaticon.com/512/833/833472.png";
+        const iconUrl =
+          pin.type === "sos"
+            ? "https://cdn-icons-png.flaticon.com/512/564/564619.png"
+            : "https://cdn-icons-png.flaticon.com/512/833/833472.png";
         const markerDiv = document.createElement("div");
         markerDiv.innerHTML = `<img src="${iconUrl}" alt="pin" style="width:30px;height:30px;" />`;
 
@@ -95,6 +101,7 @@ const Map = ({ pins = [], initialCenter }: MapProps) => {
 
     // Cleanup on unmount
     return () => {
+      isMounted = false;
       mapRef.current?.remove();
       mapRef.current = null;
     };
@@ -102,8 +109,12 @@ const Map = ({ pins = [], initialCenter }: MapProps) => {
   }, [pins, initialCenter]);
 
   return (
-    <div ref={mapContainer} className="w-full h-full rounded-xl shadow-lg overflow-hidden" />
+    <div
+      ref={mapContainer}
+      className="w-full h-full rounded-xl shadow-lg overflow-hidden"
+    />
   );
 };
 
 export default Map;
+
