@@ -2,11 +2,11 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 
-// Fix default icon issues with Leaflet + Webpack/Vite
+// Fix default icon issues with Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
@@ -32,7 +32,7 @@ interface MapProps {
   initialCenter?: [number, number];
 }
 
-// Custom icons with proper typing
+// Custom icons
 const sosIcon = new L.Icon({
   iconUrl: "https://cdn-icons-png.flaticon.com/512/564/564619.png",
   iconSize: [30, 30],
@@ -47,7 +47,7 @@ const vibeIcon = new L.Icon({
   popupAnchor: [0, -30],
 });
 
-// Helper component to handle map view setting
+// Helper component to set map view
 const MapView = ({ center }: { center: [number, number] }) => {
   const map = useMap();
   
@@ -56,6 +56,25 @@ const MapView = ({ center }: { center: [number, number] }) => {
   }, [center, map]);
   
   return null;
+};
+
+// Helper component for pins
+const PinMarker = ({ pin }: { pin: Pin }) => {
+  const icon = pin.type === "sos" ? sosIcon : vibeIcon;
+  
+  return (
+    <Marker
+      key={pin.id}
+      position={[pin.lat, pin.lng]}
+      icon={icon}
+    >
+      <Popup>
+        <strong>{pin.type.toUpperCase()}</strong>
+        <br />
+        {pin.description}
+      </Popup>
+    </Marker>
+  );
 };
 
 const Map = ({ radiusKm = 10, pins = [], initialCenter }: MapProps) => {
@@ -73,7 +92,7 @@ const Map = ({ radiusKm = 10, pins = [], initialCenter }: MapProps) => {
           setUserPos([pos.coords.latitude, pos.coords.longitude]);
         },
         () => {
-          // Fallback coords
+          // Fallback coords (NYC)
           setUserPos([40.73061, -73.935242]);
         }
       );
@@ -89,33 +108,22 @@ const Map = ({ radiusKm = 10, pins = [], initialCenter }: MapProps) => {
   return (
     <div className="h-full w-full">
       <MapContainer
-        className="rounded-xl shadow-lg h-full w-full"
         style={{ height: "100%", width: "100%" }}
+        className="rounded-xl shadow-lg h-full w-full"
+        zoom={13}
+        center={[0, 0]} // Default center that will be overridden by MapView
       >
         <TileLayer url={darkTileLayer} />
-        
-        {/* Set the map view programmatically */}
         <MapView center={userPos} />
         
         {/* User position marker */}
-        <Marker 
-          position={userPos}
-        >
+        <Marker position={userPos}>
           <Popup>You are here</Popup>
         </Marker>
         
-        {/* Add pins from props */}
+        {/* Display all pins */}
         {pins.map((pin) => (
-          <Marker
-            key={pin.id}
-            position={[pin.lat, pin.lng]}
-          >
-            <Popup>
-              <strong>{pin.type.toUpperCase()}</strong>
-              <br />
-              {pin.description}
-            </Popup>
-          </Marker>
+          <PinMarker key={pin.id} pin={pin} />
         ))}
       </MapContainer>
     </div>
