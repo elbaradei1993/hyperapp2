@@ -75,10 +75,8 @@ const Index = () => {
         </Tabs>
       </div>
 
-      {/* SOS Button Container */}
-      <div className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-40">
-        <SosButton />
-      </div>
+      {/* SOS Button */}
+      <SosButton />
 
       {/* Navbar */}
       <Navbar />
