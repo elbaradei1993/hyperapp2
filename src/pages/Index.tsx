@@ -26,16 +26,16 @@ const Index = () => {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen pb-16">
-      {/* Map area */}
-      <div className="flex-grow h-[65vh]">
+    <div className="flex flex-col h-screen">
+      {/* Map container taking 75% of the viewport height */}
+      <div className="h-[75vh]">
         <Map radiusKm={10} pins={samplePins} />
       </div>
-      {/* SOS button below map, centered */}
-      <div className="mt-4 mb-2">
+      {/* SOS button container taking remaining space */}
+      <div className="flex-1 flex items-center justify-center bg-gradient-to-b from-background to-background/95">
         <SosButton />
       </div>
-      {/* Navbar at the bottom */}
+      {/* Navbar */}
       <Navbar />
     </div>
   );
