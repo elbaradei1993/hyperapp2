@@ -31,6 +31,7 @@ const Map = ({ pins = [], initialCenter }: MapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+  const mapInitializedRef = useRef<boolean>(false);
 
   const centerOnUser = () => {
     if (navigator.geolocation && mapRef.current) {
@@ -58,7 +59,7 @@ const Map = ({ pins = [], initialCenter }: MapProps) => {
     let isMounted = true;
 
     const initializeMap = async () => {
-      if (!mapContainer.current) return;
+      if (!mapContainer.current || !isMounted || mapInitializedRef.current) return;
 
       // Get user location first
       try {
@@ -75,7 +76,7 @@ const Map = ({ pins = [], initialCenter }: MapProps) => {
             },
             (error) => {
               console.error("Error getting location:", error);
-              reject(error);
+              resolve(); // Resolve anyway to continue map initialization
             }
           );
         });
@@ -84,61 +85,86 @@ const Map = ({ pins = [], initialCenter }: MapProps) => {
       }
 
       // Initialize map
-      const initialLocation = userLocation || DEFAULT_CENTER;
+      const initialLocation = userLocation || initialCenter || DEFAULT_CENTER;
 
+      // Only attempt to remove the map if it exists
       if (mapRef.current) {
         mapRef.current.remove();
+        mapRef.current = null;
       }
 
-      mapRef.current = new maplibregl.Map({
-        container: mapContainer.current,
-        style: MAPTILER_STYLE,
-        center: initialLocation,
-        zoom: 13,
-        attributionControl: true,
-      });
+      if (!mapContainer.current || !isMounted) return;
 
-      // Add navigation control
-      mapRef.current.addControl(
-        new maplibregl.NavigationControl(),
-        "top-right"
-      );
+      try {
+        const map = new maplibregl.Map({
+          container: mapContainer.current,
+          style: MAPTILER_STYLE,
+          center: initialLocation,
+          zoom: 13,
+          attributionControl: true,
+        });
 
-      // Add user location marker
-      if (userLocation) {
-        new maplibregl.Marker({ color: "#2563eb" })
-          .setLngLat(userLocation)
-          .setPopup(new maplibregl.Popup({ offset: 20 }).setText("You are here"))
-          .addTo(mapRef.current);
-      }
+        mapRef.current = map;
+        mapInitializedRef.current = true;
 
-      // Add other pins
-      pins.forEach((pin) => {
-        const iconUrl =
-          pin.type === "sos"
-            ? "https://cdn-icons-png.flaticon.com/512/564/564619.png"
-            : "https://cdn-icons-png.flaticon.com/512/833/833472.png";
-        const markerDiv = document.createElement("div");
-        markerDiv.innerHTML = `<img src="${iconUrl}" alt="pin" style="width:30px;height:30px;" />`;
+        // Add navigation control
+        map.addControl(new maplibregl.NavigationControl(), "top-right");
 
-        new maplibregl.Marker({ element: markerDiv })
-          .setLngLat([pin.lng, pin.lat])
-          .setPopup(
-            new maplibregl.Popup({ offset: 20 }).setHTML(
-              `<strong>${pin.type.toUpperCase()}</strong><br/>${pin.description || ""}`
+        // Add user location marker
+        if (userLocation) {
+          new maplibregl.Marker({ color: "#2563eb" })
+            .setLngLat(userLocation)
+            .setPopup(new maplibregl.Popup({ offset: 20 }).setText("You are here"))
+            .addTo(map);
+        }
+
+        // Add other pins
+        pins.forEach((pin) => {
+          const iconUrl =
+            pin.type === "sos"
+              ? "https://cdn-icons-png.flaticon.com/512/564/564619.png"
+              : "https://cdn-icons-png.flaticon.com/512/833/833472.png";
+          const markerDiv = document.createElement("div");
+          markerDiv.innerHTML = `<img src="${iconUrl}" alt="pin" style="width:30px;height:30px;" />`;
+
+          new maplibregl.Marker({ element: markerDiv })
+            .setLngLat([pin.lng, pin.lat])
+            .setPopup(
+              new maplibregl.Popup({ offset: 20 }).setHTML(
+                `<strong>${pin.type.toUpperCase()}</strong><br/>${pin.description || ""}`
+              )
             )
-          )
-          .addTo(mapRef.current);
-      });
+            .addTo(map);
+        });
+      } catch (error) {
+        console.error("Error initializing map:", error);
+        mapInitializedRef.current = false;
+      }
     };
 
     initializeMap();
 
     return () => {
       isMounted = false;
-      mapRef.current?.remove();
+      // Add a safety check before removing the map
+      if (mapRef.current) {
+        try {
+          mapRef.current.remove();
+        } catch (error) {
+          console.error("Error removing map:", error);
+        }
+        mapRef.current = null;
+      }
     };
-  }, [pins, initialCenter, userLocation]);
+  }, [pins, initialCenter]);
+
+  // Re-initialize map if container changes
+  useEffect(() => {
+    if (mapContainer.current && !mapInitializedRef.current) {
+      // Reset the initialization flag
+      mapInitializedRef.current = false;
+    }
+  }, [mapContainer.current]);
 
   return (
     <div className="relative w-full h-full">
