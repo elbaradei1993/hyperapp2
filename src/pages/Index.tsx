@@ -1,42 +1,85 @@
 
 "use client";
 
-import React from "react";
-import Map from "@/components/Map";
-import SosButton from "@/components/SosButton";
+import React, { useState } from "react";
 import Navbar from "@/components/Navbar";
+import SosButton from "@/components/SosButton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MapPin, Search, Calendar, Bell } from "lucide-react";
+import MapTab from "@/components/tabs/MapTab";
+import VibesTab from "@/components/tabs/VibesTab";
+import EventsTab from "@/components/tabs/EventsTab";
+import AlertsTab from "@/components/tabs/AlertsTab";
 
 const Index = () => {
-  // Sample pins data
-  const samplePins = [
-    {
-      id: "1",
-      lat: 40.7128,
-      lng: -74.006,
-      type: "vibe" as const,
-      description: "Great vibes in NYC!",
-    },
-    {
-      id: "2",
-      lat: 40.7328,
-      lng: -73.986,
-      type: "sos" as const,
-      description: "Help needed in Manhattan!",
-    },
-  ];
+  const [activeTab, setActiveTab] = useState("vibes");
 
   return (
     <div className="flex flex-col h-screen bg-gradient-to-b from-background/95 to-background">
-      {/* Map container taking 60% of the viewport height */}
-      <div className="h-[60vh] px-4 pt-4">
-        <div className="h-full rounded-2xl overflow-hidden shadow-2xl border border-white/10">
-          <Map radiusKm={10} pins={samplePins} />
-        </div>
+      {/* Main content area */}
+      <div className="flex-1 px-4 pt-4 pb-24 overflow-hidden">
+        {/* Tabs Container */}
+        <Tabs 
+          defaultValue="vibes" 
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="h-full flex flex-col"
+        >
+          {/* Tab Navigation */}
+          <TabsList className="grid grid-cols-2 gap-2 h-auto p-1 mb-4 bg-background/50 backdrop-blur-sm border border-white/10 rounded-xl">
+            <TabsTrigger 
+              value="vibes" 
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground h-20 rounded-lg flex flex-col gap-1"
+            >
+              <Search className="h-6 w-6" />
+              <span>Vibes</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="map" 
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground h-20 rounded-lg flex flex-col gap-1"
+            >
+              <MapPin className="h-6 w-6" />
+              <span>Map</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="events" 
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground h-20 rounded-lg flex flex-col gap-1"
+            >
+              <Calendar className="h-6 w-6" />
+              <span>Events</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="alerts" 
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground h-20 rounded-lg flex flex-col gap-1"
+            >
+              <Bell className="h-6 w-6" />
+              <span>Alerts</span>
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Tab Contents */}
+          <div className="flex-1 overflow-hidden rounded-2xl">
+            <TabsContent value="vibes" className="h-full m-0">
+              <VibesTab />
+            </TabsContent>
+            <TabsContent value="map" className="h-full m-0">
+              <MapTab />
+            </TabsContent>
+            <TabsContent value="events" className="h-full m-0">
+              <EventsTab />
+            </TabsContent>
+            <TabsContent value="alerts" className="h-full m-0">
+              <AlertsTab />
+            </TabsContent>
+          </div>
+        </Tabs>
       </div>
-      {/* SOS button container with equal spacing above and below */}
-      <div className="flex-1 flex items-center justify-center">
+
+      {/* SOS Button Container */}
+      <div className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-40">
         <SosButton />
       </div>
+
       {/* Navbar */}
       <Navbar />
     </div>
