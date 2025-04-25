@@ -11,7 +11,7 @@ const sampleVibes = [
     lat: 40.7128,
     lng: -74.006,
     type: "calm",
-    radius: 500,
+    radius: 400,
     color: "#0EA5E9"  // More vivid blue
   },
   {
@@ -19,7 +19,7 @@ const sampleVibes = [
     lat: 40.7328,
     lng: -73.986,
     type: "dangerous",
-    radius: 300,
+    radius: 400,
     color: "#F43F5E"  // More vivid red
   },
   {
@@ -46,26 +46,26 @@ const MapTab = () => {
       <div className="flex justify-end items-center">
         <div className="space-x-3">
           <span className="inline-flex items-center text-xs">
-            <span className="w-3 h-3 rounded-full bg-[#0EA5E9] mr-1 opacity-70"></span>
+            <span className="w-3 h-3 rounded-full bg-[#0EA5E9] mr-1 opacity-80"></span>
             Calm
           </span>
           <span className="inline-flex items-center text-xs">
-            <span className="w-3 h-3 rounded-full bg-[#F43F5E] mr-1 opacity-70"></span>
+            <span className="w-3 h-3 rounded-full bg-[#F43F5E] mr-1 opacity-80"></span>
             Dangerous
           </span>
           <span className="inline-flex items-center text-xs">
-            <span className="w-3 h-3 rounded-full bg-[#FACC15] mr-1 opacity-70"></span>
+            <span className="w-3 h-3 rounded-full bg-[#FACC15] mr-1 opacity-80"></span>
             Noisy
           </span>
           <span className="inline-flex items-center text-xs">
-            <span className="w-3 h-3 rounded-full bg-[#8B5CF6] mr-1 opacity-70"></span>
+            <span className="w-3 h-3 rounded-full bg-[#8B5CF6] mr-1 opacity-80"></span>
             LGBTQIA+ Friendly
           </span>
         </div>
       </div>
-      <Card className="h-[calc(100vh-12rem)] overflow-hidden shadow-2xl border border-white/10">
+      <Card className="h-[calc(100vh-10rem)] overflow-hidden shadow-2xl border border-white/10">
         <div className="h-full rounded-md overflow-hidden">
-          <Map radiusKm={12} vibes={sampleVibes} />
+          <Map radiusKm={10} vibes={sampleVibes} />
         </div>
       </Card>
     </div>

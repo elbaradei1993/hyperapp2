@@ -25,6 +25,7 @@ const Map = ({ vibes = [], initialCenter = [-74.006, 40.7128], radiusKm = 10 }: 
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
 
   // Convert kilometers to pixels at the current zoom level and latitude
   const kmToPixels = (km: number, latitude: number, zoom: number) => {
@@ -43,6 +44,8 @@ const Map = ({ vibes = [], initialCenter = [-74.006, 40.7128], radiusKm = 10 }: 
   // Get user's location
   const getUserLocation = () => {
     if (navigator.geolocation) {
+      setIsLocating(true);
+      
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const userCoordinates: [number, number] = [position.coords.longitude, position.coords.latitude];
@@ -54,10 +57,27 @@ const Map = ({ vibes = [], initialCenter = [-74.006, 40.7128], radiusKm = 10 }: 
               zoom: 14,
               speed: 1.5,
             });
+
+            // Create or update user location marker
+            const el = document.createElement('div');
+            el.className = 'user-location-marker';
+            el.style.background = '#3b82f6';
+            el.style.width = '16px';
+            el.style.height = '16px';
+            el.style.borderRadius = '50%';
+            el.style.border = '3px solid white';
+            el.style.boxShadow = '0 0 0 2px rgba(59, 130, 246, 0.5)';
+
+            new maplibregl.Marker(el)
+              .setLngLat(userCoordinates)
+              .addTo(map.current);
           }
+          
+          setIsLocating(false);
         },
         (error) => {
           console.error('Error getting user location:', error);
+          setIsLocating(false);
         },
         {
           enableHighAccuracy: true,
@@ -79,7 +99,7 @@ const Map = ({ vibes = [], initialCenter = [-74.006, 40.7128], radiusKm = 10 }: 
       zoom: 12
     });
 
-    // Get initial user location
+    // Get initial user location automatically
     getUserLocation();
 
     map.current.on('load', () => {
@@ -109,9 +129,18 @@ const Map = ({ vibes = [], initialCenter = [-74.006, 40.7128], radiusKm = 10 }: 
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, 256, 256);
             
-            // Convert canvas to appropriate format for maplibre
+            // Get the image data
             const imageData = ctx.getImageData(0, 0, 256, 256);
-            map.current?.addImage('rainbow-gradient', imageData);
+            
+            // Create an ImageData object
+            const imageDataObj = new ImageData(
+              new Uint8ClampedArray(imageData.data), 
+              imageData.width, 
+              imageData.height
+            );
+
+            // Add the image to the map
+            map.current?.addImage('rainbow-gradient', imageDataObj);
           }
         }
 
@@ -138,7 +167,7 @@ const Map = ({ vibes = [], initialCenter = [-74.006, 40.7128], radiusKm = 10 }: 
               ['linear'],
               ['get', 'radius'],
               0, vibe.radius / 30,
-              100, vibe.type === 'lgbtq' ? radiusKm / 5 : radiusKm / 10
+              100, vibe.type === 'lgbtq' ? radiusKm / 5 : radiusKm / 8
             ],
             'circle-color': vibe.type === 'lgbtq' ? [
               'match',
@@ -150,7 +179,7 @@ const Map = ({ vibes = [], initialCenter = [-74.006, 40.7128], radiusKm = 10 }: 
               'interpolate',
               ['linear'],
               ['get', 'radius'],
-              0, 0.4,
+              0, 0.5,
               100, 0
             ]
           }
@@ -193,10 +222,11 @@ const Map = ({ vibes = [], initialCenter = [-74.006, 40.7128], radiusKm = 10 }: 
       {/* User location button */}
       <button 
         onClick={getUserLocation}
-        className="absolute bottom-4 right-4 bg-primary text-white p-2 rounded-full shadow-lg z-10 hover:bg-primary/80 transition-colors"
+        disabled={isLocating}
+        className="absolute bottom-24 right-4 bg-primary text-white p-3 rounded-full shadow-lg z-10 hover:bg-primary/80 transition-colors"
         aria-label="Go to my location"
       >
-        <Compass className="h-5 w-5" />
+        <Compass className={`h-6 w-6 ${isLocating ? 'animate-spin' : ''}`} />
       </button>
     </div>
   );
