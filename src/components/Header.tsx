@@ -11,17 +11,20 @@ const Header = () => {
           viewBox="0 0 400 100"
           preserveAspectRatio="none"
         >
+          <linearGradient id="vibeGradient" x1="0%" y1="0%" x2="100%" y1="0%">
+            <stop offset="0%" stopColor="#1EAEDB" />
+            <stop offset="25%" stopColor="#ea384c" />
+            <stop offset="50%" stopColor="#FEF7CD" />
+            <stop offset="75%" stopColor="#8B5CF6" />
+            <stop offset="100%" stopColor="#1EAEDB" />
+          </linearGradient>
           <path
             d="M0,50 L60,50 L80,50 L90,20 L100,80 L110,20 L120,80 L130,50 L400,50"
-            stroke="#F2FCE2"
+            stroke="url(#vibeGradient)"
             fill="none"
             strokeWidth="2"
             strokeLinecap="round"
-            style={{
-              strokeDasharray: 1000,
-              strokeDashoffset: 1000,
-              animation: 'dash 2s linear infinite'
-            }}
+            className="ecg-line"
           />
         </svg>
       </div>

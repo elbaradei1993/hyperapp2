@@ -18,16 +18,20 @@ const SosButton = () => {
     <button
       type="button"
       onClick={handleSOS}
-      className="fixed right-0 top-1/2 -translate-y-1/2 z-50 w-14 h-14 rounded-l-full bg-red-500 hover:bg-red-600 flex items-center justify-center shadow-2xl transition-all duration-300 active:scale-95 group"
+      className="fixed right-0 top-1/3 -translate-y-1/2 z-50 w-14 h-14 rounded-l-full bg-red-500 hover:bg-red-600 flex items-center justify-center shadow-2xl transition-all duration-300 active:scale-95 group"
       aria-label="Send SOS"
     >
-      {/* Subtle pulsing effect */}
+      {/* Multiple pulsing rings effect */}
       <div 
-        className="absolute inset-0 rounded-l-full bg-red-500/20 animate-[pulse_2s_ease-in-out_infinite] opacity-75"
-        style={{ animationDelay: '1s' }}
+        className="absolute inset-0 rounded-l-full bg-red-500/20 animate-[pulse_1.5s_ease-in-out_infinite] opacity-75"
       />
       <div 
-        className="absolute inset-0 rounded-l-full bg-red-500/10 animate-[pulse_2s_ease-in-out_infinite]"
+        className="absolute inset-0 rounded-l-full bg-red-500/15 animate-[pulse_2s_ease-in-out_infinite]"
+        style={{ animationDelay: '0.5s' }}
+      />
+      <div 
+        className="absolute inset-0 rounded-l-full bg-red-500/10 animate-[pulse_2.5s_ease-in-out_infinite]"
+        style={{ animationDelay: '1s' }}
       />
       
       <span className="relative z-10 text-white font-bold text-base">SOS</span>
