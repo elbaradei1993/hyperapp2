@@ -95,6 +95,9 @@ const Map = ({ vibes = [], initialCenter = [-74.006, 40.7128], radiusKm = 10 }: 
           const canvas = document.createElement('canvas');
           const ctx = canvas.getContext('2d');
           if (ctx) {
+            canvas.width = 256;
+            canvas.height = 256;
+            
             const gradient = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
             gradient.addColorStop(0, 'violet');
             gradient.addColorStop(0.2, 'indigo');
@@ -106,7 +109,9 @@ const Map = ({ vibes = [], initialCenter = [-74.006, 40.7128], radiusKm = 10 }: 
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, 256, 256);
             
-            map.current?.addImage('rainbow-gradient', canvas);
+            // Convert canvas to appropriate format for maplibre
+            const imageData = ctx.getImageData(0, 0, 256, 256);
+            map.current?.addImage('rainbow-gradient', imageData);
           }
         }
 

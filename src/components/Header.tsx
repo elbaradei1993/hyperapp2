@@ -11,7 +11,7 @@ const Header = () => {
           viewBox="0 0 400 100"
           preserveAspectRatio="none"
         >
-          <linearGradient id="vibeGradient" x1="0%" y1="0%" x2="100%" y1="0%">
+          <linearGradient id="vibeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#1EAEDB" />
             <stop offset="25%" stopColor="#ea384c" />
             <stop offset="50%" stopColor="#FEF7CD" />
