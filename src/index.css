@@ -90,6 +90,12 @@
   }
 }
 
+@keyframes dash {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
 @layer base {
   * {
     @apply border-border;

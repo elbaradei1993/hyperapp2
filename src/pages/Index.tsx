@@ -3,6 +3,7 @@
 
 import React, { useState } from "react";
 import Navbar from "@/components/Navbar";
+import Header from "@/components/Header";
 import SosButton from "@/components/SosButton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MapPin, Search, Calendar, Bell } from "lucide-react";
@@ -16,6 +17,8 @@ const Index = () => {
 
   return (
     <div className="flex flex-col h-screen bg-gradient-to-b from-background/95 to-background">
+      <Header />
+      
       {/* Main content area */}
       <div className="flex-1 px-4 pt-4 pb-24 overflow-hidden">
         {/* Tabs Container */}
