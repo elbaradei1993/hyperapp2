@@ -2,6 +2,7 @@
 // Export all UI components for easier imports
 import { Avatar, AvatarImage, AvatarFallback } from "./avatar";
 import { Button } from "./button";
+import { Checkbox } from "./checkbox";
 import { 
   Dialog, 
   DialogPortal, 
@@ -16,9 +17,11 @@ import {
 } from "./dialog";
 import { Input } from "./input";
 import { Label } from "./label";
+import { RadioGroup, RadioGroupItem } from "./radio-group";
 import { Select } from "./select";
 import { Slider } from "./slider";
 import { Switch } from "./switch";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "./tabs";
 import { Textarea } from "./textarea";
 
 export {
@@ -26,6 +29,7 @@ export {
   AvatarImage,
   AvatarFallback,
   Button,
+  Checkbox,
   Dialog,
   DialogPortal,
   DialogOverlay,
@@ -38,8 +42,14 @@ export {
   DialogDescription,
   Input,
   Label,
+  RadioGroup,
+  RadioGroupItem,
   Select,
   Slider,
   Switch,
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
   Textarea,
 };
