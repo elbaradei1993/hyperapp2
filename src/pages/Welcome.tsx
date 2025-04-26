@@ -1,52 +1,19 @@
 
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { 
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle
-} from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import IndividualRegisterForm from "@/components/auth/IndividualRegisterForm";
 import OrganizationRegisterForm from "@/components/auth/OrganizationRegisterForm";
 import LoginForm from "@/components/auth/LoginForm";
-import { Check, User, Building, Globe } from "lucide-react";
+import { User, Building, Check } from "lucide-react";
 
 const Welcome = () => {
-  const navigate = useNavigate();
-  const [showIntro, setShowIntro] = useState(true);
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
 
-  // Auto-hide intro after 3 seconds
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowIntro(false);
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (showIntro) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#8B5CF6]">
-        <div className="text-center space-y-4 animate-pulse">
-          <h1 className="text-7xl font-bold text-white tracking-tight">
-            HyperApp
-          </h1>
-          <p className="text-2xl text-white/90 font-light">
-            Stay safe...Stay connected
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen overflow-hidden relative bg-white">
+    <div className="min-h-screen overflow-hidden relative bg-background">
       {/* World Map Background with Pulse Markers */}
       <div className="absolute inset-0 opacity-10">
         <div className="w-full h-full">
@@ -58,52 +25,36 @@ const Welcome = () => {
         </div>
         {/* Animated Pulse Markers */}
         <div className="absolute top-1/4 left-1/4 animate-pulse">
-          <div className="w-4 h-4 bg-[#8B5CF6] rounded-full opacity-75" />
+          <div className="w-4 h-4 bg-primary rounded-full opacity-75" />
         </div>
         <div className="absolute top-1/3 right-1/3 animate-pulse delay-300">
-          <div className="w-4 h-4 bg-[#8B5CF6] rounded-full opacity-75" />
+          <div className="w-4 h-4 bg-primary rounded-full opacity-75" />
         </div>
         <div className="absolute bottom-1/3 right-1/4 animate-pulse delay-700">
-          <div className="w-4 h-4 bg-[#8B5CF6] rounded-full opacity-75" />
+          <div className="w-4 h-4 bg-primary rounded-full opacity-75" />
         </div>
       </div>
 
       {/* Content */}
       <div className="container max-w-7xl mx-auto px-4 py-12 relative z-10">
-        {/* ECG Line */}
-        <div className="absolute inset-x-0 top-0 h-16 flex items-center justify-center opacity-75">
-          <svg 
-            className="w-full h-12" 
-            viewBox="0 0 400 100"
-            preserveAspectRatio="none"
-          >
-            <path
-              d="M0,50 L60,50 L80,50 L90,20 L100,80 L110,20 L120,80 L130,50 L400,50"
-              stroke="#8B5CF6"
-              fill="none"
-              strokeWidth="4"
-              strokeLinecap="round"
-              className="ecg-line"
-            />
-          </svg>
-        </div>
-
-        <div className="text-center mb-12 pt-16">
-          <h1 className="text-6xl font-bold mb-4">
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#8B5CF6] to-[#9333EA]">
-              Stay Safe...Stay Connected
-            </span>
+        {/* Header with App Name and Slogan */}
+        <div className="text-center mb-8 pt-8">
+          <h1 className="text-3xl font-light tracking-wider text-primary mb-2">
+            HyperApp
           </h1>
+          <p className="text-sm text-muted-foreground">
+            Stay safe...Stay connected
+          </p>
         </div>
 
         <div className="flex flex-col items-center">
           {/* Auth Mode Toggle */}
-          <div className="bg-purple-50 rounded-full p-1 mb-8 inline-flex shadow-lg">
+          <div className="bg-muted rounded-full p-1 mb-8 inline-flex shadow-lg">
             <button 
               className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
                 authMode === "login" 
-                  ? "bg-[#8B5CF6] text-white shadow-md" 
-                  : "text-[#8B5CF6] hover:bg-purple-100"
+                  ? "bg-primary text-primary-foreground shadow-md" 
+                  : "text-muted-foreground hover:bg-accent"
               }`}
               onClick={() => setAuthMode("login")}
             >
@@ -112,8 +63,8 @@ const Welcome = () => {
             <button 
               className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
                 authMode === "register" 
-                  ? "bg-[#8B5CF6] text-white shadow-md" 
-                  : "text-[#8B5CF6] hover:bg-purple-100"
+                  ? "bg-primary text-primary-foreground shadow-md" 
+                  : "text-muted-foreground hover:bg-accent"
               }`}
               onClick={() => setAuthMode("register")}
             >
@@ -122,23 +73,23 @@ const Welcome = () => {
           </div>
 
           {/* Card Container */}
-          <div className="w-full max-w-4xl bg-white/80 backdrop-blur-lg rounded-3xl shadow-2xl border border-purple-100 overflow-hidden">
+          <div className="w-full max-w-4xl bg-card/80 backdrop-blur-lg rounded-3xl shadow-2xl border border-border overflow-hidden">
             {authMode === "login" ? (
               <div className="p-8 md:p-12">
-                <h2 className="text-3xl font-semibold text-[#8B5CF6] mb-8 text-center">Welcome Back</h2>
+                <h2 className="text-2xl font-light text-primary mb-8 text-center">Welcome Back</h2>
                 <LoginForm />
               </div>
             ) : (
               <div className="p-6 md:p-8">
-                <h2 className="text-3xl font-semibold text-[#8B5CF6] mb-6 text-center">Create Your Account</h2>
+                <h2 className="text-2xl font-light text-primary mb-6 text-center">Create Your Account</h2>
                 
                 <Tabs defaultValue="individual" className="w-full">
-                  <TabsList className="grid grid-cols-2 mb-8 bg-purple-50 p-1 rounded-lg">
-                    <TabsTrigger value="individual" className="data-[state=active]:bg-white data-[state=active]:text-[#8B5CF6] rounded-md">
+                  <TabsList className="grid grid-cols-2 mb-8">
+                    <TabsTrigger value="individual" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                       <User className="w-4 h-4 mr-2" />
                       Individual
                     </TabsTrigger>
-                    <TabsTrigger value="organization" className="data-[state=active]:bg-white data-[state=active]:text-[#8B5CF6] rounded-md">
+                    <TabsTrigger value="organization" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                       <Building className="w-4 h-4 mr-2" />
                       Organization
                     </TabsTrigger>
@@ -161,17 +112,17 @@ const Welcome = () => {
             <FeatureCard 
               title="For Individuals"
               description="Find safe spaces and connect with a supportive community."
-              icon={<User className="h-8 w-8 text-[#8B5CF6]" />}
+              icon={<User className="h-6 w-6 text-primary" />}
             />
             <FeatureCard 
               title="For Organizations"
               description="Create safe spaces and manage your venue or events."
-              icon={<Building className="h-8 w-8 text-[#8B5CF6]" />}
+              icon={<Building className="h-6 w-6 text-primary" />}
             />
             <FeatureCard 
               title="Safety Focused"
               description="Emergency features and real-time support when needed."
-              icon={<Check className="h-8 w-8 text-[#8B5CF6]" />}
+              icon={<Check className="h-6 w-6 text-primary" />}
             />
           </div>
         </div>
@@ -191,14 +142,12 @@ const FeatureCard = ({
   icon: React.ReactNode 
 }) => {
   return (
-    <Card className="bg-white/80 backdrop-blur-sm border-purple-100 hover:shadow-lg transition-all duration-300 hover:scale-105">
-      <CardHeader className="pb-2">
-        <div className="mb-2">{icon}</div>
-        <CardTitle className="text-[#8B5CF6]">{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p className="text-purple-600">{description}</p>
-      </CardContent>
+    <Card className="bg-card/80 backdrop-blur-sm border-border hover:shadow-lg transition-all duration-300 hover:scale-105">
+      <div className="p-6">
+        <div className="mb-4">{icon}</div>
+        <h3 className="text-lg font-medium text-primary mb-2">{title}</h3>
+        <p className="text-sm text-muted-foreground">{description}</p>
+      </div>
     </Card>
   );
 };
