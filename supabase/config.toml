@@ -3,3 +3,6 @@ project_id = "qdslprshnafmhsqimuqp"
 
 [functions.increment-counter]
 verify_jwt = true
+
+[functions.report-vibe]
+verify_jwt = false

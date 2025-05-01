@@ -174,20 +174,16 @@ const Trending = () => {
   const handleVote = async (id: string, voteType: 'up' | 'down') => {
     try {
       if (voteType === 'up') {
-        // Call the Edge Function to increment counter
-        const { data, error } = await supabase.functions.invoke('increment-counter', {
-          body: { 
-            row_id: safeParseInt(id), 
-            table_name: 'vibe_reports', 
-            column_name: 'confirmed_count', 
-            increment_amount: 1 
-          }
+        // Call the function to increment counter
+        const { data, error } = await supabase.rpc('increment_vibe_count', {
+          report_id: safeParseInt(id),
+          inc_amount: 1
         });
         
         if (error) {
-          console.error("Error with edge function:", error);
+          console.error("Error with function call:", error);
           
-          // Fallback direct update if edge function fails
+          // Fallback direct update if function call fails
           // First get the current value
           const { data: currentVibe } = await supabase
             .from('vibe_reports')

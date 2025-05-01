@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useRef, useState } from 'react';
@@ -34,6 +35,7 @@ const Map = ({ vibes: initialVibes = [], initialCenter = [-74.006, 40.7128], rad
   const sourceIdsRef = useRef<string[]>([]);
   const layerIdsRef = useRef<string[]>([]);
   const { toast } = useToast();
+  const mapInitializedRef = useRef(false);
 
   // Convert kilometers to pixels at the current zoom level and latitude
   const kmToPixels = (km: number, latitude: number, zoom: number) => {
@@ -163,51 +165,67 @@ const Map = ({ vibes: initialVibes = [], initialCenter = [-74.006, 40.7128], rad
   };
 
   useEffect(() => {
-    if (!mapContainer.current) return;
+    if (mapInitializedRef.current || !mapContainer.current) return;
+    mapInitializedRef.current = true;
     
-    // Initialize map
-    map.current = new maplibregl.Map({
-      container: mapContainer.current,
-      style: 'https://api.maptiler.com/maps/streets/style.json?key=QosEXQtxnqMVMLuCrptw',
-      center: initialCenter,
-      zoom: 12
-    });
+    try {
+      // Initialize map
+      map.current = new maplibregl.Map({
+        container: mapContainer.current,
+        style: 'https://api.maptiler.com/maps/streets/style.json?key=QosEXQtxnqMVMLuCrptw',
+        center: initialCenter,
+        zoom: 12,
+        attributionControl: false
+      });
 
-    // Get initial user location automatically
-    getUserLocation();
+      // Add navigation controls
+      map.current.addControl(new maplibregl.NavigationControl(), 'top-right');
+      map.current.addControl(new maplibregl.AttributionControl(), 'bottom-left');
 
-    map.current.on('load', () => {
-      if (!map.current) return;
-      
-      // Add popup functionality for vibes
-      map.current.on('click', (e) => {
-        const features = map.current?.queryRenderedFeatures(e.point, {
-          layers: layerIdsRef.current
+      map.current.on('load', () => {
+        if (!map.current) return;
+        
+        // Add popup functionality for vibes
+        map.current.on('click', (e) => {
+          const features = map.current?.queryRenderedFeatures(e.point, {
+            layers: layerIdsRef.current
+          });
+          
+          if (features && features.length > 0) {
+            const vibe = vibes.find(v => v.id === features[0].properties?.id);
+            if (vibe) {
+              new maplibregl.Popup()
+                .setLngLat([vibe.lng, vibe.lat])
+                .setHTML(`
+                  <div style="padding: 8px;">
+                    <strong>${vibe.title || vibe.type}</strong>
+                    <p>Type: ${vibe.type}</p>
+                  </div>
+                `)
+                .addTo(map.current!);
+            }
+          }
         });
         
-        if (features && features.length > 0) {
-          const vibe = vibes.find(v => v.id === features[0].properties?.id);
-          if (vibe) {
-            new maplibregl.Popup()
-              .setLngLat([vibe.lng, vibe.lat])
-              .setHTML(`
-                <div style="padding: 8px;">
-                  <strong>${vibe.title || vibe.type}</strong>
-                  <p>Type: ${vibe.type}</p>
-                </div>
-              `)
-              .addTo(map.current!);
-          }
-        }
+        // Get initial user location automatically
+        getUserLocation();
       });
-    });
 
-    // Add navigation controls
-    map.current.addControl(new maplibregl.NavigationControl(), 'top-right');
-
-    return () => {
-      map.current?.remove();
-    };
+      return () => {
+        if (map.current) {
+          map.current.remove();
+          mapInitializedRef.current = false;
+        }
+      };
+    } catch (error) {
+      console.error("Error initializing map:", error);
+      toast({
+        title: "Map Error",
+        description: "Could not initialize map. Please try again later.",
+        variant: "destructive"
+      });
+      mapInitializedRef.current = false;
+    }
   }, [initialCenter]);
   
   // Update vibes on the map when vibes state changes
@@ -238,107 +256,113 @@ const Map = ({ vibes: initialVibes = [], initialCenter = [-74.006, 40.7128], rad
       sourceIdsRef.current.push(sourceId);
       layerIdsRef.current.push(layerId);
 
-      // Create rainbow gradient for LGBTQIA+ vibes
-      if (vibe.type.toLowerCase() === 'lgbtq' || vibe.type.toLowerCase() === 'lgbtqia+') {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          canvas.width = 256;
-          canvas.height = 256;
-          
-          const gradient = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
-          gradient.addColorStop(0, 'violet');
-          gradient.addColorStop(0.2, 'indigo');
-          gradient.addColorStop(0.4, 'blue');
-          gradient.addColorStop(0.6, 'green');
-          gradient.addColorStop(0.8, 'yellow');
-          gradient.addColorStop(1, 'red');
-          
-          ctx.fillStyle = gradient;
-          ctx.fillRect(0, 0, 256, 256);
-          
-          // Get the image data
-          const imageData = ctx.getImageData(0, 0, 256, 256);
-          
-          // Create an ImageData object
-          const imageDataObj = new ImageData(
-            new Uint8ClampedArray(imageData.data), 
-            imageData.width, 
-            imageData.height
-          );
+      try {
+        // Create rainbow gradient for LGBTQIA+ vibes
+        if (vibe.type.toLowerCase() === 'lgbtq' || vibe.type.toLowerCase() === 'lgbtqia+') {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            canvas.width = 256;
+            canvas.height = 256;
+            
+            const gradient = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
+            gradient.addColorStop(0, 'violet');
+            gradient.addColorStop(0.2, 'indigo');
+            gradient.addColorStop(0.4, 'blue');
+            gradient.addColorStop(0.6, 'green');
+            gradient.addColorStop(0.8, 'yellow');
+            gradient.addColorStop(1, 'red');
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 256, 256);
+            
+            // Get the image data
+            const imageData = ctx.getImageData(0, 0, 256, 256);
+            
+            // Create an ImageData object
+            const imageDataObj = new ImageData(
+              new Uint8ClampedArray(imageData.data), 
+              imageData.width, 
+              imageData.height
+            );
 
-          // Add the image to the map
-          map.current?.addImage('rainbow-gradient', imageDataObj);
-        }
-      }
-
-      map.current?.addSource(sourceId, {
-        type: 'geojson',
-        data: {
-          type: 'Feature',
-          properties: {
-            id: vibe.id,
-            type: vibe.type
-          },
-          geometry: {
-            type: 'Point',
-            coordinates: [vibe.lng, vibe.lat]
+            // Add the image to the map
+            map.current?.addImage('rainbow-gradient', imageDataObj);
           }
         }
-      });
 
-      // Add pulse effect layer
-      map.current?.addLayer({
-        id: layerId,
-        type: 'circle',
-        source: sourceId,
-        paint: {
-          'circle-radius': [
-            'interpolate',
-            ['linear'],
-            ['get', 'radius'],
-            0, vibe.radius / 30,
-            100, vibe.type.toLowerCase() === 'lgbtq' ? radiusKm / 5 : radiusKm / 8
-          ],
-          'circle-color': vibe.type.toLowerCase() === 'lgbtq' ? [
-            'match',
-            ['get', 'radius'],
-            50, 'rgba(139,92,246,0.3)',
-            vibe.color
-          ] : vibe.color,
-          'circle-opacity': [
-            'interpolate',
-            ['linear'],
-            ['get', 'radius'],
-            0, 0.5,
-            100, 0
-          ]
-        }
-      });
-
-      // Animate the pulse
-      let radius = 0;
-      const animate = () => {
-        if (!map.current) return;
-        
-        radius = (radius + 1) % 100;
-        if (map.current?.getSource(sourceId)) {
-          (map.current?.getSource(sourceId) as maplibregl.GeoJSONSource).setData({
-            type: 'Feature',
-            properties: {
-              id: vibe.id,
-              type: vibe.type,
-              radius: radius
-            },
-            geometry: {
-              type: 'Point',
-              coordinates: [vibe.lng, vibe.lat]
+        if (map.current) {
+          map.current.addSource(sourceId, {
+            type: 'geojson',
+            data: {
+              type: 'Feature',
+              properties: {
+                id: vibe.id,
+                type: vibe.type
+              },
+              geometry: {
+                type: 'Point',
+                coordinates: [vibe.lng, vibe.lat]
+              }
             }
           });
+
+          // Add pulse effect layer
+          map.current.addLayer({
+            id: layerId,
+            type: 'circle',
+            source: sourceId,
+            paint: {
+              'circle-radius': [
+                'interpolate',
+                ['linear'],
+                ['get', 'radius'],
+                0, vibe.radius / 30,
+                100, vibe.type.toLowerCase() === 'lgbtq' ? radiusKm / 5 : radiusKm / 8
+              ],
+              'circle-color': vibe.type.toLowerCase() === 'lgbtq' ? [
+                'match',
+                ['get', 'radius'],
+                50, 'rgba(139,92,246,0.3)',
+                vibe.color
+              ] : vibe.color,
+              'circle-opacity': [
+                'interpolate',
+                ['linear'],
+                ['get', 'radius'],
+                0, 0.5,
+                100, 0
+              ]
+            }
+          });
+
+          // Animate the pulse
+          let radius = 0;
+          const animate = () => {
+            if (!map.current) return;
+            
+            radius = (radius + 1) % 100;
+            if (map.current?.getSource(sourceId)) {
+              (map.current?.getSource(sourceId) as maplibregl.GeoJSONSource).setData({
+                type: 'Feature',
+                properties: {
+                  id: vibe.id,
+                  type: vibe.type,
+                  radius: radius
+                },
+                geometry: {
+                  type: 'Point',
+                  coordinates: [vibe.lng, vibe.lat]
+                }
+              });
+            }
+            requestAnimationFrame(animate);
+          };
+          animate();
         }
-        requestAnimationFrame(animate);
-      };
-      animate();
+      } catch (error) {
+        console.error(`Error adding vibe ${vibe.id} to map:`, error);
+      }
     });
   }, [vibes, radiusKm]);
   
