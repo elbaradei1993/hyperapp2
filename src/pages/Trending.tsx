@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -10,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 
 interface TrendingVibe {
-  id: string; // Changed to string to match Supabase UUID
+  id: string;
   title: string;
   description: string;
   location: string;
@@ -58,7 +59,7 @@ const Trending = () => {
         
         if (vibeReports) {
           // Transform the data for UI display
-          const formattedVibes = vibeReports.map(vibe => {
+          const formattedVibes: TrendingVibe[] = vibeReports.map(vibe => {
             // Create a location string from lat/long
             // In a real app, you'd reverse geocode this
             const location = `${vibe.latitude.substring(0, 6)}, ${vibe.longitude.substring(0, 6)}`;
@@ -67,7 +68,7 @@ const Trending = () => {
             const timeAgo = getTimeAgo(new Date(vibe.created_at));
             
             return {
-              id: vibe.id.toString(), // Ensure ID is a string
+              id: vibe.id.toString(),
               title: vibe.title || "Untitled Vibe",
               description: vibe.description || "No description provided",
               location: location,
@@ -159,7 +160,7 @@ const Trending = () => {
       };
       
       // Add new vibe to the beginning of the array and limit to 10 items
-      setTrendingVibes(prev => [newVibe, ...prev].slice(0, 10));
+      setTrendingVibes(prev => [newVibe, ...prev.slice(0, 9)]);
       
       toast({
         title: "New trending vibe",
@@ -172,23 +173,24 @@ const Trending = () => {
   const handleVote = async (id: string, voteType: 'up' | 'down') => {
     try {
       if (voteType === 'up') {
-        // Increment the confirmed count
-        const { error } = await supabase.rpc('increment', { 
-          row_id: parseInt(id), 
-          table_name: 'vibe_reports', 
-          column_name: 'confirmed_count', 
-          increment_amount: 1 
+        // Call the Edge Function to increment counter
+        const { data, error } = await supabase.functions.invoke('increment-counter', {
+          body: { 
+            row_id: parseInt(id), 
+            table_name: 'vibe_reports', 
+            column_name: 'confirmed_count', 
+            increment_amount: 1 
+          }
         });
         
         if (error) {
-          console.error("Error with RPC call:", error);
-          // Fallback direct update if RPC isn't available
-          const { error: updateError } = await supabase
+          console.error("Error with edge function:", error);
+          
+          // Fallback direct update if edge function fails
+          await supabase
             .from('vibe_reports')
-            .update({ confirmed_count: supabase.sql(`confirmed_count + 1`) })
-            .eq('id', id);
-            
-          if (updateError) throw updateError;
+            .update({ confirmed_count: vibes => vibes.confirmed_count + 1 })
+            .eq('id', parseInt(id));
         }
         
         // Update local state optimistically

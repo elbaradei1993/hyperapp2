@@ -117,14 +117,25 @@ const Settings = () => {
           }
           
           if (data && data.settings) {
-            // Now that we've added the settings column, we can safely access it
-            const userSettings = data.settings as UserSettings;
-            setSettings({
-              language: userSettings.language || "en",
-              radius: userSettings.radius || 10,
-              darkTheme: userSettings.darkTheme !== undefined ? userSettings.darkTheme : true,
-              notifications: userSettings.notifications !== undefined ? userSettings.notifications : true
-            });
+            // Cast and safely access settings
+            const userSettingsData = data.settings as unknown;
+            // Type guard to check if it's the right structure
+            if (
+              userSettingsData && 
+              typeof userSettingsData === 'object' && 
+              'language' in userSettingsData && 
+              'radius' in userSettingsData && 
+              'darkTheme' in userSettingsData && 
+              'notifications' in userSettingsData
+            ) {
+              const userSettings = userSettingsData as UserSettings;
+              setSettings({
+                language: userSettings.language || "en",
+                radius: userSettings.radius || 10,
+                darkTheme: userSettings.darkTheme !== undefined ? userSettings.darkTheme : true,
+                notifications: userSettings.notifications !== undefined ? userSettings.notifications : true
+              });
+            }
           }
         } else {
           // Load from localStorage if user is not logged in
@@ -186,7 +197,7 @@ const Settings = () => {
         const { error } = await supabase
           .from('profiles')
           .update({ 
-            settings: settings,
+            settings: settings as unknown as Record<string, unknown>,
             updated_at: new Date().toISOString()
           })
           .eq('id', session.user.id);

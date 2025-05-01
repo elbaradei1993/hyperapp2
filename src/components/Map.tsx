@@ -1,14 +1,15 @@
+
 "use client";
 
 import React, { useEffect, useRef, useState } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { MapPin, Compass } from 'lucide-react';
+import { Compass } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 interface Vibe {
-  id: string; // Change to string to match Supabase UUID
+  id: string;
   lat: number;
   lng: number;
   type: string;
@@ -145,7 +146,7 @@ const Map = ({ vibes: initialVibes = [], initialCenter = [-74.006, 40.7128], rad
       if (vibeReports) {
         // Transform to our Vibe interface
         const formattedVibes = vibeReports.map(report => ({
-          id: report.id.toString(), // Ensure ID is a string
+          id: report.id.toString(),
           lat: parseFloat(report.latitude),
           lng: parseFloat(report.longitude),
           type: report.vibe_type?.name || "unknown",
@@ -365,7 +366,7 @@ const Map = ({ vibes: initialVibes = [], initialCenter = [-74.006, 40.7128], rad
           // Rough check if it's within our radius (1 degree ~ 111km at equator)
           if (distanceDegLat < radiusKm / 111 && distanceDegLng < radiusKm / 111) {
             // Fetch complete vibe data with joins
-            fetchNewVibe(payload.new.id);
+            fetchNewVibe(payload.new.id.toString());
           }
         }
       })
@@ -400,7 +401,7 @@ const Map = ({ vibes: initialVibes = [], initialCenter = [-74.006, 40.7128], rad
       
       if (data) {
         const newVibe: Vibe = {
-          id: data.id.toString(), // Ensure ID is a string
+          id: data.id.toString(),
           lat: parseFloat(data.latitude),
           lng: parseFloat(data.longitude),
           type: data.vibe_type?.name || "unknown",
