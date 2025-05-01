@@ -190,7 +190,12 @@ const Trending = () => {
           // Fallback direct update if edge function fails
           await supabase
             .from('vibe_reports')
-            .update({ confirmed_count: (vibe) => `${vibe.confirmed_count} + 1` })
+            .update({ confirmed_count: supabase.rpc('increment_column', {
+              p_table_name: 'vibe_reports',
+              p_column_name: 'confirmed_count',
+              p_row_id: safeParseInt(id),
+              p_increment_amount: 1
+            }) })
             .eq('id', safeParseInt(id));
         }
         
