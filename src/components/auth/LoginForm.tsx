@@ -60,18 +60,18 @@ const LoginForm = () => {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-white">Email</FormLabel>
+                <FormLabel>Email</FormLabel>
                 <FormControl>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-2.5 h-5 w-5 text-white/60" />
+                    <Mail className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
                     <Input
                       placeholder="your@email.com"
-                      className="bg-white/10 border-white/20 text-white pl-10 placeholder:text-white/40 focus-visible:ring-blue-400"
+                      className="pl-10"
                       {...field}
                     />
                   </div>
                 </FormControl>
-                <FormMessage className="text-red-300" />
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -81,19 +81,19 @@ const LoginForm = () => {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-white">Password</FormLabel>
+                <FormLabel>Password</FormLabel>
                 <FormControl>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-2.5 h-5 w-5 text-white/60" />
+                    <Lock className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
                     <Input
                       type="password"
                       placeholder="••••••••"
-                      className="bg-white/10 border-white/20 text-white pl-10 placeholder:text-white/40 focus-visible:ring-blue-400"
+                      className="pl-10"
                       {...field}
                     />
                   </div>
                 </FormControl>
-                <FormMessage className="text-red-300" />
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -102,7 +102,7 @@ const LoginForm = () => {
         <div className="flex justify-end">
           <Button 
             variant="link" 
-            className="text-blue-100 hover:text-white p-0"
+            className="p-0"
             type="button"
           >
             Forgot password?
@@ -111,12 +111,13 @@ const LoginForm = () => {
 
         <Button 
           type="submit" 
-          className="w-full bg-white hover:bg-blue-100 text-blue-900 p-6 text-lg font-semibold rounded-xl"
+          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground p-6 text-base font-semibold rounded-xl"
+          size="lg"
         >
           Sign In
         </Button>
 
-        <p className="text-center text-sm text-blue-100 mt-6">
+        <p className="text-center text-sm text-muted-foreground mt-6">
           By continuing, you agree to our Terms of Service and Privacy Policy
         </p>
       </form>

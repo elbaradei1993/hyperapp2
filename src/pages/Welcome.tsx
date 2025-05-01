@@ -7,15 +7,25 @@ import { Card } from "@/components/ui/card";
 import IndividualRegisterForm from "@/components/auth/IndividualRegisterForm";
 import OrganizationRegisterForm from "@/components/auth/OrganizationRegisterForm";
 import LoginForm from "@/components/auth/LoginForm";
-import { User, Building, Check } from "lucide-react";
+import { User, Building, Check, MapPin } from "lucide-react";
+import Map from "@/components/Map";
 
 const Welcome = () => {
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
 
+  // Sample vibe data for the map
+  const vibes = [
+    { id: "1", lat: 40.7128, lng: -74.006, type: "danger", radius: 30, color: "rgba(234, 56, 76, 0.4)" },
+    { id: "2", lat: 51.5074, lng: -0.1278, type: "calm", radius: 25, color: "rgba(242, 252, 226, 0.5)" },
+    { id: "3", lat: 35.6762, lng: 139.6503, type: "social", radius: 40, color: "rgba(254, 198, 161, 0.4)" },
+    { id: "4", lat: -33.8688, lng: 151.2093, type: "informative", radius: 35, color: "rgba(211, 228, 253, 0.5)" },
+    { id: "5", lat: 37.7749, lng: -122.4194, type: "lgbtq", radius: 45, color: "rgba(155, 135, 245, 0.5)" },
+  ];
+
   return (
     <div className="min-h-screen overflow-hidden relative bg-background">
       {/* World Map Background with Pulse Markers */}
-      <div className="absolute inset-0 opacity-10">
+      <div className="absolute inset-0 opacity-20">
         <div className="w-full h-full">
           <img 
             src="/lovable-uploads/43c08f98-56d1-4ee1-8782-9ed0524d8ce8.png" 
@@ -38,13 +48,18 @@ const Welcome = () => {
       {/* Content */}
       <div className="container max-w-7xl mx-auto px-4 py-12 relative z-10">
         {/* Header with App Name and Slogan */}
-        <div className="text-center mb-8 pt-8">
+        <div className="text-center mb-8 pt-8 animate-fade-in">
           <h1 className="text-3xl font-light tracking-wider text-primary mb-2">
             HyperApp
           </h1>
           <p className="text-sm text-muted-foreground">
             Stay safe...Stay connected
           </p>
+        </div>
+
+        {/* Interactive Map */}
+        <div className="w-full h-60 mb-8 rounded-xl overflow-hidden shadow-lg border border-border animate-scale-in">
+          <Map vibes={vibes} radiusKm={50} />
         </div>
 
         <div className="flex flex-col items-center">
