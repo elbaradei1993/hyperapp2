@@ -1,74 +1,55 @@
 
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { corsHeaders } from "../_shared/cors.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.6";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 
-interface RequestBody {
-  row_id: number;
-  table_name: string;
-  column_name: string;
-  increment_amount: number;
-}
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
 serve(async (req) => {
   // Handle CORS preflight requests
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
   }
-  
+
   try {
-    // Create a Supabase client with the service role key
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
-
-    // Parse request body
-    const { row_id, table_name, column_name, increment_amount } = await req.json() as RequestBody;
-
-    // Validate inputs to prevent SQL injection
-    const validTables = ["vibe_reports", "profiles"];
-    const validColumns = ["confirmed_count", "points", "reputation"];
+    // Get the request body
+    const { row_id, table_name, column_name, increment_amount = 1 } = await req.json();
     
-    if (!validTables.includes(table_name) || !validColumns.includes(column_name)) {
+    // Validate inputs
+    if (!row_id || !table_name || !column_name) {
       return new Response(
-        JSON.stringify({ 
-          error: "Invalid table or column name" 
-        }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, "Content-Type": "application/json" } 
-        }
+        JSON.stringify({ error: "Missing required parameters" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
       );
     }
-
-    // Use parameterized query to safely increment value
-    const { data, error } = await supabaseClient.rpc(
-      'increment_column_value',
-      { 
-        p_table_name: table_name, 
-        p_column_name: column_name, 
-        p_row_id: row_id, 
-        p_increment: increment_amount 
-      }
+    
+    // Create Supabase client
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      { global: { headers: { Authorization: req.headers.get("Authorization")! } } }
     );
+
+    // Create the SQL query
+    const { data, error } = await supabaseClient.rpc('increment_column', {
+      p_table_name: table_name,
+      p_column_name: column_name,
+      p_row_id: row_id,
+      p_increment_amount: increment_amount
+    });
 
     if (error) throw error;
 
     return new Response(
       JSON.stringify({ success: true, data }),
-      { 
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" } 
-      }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
   } catch (error) {
     return new Response(
       JSON.stringify({ error: error.message }),
-      { 
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" } 
-      }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
     );
   }
 });
