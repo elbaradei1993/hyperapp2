@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -9,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
+import { safeParseInt, safeToString } from "@/utils/typeConverters";
 
 interface TrendingVibe {
   id: string;
@@ -134,7 +134,7 @@ const Trending = () => {
           color
         )
       `)
-      .eq('id', id)
+      .eq('id', safeParseInt(id))
       .single();
     
     if (error) {
@@ -176,7 +176,7 @@ const Trending = () => {
         // Call the Edge Function to increment counter
         const { data, error } = await supabase.functions.invoke('increment-counter', {
           body: { 
-            row_id: parseInt(id), 
+            row_id: safeParseInt(id), 
             table_name: 'vibe_reports', 
             column_name: 'confirmed_count', 
             increment_amount: 1 
@@ -189,8 +189,8 @@ const Trending = () => {
           // Fallback direct update if edge function fails
           await supabase
             .from('vibe_reports')
-            .update({ confirmed_count: vibes => vibes.confirmed_count + 1 })
-            .eq('id', parseInt(id));
+            .update({ confirmed_count: (vibe) => `${vibe.confirmed_count} + 1` })
+            .eq('id', safeParseInt(id));
         }
         
         // Update local state optimistically

@@ -1,68 +1,74 @@
 
-// Follow this setup guide to integrate the Deno language server with your editor:
-// https://deno.land/manual/getting_started/setup_your_environment
-// This enables autocomplete, go to definition, etc.
+import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import { corsHeaders } from "../_shared/cors.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.6";
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+interface RequestBody {
+  row_id: number;
+  table_name: string;
+  column_name: string;
+  increment_amount: number;
 }
 
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders })
+    return new Response("ok", { headers: corsHeaders });
   }
-
+  
   try {
-    // Create a Supabase client with the Auth context of the logged in user
+    // Create a Supabase client with the service role key
     const supabaseClient = createClient(
-      // Supabase API URL - env var exported by default.
       Deno.env.get("SUPABASE_URL") ?? "",
-      // Supabase API ANON KEY - env var exported by default.
-      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      // Create client with Auth context of the user that called the function.
-      // This way your row-level-security (RLS) policies are applied.
-      {
-        global: {
-          headers: { Authorization: req.headers.get("Authorization")! },
-        },
-      }
-    )
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
 
-    const { row_id, table_name, column_name, increment_amount } = await req.json();
+    // Parse request body
+    const { row_id, table_name, column_name, increment_amount } = await req.json() as RequestBody;
 
-    // Check parameters
-    if (typeof row_id !== 'number' || 
-        typeof table_name !== 'string' || 
-        typeof column_name !== 'string' || 
-        typeof increment_amount !== 'number') {
+    // Validate inputs to prevent SQL injection
+    const validTables = ["vibe_reports", "profiles"];
+    const validColumns = ["confirmed_count", "points", "reputation"];
+    
+    if (!validTables.includes(table_name) || !validColumns.includes(column_name)) {
       return new Response(
-        JSON.stringify({ error: "Invalid parameters" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+        JSON.stringify({ 
+          error: "Invalid table or column name" 
+        }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        }
       );
     }
 
-    // Execute the increment operation
-    const { data, error } = await supabaseClient
-      .from(table_name)
-      .update({ [column_name]: supabaseClient.sql(`${column_name} + ${increment_amount}`) })
-      .eq('id', row_id)
-      .select();
+    // Use parameterized query to safely increment value
+    const { data, error } = await supabaseClient.rpc(
+      'increment_column_value',
+      { 
+        p_table_name: table_name, 
+        p_column_name: column_name, 
+        p_row_id: row_id, 
+        p_increment: increment_amount 
+      }
+    );
 
     if (error) throw error;
 
     return new Response(
       JSON.stringify({ success: true, data }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+      { 
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      }
     );
   } catch (error) {
     return new Response(
       JSON.stringify({ error: error.message }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      { 
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      }
     );
   }
-})
+});

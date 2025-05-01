@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useRef, useState } from 'react';
@@ -394,7 +393,7 @@ const Map = ({ vibes: initialVibes = [], initialCenter = [-74.006, 40.7128], rad
             color
           )
         `)
-        .eq('id', id)
+        .eq('id', safeParseInt(id))  // Convert id to number safely
         .single();
       
       if (error) throw error;
