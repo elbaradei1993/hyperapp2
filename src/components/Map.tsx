@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useRef, useState } from 'react';
@@ -9,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 interface Vibe {
-  id: string;
+  id: string; // Change to string to match Supabase UUID
   lat: number;
   lng: number;
   type: string;
@@ -146,7 +145,7 @@ const Map = ({ vibes: initialVibes = [], initialCenter = [-74.006, 40.7128], rad
       if (vibeReports) {
         // Transform to our Vibe interface
         const formattedVibes = vibeReports.map(report => ({
-          id: report.id,
+          id: report.id.toString(), // Ensure ID is a string
           lat: parseFloat(report.latitude),
           lng: parseFloat(report.longitude),
           type: report.vibe_type?.name || "unknown",
@@ -401,7 +400,7 @@ const Map = ({ vibes: initialVibes = [], initialCenter = [-74.006, 40.7128], rad
       
       if (data) {
         const newVibe: Vibe = {
-          id: data.id,
+          id: data.id.toString(), // Ensure ID is a string
           lat: parseFloat(data.latitude),
           lng: parseFloat(data.longitude),
           type: data.vibe_type?.name || "unknown",

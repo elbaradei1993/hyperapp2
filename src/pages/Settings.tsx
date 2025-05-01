@@ -116,12 +116,14 @@ const Settings = () => {
             throw error;
           }
           
-          if (data?.settings) {
+          if (data && data.settings) {
+            // Now that we've added the settings column, we can safely access it
+            const userSettings = data.settings as UserSettings;
             setSettings({
-              language: data.settings.language || "en",
-              radius: data.settings.radius || 10,
-              darkTheme: data.settings.darkTheme !== undefined ? data.settings.darkTheme : true,
-              notifications: data.settings.notifications !== undefined ? data.settings.notifications : true
+              language: userSettings.language || "en",
+              radius: userSettings.radius || 10,
+              darkTheme: userSettings.darkTheme !== undefined ? userSettings.darkTheme : true,
+              notifications: userSettings.notifications !== undefined ? userSettings.notifications : true
             });
           }
         } else {

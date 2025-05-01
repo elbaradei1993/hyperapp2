@@ -99,6 +99,7 @@ export type Database = {
           points: number | null
           profile_picture: string | null
           reputation: number | null
+          settings: Json | null
           updated_at: string | null
           username: string | null
         }
@@ -113,6 +114,7 @@ export type Database = {
           points?: number | null
           profile_picture?: string | null
           reputation?: number | null
+          settings?: Json | null
           updated_at?: string | null
           username?: string | null
         }
@@ -127,6 +129,7 @@ export type Database = {
           points?: number | null
           profile_picture?: string | null
           reputation?: number | null
+          settings?: Json | null
           updated_at?: string | null
           username?: string | null
         }
@@ -149,6 +152,42 @@ export type Database = {
           created_at?: string | null
           id?: string
           query?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      sos_alerts: {
+        Row: {
+          created_at: string
+          id: string
+          is_anonymous: boolean
+          latitude: string
+          longitude: string
+          resolved_at: string | null
+          status: string
+          type: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_anonymous?: boolean
+          latitude: string
+          longitude: string
+          resolved_at?: string | null
+          status?: string
+          type: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_anonymous?: boolean
+          latitude?: string
+          longitude?: string
+          resolved_at?: string | null
+          status?: string
+          type?: string
           user_id?: string | null
         }
         Relationships: []

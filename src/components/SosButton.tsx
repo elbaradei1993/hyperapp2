@@ -1,4 +1,3 @@
-
 "use client";
 import React, { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -94,17 +93,15 @@ const SosButton = () => {
       // Create the SOS alert in Supabase
       const { error } = await supabase
         .from('sos_alerts')
-        .insert([
-          {
-            type: alertType,
-            is_anonymous: anonymous,
-            user_id: anonymous ? null : userId,
-            latitude: location.lat.toString(),
-            longitude: location.lng.toString(),
-            status: 'active',
-            resolved_at: null
-          }
-        ]);
+        .insert({
+          type: alertType,
+          is_anonymous: anonymous,
+          user_id: anonymous ? null : userId,
+          latitude: location.lat.toString(),
+          longitude: location.lng.toString(),
+          status: 'active',
+          resolved_at: null
+        });
 
       if (error) throw error;
 

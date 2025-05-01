@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -11,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 
 interface TrendingVibe {
-  id: string;
+  id: string; // Changed to string to match Supabase UUID
   title: string;
   description: string;
   location: string;
@@ -68,7 +67,7 @@ const Trending = () => {
             const timeAgo = getTimeAgo(new Date(vibe.created_at));
             
             return {
-              id: vibe.id,
+              id: vibe.id.toString(), // Ensure ID is a string
               title: vibe.title || "Untitled Vibe",
               description: vibe.description || "No description provided",
               location: location,
@@ -109,7 +108,7 @@ const Trending = () => {
         table: 'vibe_reports' 
       }, (payload) => {
         // Fetch the complete data for the new vibe with joins
-        fetchNewVibe(payload.new.id);
+        fetchNewVibe(payload.new.id.toString());
       })
       .subscribe();
     
@@ -143,8 +142,8 @@ const Trending = () => {
     }
     
     if (data) {
-      const newVibe = {
-        id: data.id,
+      const newVibe: TrendingVibe = {
+        id: data.id.toString(),
         title: data.title || "Untitled Vibe",
         description: data.description || "No description provided",
         location: `${data.latitude.substring(0, 6)}, ${data.longitude.substring(0, 6)}`,
@@ -174,12 +173,23 @@ const Trending = () => {
     try {
       if (voteType === 'up') {
         // Increment the confirmed count
-        const { error } = await supabase
-          .from('vibe_reports')
-          .update({ confirmed_count: supabase.rpc('increment', { inc: 1 }) })
-          .eq('id', id);
+        const { error } = await supabase.rpc('increment', { 
+          row_id: parseInt(id), 
+          table_name: 'vibe_reports', 
+          column_name: 'confirmed_count', 
+          increment_amount: 1 
+        });
         
-        if (error) throw error;
+        if (error) {
+          console.error("Error with RPC call:", error);
+          // Fallback direct update if RPC isn't available
+          const { error: updateError } = await supabase
+            .from('vibe_reports')
+            .update({ confirmed_count: supabase.sql(`confirmed_count + 1`) })
+            .eq('id', id);
+            
+          if (updateError) throw updateError;
+        }
         
         // Update local state optimistically
         setTrendingVibes(prev => 
@@ -230,9 +240,9 @@ const Trending = () => {
   // Function to get vibe color based on type
   const getVibeColor = (color: string) => {
     return {
-      backgroundColor: `${color}20`, // 20% opacity
+      backgroundColor: `${color}20`,
       color: color,
-      borderColor: `${color}40`  // 40% opacity
+      borderColor: `${color}40`
     };
   };
 
