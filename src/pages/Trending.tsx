@@ -144,7 +144,7 @@ const Trending = () => {
     
     if (data) {
       const newVibe: TrendingVibe = {
-        id: data.id.toString(),
+        id: safeToString(data.id),
         title: data.title || "Untitled Vibe",
         description: data.description || "No description provided",
         location: `${data.latitude.substring(0, 6)}, ${data.longitude.substring(0, 6)}`,

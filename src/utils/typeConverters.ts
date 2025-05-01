@@ -25,3 +25,11 @@ export const safeToString = (value: string | number | null | undefined): string 
 export const isJsonObject = (value: unknown): value is Record<string, unknown> => {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 };
+
+/**
+ * Convert any value to a Json compatible type for Supabase
+ * This is useful when saving settings or other complex objects to Supabase
+ */
+export const toJson = (value: unknown): any => {
+  return value;
+};

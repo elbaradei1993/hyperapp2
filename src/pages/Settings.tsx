@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -11,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toJson, isJsonObject } from "@/utils/typeConverters";
 
 // Language translations
 const translations = {
@@ -117,18 +117,9 @@ const Settings = () => {
           }
           
           if (data && data.settings) {
-            // Cast and safely access settings
-            const userSettingsData = data.settings as unknown;
             // Type guard to check if it's the right structure
-            if (
-              userSettingsData && 
-              typeof userSettingsData === 'object' && 
-              'language' in userSettingsData && 
-              'radius' in userSettingsData && 
-              'darkTheme' in userSettingsData && 
-              'notifications' in userSettingsData
-            ) {
-              const userSettings = userSettingsData as UserSettings;
+            if (isJsonObject(data.settings)) {
+              const userSettings = data.settings as unknown as UserSettings;
               setSettings({
                 language: userSettings.language || "en",
                 radius: userSettings.radius || 10,
@@ -197,7 +188,7 @@ const Settings = () => {
         const { error } = await supabase
           .from('profiles')
           .update({ 
-            settings: settings as unknown as Record<string, unknown>,
+            settings: toJson(settings),
             updated_at: new Date().toISOString()
           })
           .eq('id', session.user.id);
