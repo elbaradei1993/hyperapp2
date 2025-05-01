@@ -188,15 +188,22 @@ const Trending = () => {
           console.error("Error with edge function:", error);
           
           // Fallback direct update if edge function fails
-          await supabase
+          // First get the current value
+          const { data: currentVibe } = await supabase
             .from('vibe_reports')
-            .update({ confirmed_count: supabase.rpc('increment_column', {
-              p_table_name: 'vibe_reports',
-              p_column_name: 'confirmed_count',
-              p_row_id: safeParseInt(id),
-              p_increment_amount: 1
-            }) })
-            .eq('id', safeParseInt(id));
+            .select('confirmed_count')
+            .eq('id', safeParseInt(id))
+            .single();
+            
+          if (currentVibe) {
+            // Then update with the new value
+            await supabase
+              .from('vibe_reports')
+              .update({ 
+                confirmed_count: (currentVibe.confirmed_count || 0) + 1 
+              })
+              .eq('id', safeParseInt(id));
+          }
         }
         
         // Update local state optimistically
