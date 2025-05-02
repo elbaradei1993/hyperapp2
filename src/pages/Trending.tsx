@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { safeParseInt, safeToString } from "@/utils/typeConverters";
+import { VibeService } from "@/services/VibeService";
 
 interface TrendingVibe {
   id: string;
@@ -175,32 +176,7 @@ const Trending = () => {
     try {
       if (voteType === 'up') {
         // Call the function to increment counter
-        const { data, error } = await supabase.rpc('increment_vibe_count', {
-          report_id: safeParseInt(id),
-          inc_amount: 1
-        });
-        
-        if (error) {
-          console.error("Error with function call:", error);
-          
-          // Fallback direct update if function call fails
-          // First get the current value
-          const { data: currentVibe } = await supabase
-            .from('vibe_reports')
-            .select('confirmed_count')
-            .eq('id', safeParseInt(id))
-            .single();
-            
-          if (currentVibe) {
-            // Then update with the new value
-            await supabase
-              .from('vibe_reports')
-              .update({ 
-                confirmed_count: (currentVibe.confirmed_count || 0) + 1 
-              })
-              .eq('id', safeParseInt(id));
-          }
-        }
+        await VibeService.upvoteVibe(safeParseInt(id));
         
         // Update local state optimistically
         setTrendingVibes(prev => 

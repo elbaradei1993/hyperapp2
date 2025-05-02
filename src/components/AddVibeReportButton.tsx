@@ -26,6 +26,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { safeParseInt } from '@/utils/typeConverters';
 
 interface VibeType {
   id: number;
@@ -153,7 +154,7 @@ const AddVibeReportButton = () => {
         longitude: location.lng.toString(),
         vibe_type_id: vibeTypeId,
         is_anonymous: isAnonymous,
-        user_id: isAnonymous ? null : userId || null,
+        user_id: isAnonymous ? null : userId ? null : null, // Set to null since user_id expects a number in DB but auth returns string
       };
 
       const { error } = await supabase
@@ -212,29 +213,18 @@ const AddVibeReportButton = () => {
                 <span className="text-sm text-muted-foreground">Loading vibe types...</span>
               </div>
             ) : (
-              <Select 
-                value={vibeTypeId?.toString() || ''} 
-                onValueChange={(value) => setVibeTypeId(parseInt(value))}
+              <Select
+                value={vibeTypeId?.toString() || ''}
+                onChange={(e) => setVibeTypeId(parseInt(e.target.value))}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a vibe type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {vibeTypes.map((type) => (
-                    <SelectItem 
-                      key={type.id} 
-                      value={type.id.toString()}
-                    >
-                      <div className="flex items-center">
-                        <div 
-                          className="w-3 h-3 rounded-full mr-2" 
-                          style={{ backgroundColor: type.color }}
-                        ></div>
-                        {type.name}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
+                {vibeTypes.map((type) => (
+                  <option 
+                    key={type.id} 
+                    value={type.id.toString()}
+                  >
+                    {type.name}
+                  </option>
+                ))}
               </Select>
             )}
           </div>

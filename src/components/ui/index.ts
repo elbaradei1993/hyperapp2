@@ -18,7 +18,16 @@ import {
 import { Input } from "./input";
 import { Label } from "./label";
 import { RadioGroup, RadioGroupItem } from "./radio-group";
-import { Select } from "./select";
+import { 
+  Select,
+  SelectGroup,
+  SelectValue,
+  SelectTrigger,
+  SelectContent,
+  SelectLabel,
+  SelectItem,
+  SelectSeparator
+} from "./select";
 import { Slider } from "./slider";
 import { Switch } from "./switch";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "./tabs";
@@ -45,6 +54,13 @@ export {
   RadioGroup,
   RadioGroupItem,
   Select,
+  SelectGroup,
+  SelectValue,
+  SelectTrigger,
+  SelectContent,
+  SelectLabel,
+  SelectItem,
+  SelectSeparator,
   Slider,
   Switch,
   Tabs,
