@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -10,51 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { toJson, isJsonObject } from "@/utils/typeConverters";
-
-// Language translations
-const translations = {
-  en: {
-    settings: "Settings",
-    language: "Language",
-    radius: "Radius (KM)",
-    darkTheme: "Dark Theme",
-    notifications: "Notifications",
-    save: "Save Changes",
-    saved: "Settings saved successfully!",
-    error: "Failed to save settings"
-  },
-  es: {
-    settings: "Configuración",
-    language: "Idioma",
-    radius: "Radio (KM)",
-    darkTheme: "Tema Oscuro",
-    notifications: "Notificaciones",
-    save: "Guardar Cambios",
-    saved: "¡Configuración guardada con éxito!",
-    error: "Error al guardar la configuración"
-  },
-  fr: {
-    settings: "Paramètres",
-    language: "Langue",
-    radius: "Rayon (KM)",
-    darkTheme: "Thème Sombre",
-    notifications: "Notifications",
-    save: "Enregistrer",
-    saved: "Paramètres enregistrés avec succès!",
-    error: "Échec de l'enregistrement des paramètres"
-  },
-  ar: {
-    settings: "الإعدادات",
-    language: "اللغة",
-    radius: "نطاق (كم)",
-    darkTheme: "مظهر داكن",
-    notifications: "الإشعارات",
-    save: "حفظ التغييرات",
-    saved: "تم حفظ الإعدادات بنجاح!",
-    error: "فشل في حفظ الإعدادات"
-  }
-};
+import { toJson } from "@/utils/typeConverters";
+import { useLanguage, LanguageType } from "@/contexts/LanguageContext";
 
 const languages = [
   { value: "en", label: "English" },
@@ -64,7 +22,7 @@ const languages = [
 ];
 
 interface UserSettings {
-  language: string;
+  language: LanguageType;
   radius: number;
   darkTheme: boolean;
   notifications: boolean;
@@ -72,29 +30,24 @@ interface UserSettings {
 
 const Settings = () => {
   const { toast } = useToast();
+  const { language: currentLanguage, setLanguage, t } = useLanguage();
   const [settings, setSettings] = useState<UserSettings>({
-    language: "en",
+    language: currentLanguage as LanguageType,
     radius: 10,
     darkTheme: true,
     notifications: true
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  
-  // Current translations based on selected language
-  const t = translations[settings.language as keyof typeof translations];
 
   useEffect(() => {
-    // Apply RTL or LTR text direction based on language
-    document.documentElement.dir = settings.language === "ar" ? "rtl" : "ltr";
-    
     // Apply dark mode
     if (settings.darkTheme) {
       document.documentElement.classList.add("dark");
     } else {
       document.documentElement.classList.remove("dark");
     }
-  }, [settings.language, settings.darkTheme]);
+  }, [settings.darkTheme]);
 
   useEffect(() => {
     const fetchUserSettings = async () => {
@@ -117,22 +70,25 @@ const Settings = () => {
           }
           
           if (data && data.settings) {
-            // Type guard to check if it's the right structure
-            if (isJsonObject(data.settings)) {
-              const userSettings = data.settings as unknown as UserSettings;
-              setSettings({
-                language: userSettings.language || "en",
-                radius: userSettings.radius || 10,
-                darkTheme: userSettings.darkTheme !== undefined ? userSettings.darkTheme : true,
-                notifications: userSettings.notifications !== undefined ? userSettings.notifications : true
-              });
-            }
+            // Update the settings state with db values
+            setSettings({
+              language: (data.settings.language as LanguageType) || "en",
+              radius: data.settings.radius || 10,
+              darkTheme: data.settings.darkTheme !== undefined ? data.settings.darkTheme : true,
+              notifications: data.settings.notifications !== undefined ? data.settings.notifications : true
+            });
           }
         } else {
           // Load from localStorage if user is not logged in
           const savedSettings = localStorage.getItem('user_settings');
           if (savedSettings) {
-            setSettings(JSON.parse(savedSettings));
+            const parsedSettings = JSON.parse(savedSettings);
+            setSettings({
+              language: (parsedSettings.language as LanguageType) || "en",
+              radius: parsedSettings.radius || 10,
+              darkTheme: parsedSettings.darkTheme !== undefined ? parsedSettings.darkTheme : true,
+              notifications: parsedSettings.notifications !== undefined ? parsedSettings.notifications : true
+            });
           }
         }
       } catch (error) {
@@ -146,10 +102,13 @@ const Settings = () => {
   }, []);
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newLanguage = e.target.value as LanguageType;
     setSettings({
       ...settings,
-      language: e.target.value
+      language: newLanguage
     });
+    // Update the global language context immediately
+    setLanguage(newLanguage);
   };
 
   const handleRadiusChange = (value: number[]) => {
@@ -197,13 +156,13 @@ const Settings = () => {
       }
       
       toast({
-        title: t.saved,
+        title: t('saved'),
         duration: 3000,
       });
     } catch (error) {
       console.error("Error saving settings:", error);
       toast({
-        title: t.error,
+        title: t('error'),
         variant: "destructive",
       });
     } finally {
@@ -221,11 +180,11 @@ const Settings = () => {
 
   return (
     <div className={`max-w-md mx-auto p-4 min-h-screen pb-16 space-y-8 ${settings.language === 'ar' ? 'text-right' : 'text-left'}`}>
-      <h1 className="text-3xl font-bold mb-6">{t.settings}</h1>
+      <h1 className="text-3xl font-bold mb-6">{t('settings')}</h1>
 
       <div className="space-y-8">
         <div className="space-y-2">
-          <Label htmlFor="language">{t.language}</Label>
+          <Label htmlFor="language">{t('language')}</Label>
           <Select
             id="language"
             value={settings.language}
@@ -241,7 +200,7 @@ const Settings = () => {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="radius">{t.radius}: {settings.radius}</Label>
+          <Label htmlFor="radius">{t('radius')}: {settings.radius}</Label>
           <Slider
             id="radius"
             min={5}
@@ -260,7 +219,7 @@ const Settings = () => {
             onCheckedChange={handleThemeChange} 
           />
           <Label htmlFor="theme" className="select-none">
-            {t.darkTheme}
+            {t('darkTheme')}
           </Label>
         </div>
         
@@ -271,7 +230,7 @@ const Settings = () => {
             onCheckedChange={handleNotificationsChange} 
           />
           <Label htmlFor="notifications" className="select-none">
-            {t.notifications}
+            {t('notifications')}
           </Label>
         </div>
         
@@ -281,7 +240,7 @@ const Settings = () => {
           className="w-full"
         >
           {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
-          {t.save}
+          {t('save')}
         </Button>
       </div>
       
