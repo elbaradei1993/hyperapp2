@@ -115,14 +115,14 @@ export const VibeService = {
    */
   confirmVibeReport: async (id: number): Promise<VibeReport | null> => {
     // First call the RPC function to increment the counter
-    const incrementResult = await supabase.rpc('increment_vibe_count', {
+    const { error: incrementError } = await supabase.rpc('increment_vibe_count', {
       report_id: id,
       inc_amount: 1
     });
     
-    if (incrementResult.error) {
-      console.error("Error incrementing vibe count:", incrementResult.error);
-      throw incrementResult.error;
+    if (incrementError) {
+      console.error("Error incrementing vibe count:", incrementError);
+      throw incrementError;
     }
 
     // Then fetch the updated record
