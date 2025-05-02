@@ -138,7 +138,7 @@ const EventCard = ({ event }: { event: EventResponse }) => {
         </div>
         <div className="flex items-center text-muted-foreground text-sm">
           <Calendar className="h-3 w-3 mr-1" />
-          <span className="line-clamp-1">{formatDate(event.start_date)}</span>
+          <span className="line-clamp-1">{formatDate(event.start_date_time)}</span>
         </div>
       </CardHeader>
       <CardContent className="p-4 pt-2">

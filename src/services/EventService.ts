@@ -47,6 +47,8 @@ export const EventService = {
     // Ensure the data structure matches the database schema
     const eventRecord = {
       ...eventData,
+      // Map organization_id to organizer_id which is what database uses
+      organizer_id: eventData.organization_id,
       // No need to convert dates as they're already expected as strings
     };
     
@@ -67,7 +69,7 @@ export const EventService = {
     const { data, error } = await supabase
       .from('events')
       .select('*')
-      .eq('status', 'active')
+      .eq('is_featured', false) // Assuming we only want non-featured events
       .order('start_date_time')
       .limit(limit);
       
@@ -75,7 +77,7 @@ export const EventService = {
     
     // Convert database response to EventResponse type
     return (data || []).map(item => ({
-      id: item.id,
+      id: item.id.toString(), // Convert to string to match our interface
       title: item.title,
       description: item.description,
       location: item.address || '', // Use address as location if needed
@@ -84,15 +86,15 @@ export const EventService = {
       longitude: item.longitude,
       start_date_time: item.start_date_time,
       end_date_time: item.end_date_time,
-      image_url: item.image_url,
-      organization_id: item.organization_id,
+      image_url: item.poster_url, // Map poster_url to image_url
+      organization_id: item.organizer_id ? item.organizer_id.toString() : null, // Map organizer_id to organization_id
       created_at: item.created_at,
-      updated_at: item.updated_at,
-      is_public: item.is_public || false,
+      updated_at: null, // Our DB doesn't seem to have updated_at
+      is_public: !item.is_paid, // Assuming paid events are not public
       vibe_type_id: item.vibe_type_id,
       max_attendees: item.max_attendees,
-      current_attendees: item.current_attendees || 0,
-      status: item.status || 'active'
+      current_attendees: 0, // Default value since DB might not have this field
+      status: 'active' // Default value since DB might not have this field
     }));
   },
   
@@ -103,7 +105,7 @@ export const EventService = {
     const { data, error } = await supabase
       .from('events')
       .select('*')
-      .eq('id', id)
+      .eq('id', parseInt(id, 10))
       .maybeSingle();
       
     if (error) throw error;
@@ -112,7 +114,7 @@ export const EventService = {
     
     // Convert database response to EventResponse type
     return {
-      id: data.id,
+      id: data.id.toString(),
       title: data.title,
       description: data.description,
       location: data.address || '',
@@ -121,15 +123,15 @@ export const EventService = {
       longitude: data.longitude,
       start_date_time: data.start_date_time,
       end_date_time: data.end_date_time,
-      image_url: data.image_url,
-      organization_id: data.organization_id,
+      image_url: data.poster_url, // Map poster_url to image_url
+      organization_id: data.organizer_id ? data.organizer_id.toString() : null, // Map organizer_id to organization_id
       created_at: data.created_at,
-      updated_at: data.updated_at,
-      is_public: data.is_public || false,
+      updated_at: null, // Our DB doesn't seem to have updated_at
+      is_public: !data.is_paid, // Assuming paid events are not public
       vibe_type_id: data.vibe_type_id,
       max_attendees: data.max_attendees,
-      current_attendees: data.current_attendees || 0,
-      status: data.status || 'active'
+      current_attendees: 0, // Default value since DB might not have this field
+      status: 'active' // Default value since DB might not have this field
     };
   },
   
@@ -140,14 +142,14 @@ export const EventService = {
     const { data, error } = await supabase
       .from('events')
       .select('*')
-      .eq('organization_id', organizationId)
+      .eq('organizer_id', parseInt(organizationId, 10))
       .order('created_at', { ascending: false });
       
     if (error) throw error;
     
     // Convert database response to EventResponse type
     return (data || []).map(item => ({
-      id: item.id,
+      id: item.id.toString(),
       title: item.title,
       description: item.description,
       location: item.address || '',
@@ -156,15 +158,15 @@ export const EventService = {
       longitude: item.longitude,
       start_date_time: item.start_date_time,
       end_date_time: item.end_date_time,
-      image_url: item.image_url,
-      organization_id: item.organization_id,
+      image_url: item.poster_url, // Map poster_url to image_url
+      organization_id: item.organizer_id ? item.organizer_id.toString() : null, // Map organizer_id to organization_id
       created_at: item.created_at,
-      updated_at: item.updated_at,
-      is_public: item.is_public || false,
+      updated_at: null, // Our DB doesn't seem to have updated_at
+      is_public: !item.is_paid, // Assuming paid events are not public
       vibe_type_id: item.vibe_type_id,
       max_attendees: item.max_attendees,
-      current_attendees: item.current_attendees || 0,
-      status: item.status || 'active'
+      current_attendees: 0, // Default value since DB might not have this field
+      status: 'active' // Default value since DB might not have this field
     }));
   },
   
@@ -172,100 +174,64 @@ export const EventService = {
    * Register user for event
    */
   registerForEvent: async (eventId: string, userId: string) => {
-    // Using raw SQL through rpc since event_attendees may not be in the types
-    const { data, error } = await supabase
-      .rpc('register_for_event', {
-        p_event_id: eventId,
-        p_user_id: userId
-      }) as any;
+    try {
+      const { data, error } = await supabase
+        .from('event_attendees')
+        .insert({
+          event_id: parseInt(eventId, 10),
+          user_id: parseInt(userId, 10)
+        })
+        .select()
+        .single();
       
-    if (error) {
-      // Fallback if the RPC function doesn't exist
-      try {
-        const { data: insertData, error: insertError } = await supabase
-          .from('event_attendees')
-          .insert({
-            event_id: eventId,
-            user_id: userId
-          })
-          .select()
-          .single();
-        
-        if (insertError) throw insertError;
-        return insertData;
-      } catch (fallbackError) {
-        console.error("Error registering for event:", fallbackError);
-        throw fallbackError;
-      }
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error("Error registering for event:", error);
+      throw error;
     }
-    
-    return data;
   },
   
   /**
    * Unregister user from event
    */
   unregisterFromEvent: async (eventId: string, userId: string) => {
-    // Using raw SQL through rpc since event_attendees may not be in the types
-    const { data, error } = await supabase
-      .rpc('unregister_from_event', {
-        p_event_id: eventId,
-        p_user_id: userId
-      }) as any;
+    try {
+      const { error } = await supabase
+        .from('event_attendees')
+        .delete()
+        .match({
+          event_id: parseInt(eventId, 10),
+          user_id: parseInt(userId, 10)
+        });
       
-    if (error) {
-      // Fallback if the RPC function doesn't exist
-      try {
-        const { error: deleteError } = await supabase
-          .from('event_attendees')
-          .delete()
-          .match({
-            event_id: eventId,
-            user_id: userId
-          });
-        
-        if (deleteError) throw deleteError;
-        return true;
-      } catch (fallbackError) {
-        console.error("Error unregistering from event:", fallbackError);
-        throw fallbackError;
-      }
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error("Error unregistering from event:", error);
+      throw error;
     }
-    
-    return true;
   },
   
   /**
    * Check if user is registered for event
    */
   isUserRegistered: async (eventId: string, userId: string): Promise<boolean> => {
-    // Using raw SQL through rpc since event_attendees may not be in the types
-    const { data, error } = await supabase
-      .rpc('is_user_registered_for_event', {
-        p_event_id: eventId,
-        p_user_id: userId
-      }) as any;
+    try {
+      const { data, error } = await supabase
+        .from('event_attendees')
+        .select('id')
+        .match({
+          event_id: parseInt(eventId, 10),
+          user_id: parseInt(userId, 10)
+        })
+        .maybeSingle();
       
-    if (error) {
-      // Fallback if the RPC function doesn't exist
-      try {
-        const { data: attendeeData, error: attendeeError } = await supabase
-          .from('event_attendees')
-          .select('id')
-          .match({
-            event_id: eventId,
-            user_id: userId
-          })
-          .maybeSingle();
-        
-        if (attendeeError) throw attendeeError;
-        return attendeeData !== null;
-      } catch (fallbackError) {
-        console.error("Error checking registration:", fallbackError);
-        throw fallbackError;
-      }
+      if (error) throw error;
+      return data !== null;
+    } catch (error) {
+      console.error("Error checking registration:", error);
+      throw error;
     }
-    
-    return Boolean(data);
   }
 };
