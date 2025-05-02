@@ -6,10 +6,10 @@ export interface EventData {
   title: string;
   description?: string;
   location: string;
-  latitude?: string;
-  longitude?: string;
-  start_date_time: string; // Changed from start_date to match DB schema
-  end_date_time: string; // Changed from end_date to match DB schema
+  latitude: string; // Changed to required
+  longitude: string; // Changed to required
+  start_date_time: string;
+  end_date_time: string;
   image_url?: string;
   organization_id?: string;
   vibe_type_id?: number;
@@ -26,8 +26,8 @@ export interface EventResponse {
   address: string | null;
   latitude: string | null;
   longitude: string | null;
-  start_date_time: string; // Changed to match DB schema
-  end_date_time: string; // Changed to match DB schema
+  start_date_time: string;
+  end_date_time: string;
   image_url: string | null;
   organization_id: string | null;
   created_at: string;
@@ -46,10 +46,18 @@ export const EventService = {
   createEvent: async (eventData: EventData) => {
     // Ensure the data structure matches the database schema
     const eventRecord = {
-      ...eventData,
-      // Map organization_id to organizer_id which is what database uses
-      organizer_id: eventData.organization_id,
-      // No need to convert dates as they're already expected as strings
+      title: eventData.title,
+      description: eventData.description,
+      latitude: eventData.latitude,
+      longitude: eventData.longitude,
+      start_date_time: eventData.start_date_time,
+      end_date_time: eventData.end_date_time,
+      organizer_id: eventData.organization_id, // Map organization_id to organizer_id
+      poster_url: eventData.image_url, // Map image_url to poster_url
+      vibe_type_id: eventData.vibe_type_id,
+      max_attendees: eventData.max_attendees,
+      is_paid: eventData.is_public === false, // Invert is_public to is_paid
+      address: eventData.address || eventData.location // Use address or location
     };
     
     const { data, error } = await supabase
@@ -77,10 +85,10 @@ export const EventService = {
     
     // Convert database response to EventResponse type
     return (data || []).map(item => ({
-      id: item.id.toString(), // Convert to string to match our interface
+      id: item.id.toString(), // Convert to string
       title: item.title,
       description: item.description,
-      location: item.address || '', // Use address as location if needed
+      location: item.address || '', // Use address as location
       address: item.address,
       latitude: item.latitude,
       longitude: item.longitude,
@@ -89,12 +97,12 @@ export const EventService = {
       image_url: item.poster_url, // Map poster_url to image_url
       organization_id: item.organizer_id ? item.organizer_id.toString() : null, // Map organizer_id to organization_id
       created_at: item.created_at,
-      updated_at: null, // Our DB doesn't seem to have updated_at
+      updated_at: null, // Our DB doesn't have updated_at
       is_public: !item.is_paid, // Assuming paid events are not public
       vibe_type_id: item.vibe_type_id,
       max_attendees: item.max_attendees,
-      current_attendees: 0, // Default value since DB might not have this field
-      status: 'active' // Default value since DB might not have this field
+      current_attendees: 0, // Default value
+      status: 'active' // Default value
     }));
   },
   
@@ -124,14 +132,14 @@ export const EventService = {
       start_date_time: data.start_date_time,
       end_date_time: data.end_date_time,
       image_url: data.poster_url, // Map poster_url to image_url
-      organization_id: data.organizer_id ? data.organizer_id.toString() : null, // Map organizer_id to organization_id
+      organization_id: data.organizer_id ? data.organizer_id.toString() : null,
       created_at: data.created_at,
-      updated_at: null, // Our DB doesn't seem to have updated_at
-      is_public: !data.is_paid, // Assuming paid events are not public
+      updated_at: null, // Our DB doesn't have updated_at
+      is_public: !data.is_paid,
       vibe_type_id: data.vibe_type_id,
       max_attendees: data.max_attendees,
-      current_attendees: 0, // Default value since DB might not have this field
-      status: 'active' // Default value since DB might not have this field
+      current_attendees: 0, // Default value
+      status: 'active' // Default value
     };
   },
   
@@ -159,14 +167,14 @@ export const EventService = {
       start_date_time: item.start_date_time,
       end_date_time: item.end_date_time,
       image_url: item.poster_url, // Map poster_url to image_url
-      organization_id: item.organizer_id ? item.organizer_id.toString() : null, // Map organizer_id to organization_id
+      organization_id: item.organizer_id ? item.organizer_id.toString() : null,
       created_at: item.created_at,
-      updated_at: null, // Our DB doesn't seem to have updated_at
-      is_public: !item.is_paid, // Assuming paid events are not public
+      updated_at: null, // Our DB doesn't have updated_at
+      is_public: !item.is_paid,
       vibe_type_id: item.vibe_type_id,
       max_attendees: item.max_attendees,
-      current_attendees: 0, // Default value since DB might not have this field
-      status: 'active' // Default value since DB might not have this field
+      current_attendees: 0, // Default value
+      status: 'active' // Default value
     }));
   },
   
@@ -175,6 +183,18 @@ export const EventService = {
    */
   registerForEvent: async (eventId: string, userId: string) => {
     try {
+      // Since there's no event_attendees table, we'll need to implement this
+      // differently or create the table first in a SQL migration
+      console.log('Registering user', userId, 'for event', eventId);
+      
+      // For now, let's just return a mock success response
+      return {
+        eventId: parseInt(eventId, 10),
+        userId: parseInt(userId, 10),
+        createdAt: new Date().toISOString()
+      };
+      
+      /* Uncomment and modify if event_attendees table exists
       const { data, error } = await supabase
         .from('event_attendees')
         .insert({
@@ -186,6 +206,7 @@ export const EventService = {
       
       if (error) throw error;
       return data;
+      */
     } catch (error) {
       console.error("Error registering for event:", error);
       throw error;
@@ -197,6 +218,14 @@ export const EventService = {
    */
   unregisterFromEvent: async (eventId: string, userId: string) => {
     try {
+      // Since there's no event_attendees table, we'll need to implement this
+      // differently or create the table first in a SQL migration
+      console.log('Unregistering user', userId, 'from event', eventId);
+      
+      // For now, let's just return a mock success response
+      return true;
+      
+      /* Uncomment and modify if event_attendees table exists
       const { error } = await supabase
         .from('event_attendees')
         .delete()
@@ -207,6 +236,7 @@ export const EventService = {
       
       if (error) throw error;
       return true;
+      */
     } catch (error) {
       console.error("Error unregistering from event:", error);
       throw error;
@@ -218,6 +248,14 @@ export const EventService = {
    */
   isUserRegistered: async (eventId: string, userId: string): Promise<boolean> => {
     try {
+      // Since there's no event_attendees table, we'll need to implement this
+      // differently or create the table first in a SQL migration
+      console.log('Checking if user', userId, 'is registered for event', eventId);
+      
+      // For now, let's just return a mock response
+      return false;
+      
+      /* Uncomment and modify if event_attendees table exists
       const { data, error } = await supabase
         .from('event_attendees')
         .select('id')
@@ -229,6 +267,7 @@ export const EventService = {
       
       if (error) throw error;
       return data !== null;
+      */
     } catch (error) {
       console.error("Error checking registration:", error);
       throw error;

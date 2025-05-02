@@ -35,8 +35,8 @@ const formSchema = z.object({
   title: z.string().min(2, { message: "Title must be at least 2 characters." }),
   description: z.string().optional(),
   location: z.string().min(2, { message: "Location is required." }),
-  latitude: z.string().optional(),
-  longitude: z.string().optional(),
+  latitude: z.string().min(1, { message: "Latitude is required." }).default("0"), // Default value
+  longitude: z.string().min(1, { message: "Longitude is required." }).default("0"), // Default value
   start_date: z.date({ required_error: "Start date is required." }),
   end_date: z.date({ required_error: "End date is required." }),
   vibe_type_id: z.number().optional(),
@@ -63,8 +63,8 @@ const EventCreate = () => {
       title: "",
       description: "",
       location: "",
-      latitude: "",
-      longitude: "",
+      latitude: "0", // Default value
+      longitude: "0", // Default value
       start_date: new Date(),
       end_date: new Date(),
       max_attendees: undefined,
@@ -155,10 +155,10 @@ const EventCreate = () => {
         title: data.title,
         description: data.description,
         location: data.location,
-        latitude: data.latitude,
-        longitude: data.longitude,
-        start_date_time: data.start_date.toISOString(), // Use start_date_time instead of start_date
-        end_date_time: data.end_date.toISOString(), // Use end_date_time instead of end_date
+        latitude: data.latitude, // Now required
+        longitude: data.longitude, // Now required
+        start_date_time: data.start_date.toISOString(),
+        end_date_time: data.end_date.toISOString(),
         vibe_type_id: data.vibe_type_id,
         max_attendees: data.max_attendees,
         is_public: data.is_public,
@@ -261,13 +261,32 @@ const EventCreate = () => {
                   </div>
                 )}
                 
-                <input
-                  type="hidden"
-                  {...form.register("latitude")}
+                <FormField
+                  control={form.control}
+                  name="latitude"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Latitude</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-                <input
-                  type="hidden"
-                  {...form.register("longitude")}
+                
+                <FormField
+                  control={form.control}
+                  name="longitude"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Longitude</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
               </div>
               

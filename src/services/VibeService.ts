@@ -1,15 +1,4 @@
-
 import { supabase } from '@/integrations/supabase/client';
-import { safeParseInt } from '@/utils/typeConverters';
-
-export interface VibeReport {
-  title: string;
-  description?: string | null;
-  latitude: string;
-  longitude: string;
-  vibe_type_id: number;
-  is_anonymous?: boolean;
-}
 
 export interface VibeType {
   id: number;
@@ -17,18 +6,18 @@ export interface VibeType {
   color: string;
 }
 
-export interface VibeData {
+export interface VibeReport {
   id: number;
   title: string | null;
   description: string | null;
   latitude: string;
   longitude: string;
-  created_at: string;
+  media_url: string | null;
+  vibe_type_id: number;
+  user_id: number | null;
+  is_anonymous: boolean;
+  created_at: string | null;
   confirmed_count: number;
-  vibe_type: {
-    name: string;
-    color: string;
-  };
 }
 
 export const VibeService = {
@@ -38,89 +27,139 @@ export const VibeService = {
   getVibeTypes: async (): Promise<VibeType[]> => {
     const { data, error } = await supabase
       .from('vibe_types')
-      .select('id, name, color')
+      .select('*')
       .order('name');
-      
-    if (error) throw error;
+
+    if (error) {
+      console.error("Error fetching vibe types:", error);
+      throw error;
+    }
+
+    return data || [];
+  },
+
+  /**
+   * Get vibe type by ID
+   */
+  getVibeTypeById: async (id: number): Promise<VibeType | null> => {
+    const { data, error } = await supabase
+      .from('vibe_types')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error("Error fetching vibe type:", error);
+      throw error;
+    }
+
+    return data || null;
+  },
+
+  /**
+   * Get all vibe reports
+   */
+  getVibeReports: async (): Promise<VibeReport[]> => {
+    const { data, error } = await supabase
+      .from('vibe_reports')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error("Error fetching vibe reports:", error);
+      throw error;
+    }
+
+    return data || [];
+  },
+
+  /**
+   * Get vibe reports by vibe type ID
+   */
+  getVibeReportsByVibeTypeId: async (vibe_type_id: number): Promise<VibeReport[]> => {
+    const { data, error } = await supabase
+      .from('vibe_reports')
+      .select('*')
+      .eq('vibe_type_id', vibe_type_id)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error("Error fetching vibe reports:", error);
+      throw error;
+    }
+
     return data || [];
   },
 
   /**
    * Create a new vibe report
    */
-  createVibeReport: async (vibeReport: VibeReport) => {
+  createVibeReport: async (vibeReport: Omit<VibeReport, 'id' | 'created_at' | 'confirmed_count'>): Promise<VibeReport> => {
     const { data, error } = await supabase
       .from('vibe_reports')
-      .insert(vibeReport)
-      .select('id')
+      .insert([vibeReport])
+      .select('*')
       .single();
-      
-    if (error) throw error;
-    return data;
-  },
 
-  /**
-   * Get trending vibes
-   */
-  getTrendingVibes: async (limit: number = 10): Promise<VibeData[]> => {
-    const { data, error } = await supabase
-      .from('vibe_reports')
-      .select(`
-        id,
-        title,
-        description,
-        latitude,
-        longitude,
-        created_at,
-        confirmed_count,
-        vibe_type: vibe_type_id (
-          name,
-          color
-        )
-      `)
-      .order('confirmed_count', { ascending: false })
-      .limit(limit);
-      
-    if (error) throw error;
-    return data || [];
-  },
-
-  /**
-   * Upvote a vibe report
-   */
-  upvoteVibe: async (vibeId: number | string) => {
-    // Convert string ID to number if necessary
-    const id = typeof vibeId === 'string' ? safeParseInt(vibeId) : vibeId;
-    
-    try {
-      // Define the parameters object for the RPC call
-      const params = { report_id: id };
-      
-      // Fix: Handle the TypeScript type issue by using function type assertion
-      const { error } = await supabase.rpc('increment_vibe_count' as any, params);
-      
-      if (error) {
-        // Fallback to direct update
-        const { data: currentVibe } = await supabase
-          .from('vibe_reports')
-          .select('confirmed_count')
-          .eq('id', id)
-          .single();
-          
-        if (currentVibe) {
-          await supabase
-            .from('vibe_reports')
-            .update({ 
-              confirmed_count: (currentVibe.confirmed_count || 0) + 1 
-            })
-            .eq('id', id);
-        }
-      }
-      
-      return true;
-    } catch (error) {
-      console.error("Error upvoting vibe:", error);
+    if (error) {
+      console.error("Error creating vibe report:", error);
       throw error;
     }
+
+    return data as VibeReport;
+  },
+
+  /**
+   * Confirm a vibe report
+   */
+  confirmVibeReport: async (id: number): Promise<VibeReport | null> => {
+    const { data, error } = await supabase
+      .from('vibe_reports')
+      .update({ confirmed_count: () => 'confirmed_count + 1' })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error confirming vibe report:", error);
+      throw error;
+    }
+
+    return data as VibeReport;
+  },
+
+  /**
+   * Delete a vibe report
+   */
+  deleteVibeReport: async (id: number): Promise<boolean> => {
+    const { error } = await supabase
+      .from('vibe_reports')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error("Error deleting vibe report:", error);
+      throw error;
+    }
+
+    return true;
+  },
+  
+  /**
+   * Get the most recent vibe reports
+   */
+  getMostRecentVibeReports: async (limit: number = 5): Promise<VibeReport[]> => {
+    const { data, error } = await supabase
+      .from('vibe_reports')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(limit);
+      
+    if (error) {
+      console.error("Error fetching vibe reports:", error);
+      throw error;
+    }
+    
+    return data || [];
   }
 };
