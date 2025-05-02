@@ -96,10 +96,9 @@ export const VibeService = {
       // Define the parameters object for the RPC call
       const params = { report_id: id };
       
-      // Fix: Call the RPC function with proper type handling
-      // Use the non-generic form of rpc which accepts a string function name
-      const { error } = await supabase.rpc(
-        'increment_vibe_count',
+      // Fix: Using type assertion to bypass TypeScript's type checking for the rpc function
+      const { error } = await (supabase.rpc as any)(
+        'increment_vibe_count', 
         params
       );
       
