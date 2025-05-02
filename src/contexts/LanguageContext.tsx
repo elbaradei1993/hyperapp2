@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { Json } from '@/integrations/supabase/types';
 
 // Define available languages
 export type LanguageType = 'en' | 'es' | 'fr' | 'ar';
@@ -204,10 +205,45 @@ const LanguageContext = createContext<LanguageContextProps>({
   t: () => ''
 });
 
+// Interface for user settings with typed properties
+interface UserSettings {
+  language: LanguageType;
+  radius: number;
+  darkTheme: boolean;
+  notifications: boolean;
+}
+
 // Create language provider
 interface LanguageProviderProps {
   children: ReactNode;
 }
+
+// Helper function to safely extract settings from Json
+const extractSettings = (settings: Json | null): UserSettings => {
+  const defaultSettings: UserSettings = {
+    language: 'en',
+    radius: 10,
+    darkTheme: true,
+    notifications: true
+  };
+  
+  if (!settings) return defaultSettings;
+  
+  // Handle if settings is a string, number, boolean, or array (invalid types for our purpose)
+  if (typeof settings !== 'object' || Array.isArray(settings)) {
+    return defaultSettings;
+  }
+  
+  // Now settings is a JSON object, we can safely access properties
+  const settingsObj = settings as Record<string, unknown>;
+  
+  return {
+    language: (settingsObj.language as LanguageType) || defaultSettings.language,
+    radius: typeof settingsObj.radius === 'number' ? settingsObj.radius : defaultSettings.radius,
+    darkTheme: typeof settingsObj.darkTheme === 'boolean' ? settingsObj.darkTheme : defaultSettings.darkTheme,
+    notifications: typeof settingsObj.notifications === 'boolean' ? settingsObj.notifications : defaultSettings.notifications
+  };
+};
 
 export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
   const [language, setLanguageState] = useState<LanguageType>('en');
@@ -237,9 +273,10 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
             .eq('id', session.user.id)
             .single();
 
-          if (data?.settings?.language) {
-            setLanguageState(data.settings.language as LanguageType);
-            document.documentElement.dir = data.settings.language === "ar" ? "rtl" : "ltr";
+          if (data?.settings) {
+            const userSettings = extractSettings(data.settings);
+            setLanguageState(userSettings.language);
+            document.documentElement.dir = userSettings.language === "ar" ? "rtl" : "ltr";
           }
         }
       } catch (error) {
@@ -273,14 +310,22 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
           .eq('id', session.user.id)
           .single();
         
-        const updatedSettings = { 
-          ...(data?.settings || {}), 
+        // Use extracted settings or empty object if none found
+        const currentSettings = data?.settings ? extractSettings(data.settings) : {
+          language: newLanguage,
+          radius: 10,
+          darkTheme: true,
+          notifications: true
+        };
+        
+        const updatedSettings = {
+          ...currentSettings,
           language: newLanguage 
         };
         
         await supabase
           .from('profiles')
-          .update({ settings: updatedSettings })
+          .update({ settings: updatedSettings as Json })
           .eq('id', session.user.id);
       }
     } catch (error) {

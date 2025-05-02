@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -11,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { toJson } from "@/utils/typeConverters";
+import { Json } from "@/integrations/supabase/types";
 import { useLanguage, LanguageType } from "@/contexts/LanguageContext";
 
 const languages = [
@@ -27,6 +26,33 @@ interface UserSettings {
   darkTheme: boolean;
   notifications: boolean;
 }
+
+// Helper function to safely extract settings from Json
+const extractSettings = (settings: Json | null): UserSettings => {
+  const defaultSettings: UserSettings = {
+    language: 'en' as LanguageType,
+    radius: 10,
+    darkTheme: true,
+    notifications: true
+  };
+  
+  if (!settings) return defaultSettings;
+  
+  // Handle if settings is a string, number, boolean, or array (invalid types)
+  if (typeof settings !== 'object' || Array.isArray(settings)) {
+    return defaultSettings;
+  }
+  
+  // Now settings is a JSON object, we can safely access properties
+  const settingsObj = settings as Record<string, unknown>;
+  
+  return {
+    language: (settingsObj.language as LanguageType) || defaultSettings.language,
+    radius: typeof settingsObj.radius === 'number' ? settingsObj.radius : defaultSettings.radius,
+    darkTheme: typeof settingsObj.darkTheme === 'boolean' ? settingsObj.darkTheme : defaultSettings.darkTheme,
+    notifications: typeof settingsObj.notifications === 'boolean' ? settingsObj.notifications : defaultSettings.notifications
+  };
+};
 
 const Settings = () => {
   const { toast } = useToast();
@@ -70,25 +96,24 @@ const Settings = () => {
           }
           
           if (data && data.settings) {
-            // Update the settings state with db values
-            setSettings({
-              language: (data.settings.language as LanguageType) || "en",
-              radius: data.settings.radius || 10,
-              darkTheme: data.settings.darkTheme !== undefined ? data.settings.darkTheme : true,
-              notifications: data.settings.notifications !== undefined ? data.settings.notifications : true
-            });
+            const userSettings = extractSettings(data.settings);
+            setSettings(userSettings);
           }
         } else {
           // Load from localStorage if user is not logged in
           const savedSettings = localStorage.getItem('user_settings');
           if (savedSettings) {
-            const parsedSettings = JSON.parse(savedSettings);
-            setSettings({
-              language: (parsedSettings.language as LanguageType) || "en",
-              radius: parsedSettings.radius || 10,
-              darkTheme: parsedSettings.darkTheme !== undefined ? parsedSettings.darkTheme : true,
-              notifications: parsedSettings.notifications !== undefined ? parsedSettings.notifications : true
-            });
+            try {
+              const parsedSettings = JSON.parse(savedSettings);
+              setSettings({
+                language: (parsedSettings.language as LanguageType) || 'en',
+                radius: parsedSettings.radius || 10,
+                darkTheme: parsedSettings.darkTheme !== undefined ? parsedSettings.darkTheme : true,
+                notifications: parsedSettings.notifications !== undefined ? parsedSettings.notifications : true
+              });
+            } catch (e) {
+              console.error("Error parsing stored settings:", e);
+            }
           }
         }
       } catch (error) {
@@ -147,7 +172,7 @@ const Settings = () => {
         const { error } = await supabase
           .from('profiles')
           .update({ 
-            settings: toJson(settings),
+            settings: settings as unknown as Json,
             updated_at: new Date().toISOString()
           })
           .eq('id', session.user.id);

@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -29,7 +28,6 @@ import { VibeService } from "@/services/VibeService";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Select } from "@/components/ui/select";
 import Map from "@/components/Map";
 
 // Form schema
@@ -152,8 +150,18 @@ const EventCreate = () => {
     setIsLoading(true);
     
     try {
+      // Convert dates to proper format for DB
       const eventData: EventData = {
-        ...data,
+        title: data.title,
+        description: data.description,
+        location: data.location,
+        latitude: data.latitude,
+        longitude: data.longitude,
+        start_date_time: data.start_date.toISOString(), // Use start_date_time instead of start_date
+        end_date_time: data.end_date.toISOString(), // Use end_date_time instead of end_date
+        vibe_type_id: data.vibe_type_id,
+        max_attendees: data.max_attendees,
+        is_public: data.is_public,
         organization_id: user.id,
       };
 
@@ -350,9 +358,10 @@ const EventCreate = () => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Vibe Type</FormLabel>
-                      <Select
+                      <select
                         value={field.value?.toString() || ""}
-                        onValueChange={(value) => field.onChange(parseInt(value) || undefined)}
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
+                        className="w-full p-2 border border-gray-300 rounded-md"
                       >
                         <option value="">Select vibe type</option>
                         {vibeTypes.map((type) => (
@@ -360,7 +369,7 @@ const EventCreate = () => {
                             {type.name}
                           </option>
                         ))}
-                      </Select>
+                      </select>
                       <FormDescription>Optional</FormDescription>
                       <FormMessage />
                     </FormItem>
