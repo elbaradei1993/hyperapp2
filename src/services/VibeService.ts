@@ -89,6 +89,7 @@ export const VibeService = {
    * Upvote a vibe report
    */
   upvoteVibe: async (vibeId: number | string) => {
+    // Convert string ID to number if necessary
     const id = typeof vibeId === 'string' ? safeParseInt(vibeId) : vibeId;
     
     try {
