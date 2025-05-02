@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 export interface VibeType {
@@ -126,6 +127,13 @@ export const VibeService = {
     }
 
     return data as VibeReport;
+  },
+
+  /**
+   * Upvote a vibe (alias for confirmVibeReport for readability)
+   */
+  upvoteVibe: async (id: number): Promise<VibeReport | null> => {
+    return VibeService.confirmVibeReport(id);
   },
 
   /**

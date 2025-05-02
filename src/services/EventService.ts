@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Json } from '@/integrations/supabase/types';
 
@@ -52,7 +51,7 @@ export const EventService = {
       longitude: eventData.longitude,
       start_date_time: eventData.start_date_time,
       end_date_time: eventData.end_date_time,
-      organizer_id: eventData.organization_id, // Map organization_id to organizer_id
+      organizer_id: parseInt(eventData.organization_id || '0', 10), // Convert string to number
       poster_url: eventData.image_url, // Map image_url to poster_url
       vibe_type_id: eventData.vibe_type_id,
       max_attendees: eventData.max_attendees,
