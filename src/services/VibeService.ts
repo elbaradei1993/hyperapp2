@@ -93,14 +93,11 @@ export const VibeService = {
     const id = typeof vibeId === 'string' ? safeParseInt(vibeId) : vibeId;
     
     try {
-      // Define a proper type for the RPC parameters
-      interface IncrementVibeCountParams {
-        report_id: number;
-      }
+      // Define the parameters object for the RPC call
+      const params = { report_id: id };
       
-      const params: IncrementVibeCountParams = { report_id: id };
-      
-      // Call the RPC function with proper typing - fixing the type parameter issue
+      // Call the RPC function without specifying generic types
+      // Let TypeScript infer the types automatically
       const { error } = await supabase.rpc(
         'increment_vibe_count',
         params
