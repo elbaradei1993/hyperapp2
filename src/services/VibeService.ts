@@ -95,8 +95,7 @@ export const VibeService = {
     try {
       // Try to use the RPC function
       const { error } = await supabase.rpc('increment_vibe_count', {
-        report_id: id,
-        inc_amount: 1
+        report_id: id
       });
       
       if (error) {
