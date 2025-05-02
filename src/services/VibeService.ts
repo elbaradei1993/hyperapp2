@@ -116,7 +116,7 @@ export const VibeService = {
   confirmVibeReport: async (id: number): Promise<VibeReport | null> => {
     const { data, error } = await supabase
       .from('vibe_reports')
-      .update({ confirmed_count: () => 'confirmed_count + 1' })
+      .update({ confirmed_count: supabase.rpc('increment_counter') })
       .eq('id', id)
       .select()
       .single();
