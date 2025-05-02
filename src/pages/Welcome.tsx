@@ -100,7 +100,7 @@ const Welcome = () => {
                   </h2>
                   
                   <Tabs defaultValue="individual" className="w-full">
-                    <TabsList className="grid grid-cols-2 mb-6">
+                    <TabsList className="grid w-full grid-cols-2 mb-6">
                       <TabsTrigger value="individual" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                         <User className="w-4 h-4 mr-2" />
                         Individual

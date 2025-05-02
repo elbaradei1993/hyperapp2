@@ -178,8 +178,8 @@ const Map = ({ vibes: initialVibes = [], initialCenter = [-74.006, 40.7128], rad
         attributionControl: false
       });
 
-      // Add navigation controls
-      map.current.addControl(new maplibregl.NavigationControl(), 'top-right');
+      // Add navigation controls to bottom right instead of top right
+      map.current.addControl(new maplibregl.NavigationControl(), 'bottom-right');
       map.current.addControl(new maplibregl.AttributionControl(), 'bottom-left');
 
       map.current.on('load', () => {
@@ -451,7 +451,7 @@ const Map = ({ vibes: initialVibes = [], initialCenter = [-74.006, 40.7128], rad
     <div className="w-full h-full relative">
       <div ref={mapContainer} className="w-full h-full" />
       
-      {/* User location button */}
+      {/* User location button - moved to the bottom right */}
       <button 
         onClick={getUserLocation}
         disabled={isLocating}

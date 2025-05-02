@@ -15,7 +15,6 @@ import Trending from "./pages/Trending";
 import EventCreate from "./pages/EventCreate";
 import NotFound from "./pages/NotFound";
 import SosButton from "./components/SosButton";
-import AddVibeReportButton from "./components/AddVibeReportButton";
 
 const queryClient = new QueryClient();
 
@@ -39,7 +38,6 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
             <SosButton />
-            <AddVibeReportButton />
           </BrowserRouter>
         </TooltipProvider>
       </LanguageProvider>
