@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { safeParseInt } from '@/utils/typeConverters';
 
@@ -93,10 +92,10 @@ export const VibeService = {
     const id = typeof vibeId === 'string' ? safeParseInt(vibeId) : vibeId;
     
     try {
-      // Try to use the RPC function
+      // Try to use the RPC function with explicitly typed parameters
       const { error } = await supabase.rpc('increment_vibe_count', {
         report_id: id
-      });
+      } as { report_id: number });
       
       if (error) {
         // Fallback to direct update
