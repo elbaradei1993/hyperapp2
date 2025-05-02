@@ -93,10 +93,10 @@ export const VibeService = {
     const id = typeof vibeId === 'string' ? safeParseInt(vibeId) : vibeId;
     
     try {
-      // Fix TypeScript error by using type assertion with unknown as intermediary
+      // Use explicit typing to fix the TypeScript error
       const { error } = await supabase.rpc(
         'increment_vibe_count', 
-        { report_id: id } as unknown as Record<string, unknown>
+        { report_id: id } as any // Using 'any' type to bypass TypeScript checking for RPC calls
       );
       
       if (error) {
