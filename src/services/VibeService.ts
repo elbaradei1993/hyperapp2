@@ -101,7 +101,7 @@ export const VibeService = {
       const params: IncrementVibeCountParams = { report_id: id };
       
       // Call the RPC function with proper typing - fixing the type parameter issue
-      const { error } = await supabase.rpc<void, IncrementVibeCountParams>(
+      const { error } = await supabase.rpc(
         'increment_vibe_count',
         params
       );
