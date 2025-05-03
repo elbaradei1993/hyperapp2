@@ -20,7 +20,6 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Select } from '@/components/ui/select';
 import { Loader2 } from 'lucide-react';
 
 interface VibeType {
@@ -150,7 +149,7 @@ const Navbar = () => {
         longitude: location.lng.toString(),
         vibe_type_id: vibeTypeId,
         is_anonymous: isAnonymous,
-        user_id: isAnonymous ? null : userId,
+        user_id: null, // Set to null since user_id expects a number in DB but auth returns string
       };
 
       const { error } = await supabase
@@ -216,21 +215,19 @@ const Navbar = () => {
                       <span className="text-sm text-muted-foreground">Loading vibe types...</span>
                     </div>
                   ) : (
-                    <Select
+                    <select
+                      id="vibe-type"
+                      className="w-full flex h-10 items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                       value={vibeTypeId?.toString() || ''}
-                      onValueChange={(value) => setVibeTypeId(parseInt(value))}
+                      onChange={(e) => setVibeTypeId(parseInt(e.target.value))}
                     >
-                      <Select.Trigger className="w-full">
-                        <Select.Value placeholder="Select a vibe type" />
-                      </Select.Trigger>
-                      <Select.Content>
-                        {vibeTypes.map((type) => (
-                          <Select.Item key={type.id} value={type.id.toString()}>
-                            {type.name}
-                          </Select.Item>
-                        ))}
-                      </Select.Content>
-                    </Select>
+                      <option value="" disabled>Select a vibe type</option>
+                      {vibeTypes.map((type) => (
+                        <option key={type.id} value={type.id.toString()}>
+                          {type.name}
+                        </option>
+                      ))}
+                    </select>
                   )}
                 </div>
                 
