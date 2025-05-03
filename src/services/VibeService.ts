@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface VibeType {
@@ -121,7 +120,7 @@ export const VibeService = {
    */
   confirmVibeReport: async (id: number): Promise<VibeReport | null> => {
     // First call the RPC function to increment the counter
-    const { error: incrementError } = await supabase.rpc<void>('increment_vibe_count', {
+    const { error: incrementError } = await supabase.rpc<void, IncrementVibeCountParams>('increment_vibe_count', {
       report_id: id,
       inc_amount: 1
     } as IncrementVibeCountParams);
