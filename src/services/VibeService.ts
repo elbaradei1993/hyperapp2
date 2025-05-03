@@ -115,9 +115,8 @@ export const VibeService = {
    */
   confirmVibeReport: async (id: number): Promise<VibeReport | null> => {
     // First call the RPC function to increment the counter
-    // Fix: Pass the id as a number to the RPC function
     const { error: incrementError } = await supabase.rpc('increment_vibe_count', {
-      report_id: id,  // This is now passed as a number, not a string
+      report_id: id,
       inc_amount: 1
     });
     
