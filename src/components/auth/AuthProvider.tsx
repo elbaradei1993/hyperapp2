@@ -30,16 +30,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
-        // Show toast for sign-in and sign-out events only if there's a change
-        if (event === 'SIGNED_IN' && !session) {
+        // Show toast for sign-in and sign-out events
+        if (event === 'SIGNED_IN') {
           toast({
             title: 'Signed in',
             description: 'Welcome back!',
           });
-        } else if (event === 'SIGNED_OUT' && session) {
+        } else if (event === 'SIGNED_OUT') {
           toast({
             title: 'Signed out',
             description: 'You have been signed out.',
+          });
+        } else if (event === 'USER_UPDATED') {
+          toast({
+            title: 'Profile updated',
+            description: 'Your profile has been updated successfully.',
           });
         }
       }
@@ -63,7 +68,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [toast]);
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -81,9 +86,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         email, 
         password, 
         options: {
-          data: userData
+          data: userData,
+          emailRedirectTo: `${window.location.origin}/auth`
         } 
       });
+      
+      if (!error) {
+        toast({
+          title: 'Account created',
+          description: 'Check your email to confirm your account.',
+        });
+      }
+      
       return { data, error };
     } catch (error) {
       console.error('Error during sign up:', error);
@@ -96,6 +110,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       await supabase.auth.signOut();
     } catch (error) {
       console.error('Error during sign out:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to sign out. Please try again.',
+        variant: 'destructive',
+      });
     }
   };
 

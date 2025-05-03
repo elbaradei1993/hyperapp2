@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import MapTab from "@/components/tabs/MapTab";
@@ -9,64 +9,105 @@ import VibesTab from "@/components/tabs/VibesTab";
 import EventsTab from "@/components/tabs/EventsTab";
 import AlertsTab from "@/components/tabs/AlertsTab";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { H1, FadeIn, PageHeader } from "@/components/ui/design-system";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { MapPin, Bell, Calendar, TrendingUp } from "lucide-react";
+import { NavLink } from "react-router-dom";
+import AddVibeReportDialog from "@/components/AddVibeReportDialog";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("map");
   const { user } = useAuth();
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null; // Avoid hydration errors
+  }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Header */}
-      <header className="border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-          <h1 className="text-xl font-semibold text-foreground">HyperApp</h1>
-          <div className="flex items-center space-x-2">
-            {!user ? (
-              <a 
-                href="/auth" 
-                className="text-sm text-primary hover:text-primary/80"
-              >
-                Sign In
-              </a>
-            ) : (
-              <span className="text-sm text-muted-foreground">
-                {user.email?.split('@')[0]}
+    <div className="min-h-screen flex flex-col bg-background">
+      {/* Main Content */}
+      <div className="flex flex-col flex-1 container max-w-7xl mx-auto px-4 pt-20 pb-24 md:pb-6 h-[calc(100vh-128px)]">
+        <FadeIn>
+          <PageHeader className="md:flex md:justify-between md:items-center">
+            <div>
+              <span className="inline-block mb-2 text-sm bg-primary/10 text-primary px-3 py-1 rounded-full">
+                Explore your surroundings
               </span>
-            )}
-          </div>
-        </div>
-      </header>
+              <H1>
+                Discover what's happening <span className="text-gradient">around you</span>
+              </H1>
+            </div>
+          </PageHeader>
+        </FadeIn>
 
-      {/* Tabs */}
-      <div className="flex flex-col flex-1 container max-w-7xl mx-auto px-4 py-4 h-[calc(100vh-128px)]">
         <Tabs 
           defaultValue="map" 
           value={activeTab} 
           onValueChange={setActiveTab} 
-          className="w-full h-full flex flex-col"
+          className="w-full h-full flex flex-col mt-4"
         >
-          <TabsList className="self-center mb-4">
-            <TabsTrigger value="map">Map</TabsTrigger>
-            <TabsTrigger value="vibes">Vibes</TabsTrigger>
-            <TabsTrigger value="events">Events</TabsTrigger>
-            <TabsTrigger value="alerts">Alerts</TabsTrigger>
-          </TabsList>
+          <FadeIn delay="100ms">
+            <Card className="mb-6 border border-border/40">
+              <CardContent className="p-2">
+                <TabsList className="grid w-full grid-cols-4">
+                  <TabsTrigger value="map" className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4" />
+                    <span className="hidden sm:inline">Map</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="vibes" className="flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4" />
+                    <span className="hidden sm:inline">Vibes</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="events" className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    <span className="hidden sm:inline">Events</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="alerts" className="flex items-center gap-2">
+                    <Bell className="h-4 w-4" />
+                    <span className="hidden sm:inline">Alerts</span>
+                  </TabsTrigger>
+                </TabsList>
+              </CardContent>
+            </Card>
+          </FadeIn>
           
-          <TabsContent value="map" className="flex-1 mt-0">
-            <MapTab />
-          </TabsContent>
-          
-          <TabsContent value="vibes" className="flex-1 mt-0">
-            <VibesTab />
-          </TabsContent>
-          
-          <TabsContent value="events" className="flex-1 mt-0">
-            <EventsTab />
-          </TabsContent>
-          
-          <TabsContent value="alerts" className="flex-1 mt-0">
-            <AlertsTab />
-          </TabsContent>
+          <div className="flex-1 relative">
+            <FadeIn delay="200ms" className="h-full">
+              <TabsContent value="map" className="h-full m-0 overflow-hidden rounded-lg">
+                <MapTab />
+              </TabsContent>
+              
+              <TabsContent value="vibes" className="h-full m-0 overflow-auto">
+                <VibesTab />
+              </TabsContent>
+              
+              <TabsContent value="events" className="h-full m-0 overflow-auto">
+                <EventsTab />
+              </TabsContent>
+              
+              <TabsContent value="alerts" className="h-full m-0 overflow-auto">
+                <AlertsTab />
+              </TabsContent>
+            </FadeIn>
+            
+            {/* Quick Action Button (Desktop) */}
+            <div className="hidden md:block absolute bottom-6 right-6">
+              <AddVibeReportDialog 
+                trigger={
+                  <Button className="btn-gradient h-14 px-6 rounded-full shadow-lg shadow-primary/20">
+                    <Plus className="h-6 w-6 mr-2" />
+                    Add Vibe Report
+                  </Button>
+                }
+              />
+            </div>
+          </div>
         </Tabs>
       </div>
       

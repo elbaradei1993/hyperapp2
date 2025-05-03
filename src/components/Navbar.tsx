@@ -1,303 +1,73 @@
 
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, User, Settings, TrendingUp, Plus } from 'lucide-react';
+import { Home, User, Settings, TrendingUp, Plus, MapPin, Bell, Menu } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
-import { 
-  Dialog, 
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger 
-} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import AddVibeReportDialog from '@/components/AddVibeReportDialog';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
-interface VibeType {
-  id: number;
-  name: string;
-  color: string;
+interface NavItemProps {
+  to: string;
+  icon: React.ReactNode;
+  label: string;
+  onClick?: () => void;
 }
+
+const NavItem = ({ to, icon, label, onClick }: NavItemProps) => (
+  <NavLink
+    to={to}
+    className={({ isActive }) =>
+      cn(
+        "flex flex-col items-center py-2 px-3 transition-colors",
+        isActive
+          ? "text-primary"
+          : "text-muted-foreground hover:text-foreground"
+      )
+    }
+    onClick={onClick}
+  >
+    <div className="mb-1">{icon}</div>
+    <span className="text-xs">{label}</span>
+  </NavLink>
+);
 
 const Navbar = () => {
   const { user } = useAuth();
-  const [open, setOpen] = useState(false);
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [vibeTypeId, setVibeTypeId] = useState<number | null>(null);
-  const [vibeTypes, setVibeTypes] = useState<VibeType[]>([]);
-  const [isAnonymous, setIsAnonymous] = useState(false);
-  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isLoadingTypes, setIsLoadingTypes] = useState(false);
-  const { toast } = useToast();
-
-  // Fetch vibe types when the dialog opens
-  useEffect(() => {
-    if (open) {
-      fetchVibeTypes();
-      getCurrentLocation();
-    }
-  }, [open]);
-
-  // Get current location
-  const getCurrentLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          });
-        },
-        (error) => {
-          console.error('Error getting location:', error);
-          toast({
-            title: 'Location Error',
-            description: 'Unable to get your location. Please enable location services.',
-            variant: 'destructive'
-          });
-        }
-      );
-    } else {
-      toast({
-        title: 'Location Not Supported',
-        description: 'Your device does not support geolocation.',
-        variant: 'destructive'
-      });
-    }
-  };
-
-  // Fetch vibe types from Supabase
-  const fetchVibeTypes = async () => {
-    try {
-      setIsLoadingTypes(true);
-      const { data, error } = await supabase
-        .from('vibe_types')
-        .select('id, name, color')
-        .order('name');
-
-      if (error) throw error;
-      
-      if (data) {
-        setVibeTypes(data);
-        if (data.length > 0) {
-          setVibeTypeId(data[0].id);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching vibe types:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load vibe types.',
-        variant: 'destructive'
-      });
-    } finally {
-      setIsLoadingTypes(false);
-    }
-  };
-
-  // Submit vibe report
-  const handleSubmit = async () => {
-    if (!location) {
-      toast({
-        title: 'Location Required',
-        description: 'Your location is required to submit a vibe report.',
-        variant: 'destructive'
-      });
-      return;
-    }
-
-    if (!vibeTypeId) {
-      toast({
-        title: 'Vibe Type Required',
-        description: 'Please select a vibe type.',
-        variant: 'destructive'
-      });
-      return;
-    }
-
-    if (!title.trim()) {
-      toast({
-        title: 'Title Required',
-        description: 'Please provide a title for your vibe report.',
-        variant: 'destructive'
-      });
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-
-      // Get user session
-      const { data: sessionData } = await supabase.auth.getSession();
-      const userId = sessionData?.session?.user?.id;
-
-      const newVibeReport = {
-        title,
-        description: description.trim() || null,
-        latitude: location.lat.toString(),
-        longitude: location.lng.toString(),
-        vibe_type_id: vibeTypeId,
-        is_anonymous: isAnonymous,
-        user_id: null, // Set to null since user_id expects a number in DB but auth returns string
-      };
-
-      const { error } = await supabase
-        .from('vibe_reports')
-        .insert(newVibeReport);
-
-      if (error) throw error;
-
-      toast({
-        title: 'Success',
-        description: 'Your vibe report has been submitted.',
-      });
-
-      // Reset form and close dialog
-      setTitle('');
-      setDescription('');
-      setIsAnonymous(false);
-      setOpen(false);
-    } catch (error) {
-      console.error('Error submitting vibe report:', error);
-      toast({
-        title: 'Submission Failed',
-        description: 'Failed to submit your vibe report. Please try again.',
-        variant: 'destructive'
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const isMobile = useIsMobile();
+  
+  if (!isMobile) {
+    return <DesktopNavbar user={user} />;
+  }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t border-border/40 z-40">
+    <nav className="mobile-nav">
       <div className="container max-w-md mx-auto">
         <div className="flex items-center justify-around">
-          <NavItem to="/" icon={<Home />} label="Home" />
-          <NavItem to="/trending" icon={<TrendingUp />} label="Trending" />
+          <NavItem to="/" icon={<Home className="h-5 w-5" />} label="Home" />
+          <NavItem to="/trending" icon={<TrendingUp className="h-5 w-5" />} label="Trending" />
           
-          {/* Add Vibe Report Button in Navbar */}
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <button className="flex flex-col items-center py-2 px-3 transition-colors text-primary hover:text-primary/90">
-                <div className="mb-1">
-                  <Plus />
+          <AddVibeReportDialog 
+            trigger={
+              <button className="flex flex-col items-center py-2 px-3 transition-colors text-primary">
+                <div className="mb-1 bg-primary text-white p-2 rounded-full">
+                  <Plus className="h-5 w-5" />
                 </div>
                 <span className="text-xs">Add Vibe</span>
               </button>
-            </DialogTrigger>
-            
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Report a Vibe</DialogTitle>
-                <DialogDescription>
-                  Share the vibe of your current location with the community.
-                </DialogDescription>
-              </DialogHeader>
-              
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="vibe-type">Vibe Type</Label>
-                  {isLoadingTypes ? (
-                    <div className="flex items-center space-x-2">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span className="text-sm text-muted-foreground">Loading vibe types...</span>
-                    </div>
-                  ) : (
-                    <select
-                      id="vibe-type"
-                      className="w-full flex h-10 items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                      value={vibeTypeId?.toString() || ''}
-                      onChange={(e) => setVibeTypeId(parseInt(e.target.value))}
-                    >
-                      <option value="" disabled>Select a vibe type</option>
-                      {vibeTypes.map((type) => (
-                        <option key={type.id} value={type.id.toString()}>
-                          {type.name}
-                        </option>
-                      ))}
-                    </select>
-                  )}
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="title">Title</Label>
-                  <Input
-                    id="title"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Give your vibe a title"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description (Optional)</Label>
-                  <Textarea
-                    id="description"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Describe the vibe in more detail..."
-                    rows={3}
-                  />
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <Switch 
-                    id="anonymous" 
-                    checked={isAnonymous}
-                    onCheckedChange={setIsAnonymous}
-                  />
-                  <Label htmlFor="anonymous">Report Anonymously</Label>
-                </div>
-                
-                {location ? (
-                  <p className="text-xs text-muted-foreground">
-                    Location: {location.lat.toFixed(6)}, {location.lng.toFixed(6)}
-                  </p>
-                ) : (
-                  <p className="text-xs text-rose-500 flex items-center">
-                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                    Detecting your location...
-                  </p>
-                )}
-              </div>
-              
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setOpen(false)} disabled={isLoading}>
-                  Cancel
-                </Button>
-                <Button onClick={handleSubmit} disabled={isLoading || !location || !vibeTypeId}>
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Submitting...
-                    </>
-                  ) : (
-                    'Submit Report'
-                  )}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+            }
+          />
 
           {user ? (
             <>
-              <NavItem to="/profile" icon={<User />} label="Profile" />
-              <NavItem to="/settings" icon={<Settings />} label="Settings" />
+              <NavItem to="/profile" icon={<User className="h-5 w-5" />} label="Profile" />
+              <NavItem to="/settings" icon={<Settings className="h-5 w-5" />} label="Settings" />
             </>
           ) : (
-            <NavItem to="/auth" icon={<User />} label="Sign In" />
+            <NavItem to="/auth" icon={<User className="h-5 w-5" />} label="Sign In" />
           )}
         </div>
       </div>
@@ -305,26 +75,96 @@ const Navbar = () => {
   );
 };
 
-interface NavItemProps {
-  to: string;
-  icon: React.ReactNode;
-  label: string;
-}
-
-const NavItem = ({ to, icon, label }: NavItemProps) => (
-  <NavLink
-    to={to}
-    className={({ isActive }) =>
-      `flex flex-col items-center py-2 px-3 transition-colors ${
-        isActive
-          ? 'text-primary'
-          : 'text-muted-foreground hover:text-foreground'
-      }`
-    }
-  >
-    <div className="mb-1">{icon}</div>
-    <span className="text-xs">{label}</span>
-  </NavLink>
-);
+const DesktopNavbar = ({ user }: { user: User | null }) => {
+  return (
+    <div className="fixed top-0 left-0 w-full border-b border-border/40 bg-background/95 backdrop-blur z-40">
+      <div className="container max-w-7xl mx-auto px-4">
+        <div className="flex h-16 items-center justify-between">
+          <div className="flex items-center space-x-8">
+            <NavLink to="/" className="flex items-center space-x-2 text-primary">
+              <MapPin className="h-6 w-6" />
+              <span className="font-bold text-xl">HyperApp</span>
+            </NavLink>
+            
+            <div className="hidden md:flex items-center space-x-6">
+              <NavLink 
+                to="/" 
+                className={({ isActive }) => 
+                  cn("text-sm font-medium transition-colors", 
+                     isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                  )
+                }
+              >
+                Map
+              </NavLink>
+              <NavLink 
+                to="/trending" 
+                className={({ isActive }) => 
+                  cn("text-sm font-medium transition-colors", 
+                     isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                  )
+                }
+              >
+                Trending
+              </NavLink>
+            </div>
+          </div>
+          
+          <div className="flex items-center space-x-4">
+            <AddVibeReportDialog 
+              trigger={
+                <Button size="sm" className="hidden md:flex">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Vibe
+                </Button>
+              }
+            />
+            
+            <Button variant="ghost" size="icon" className="relative">
+              <Bell className="h-5 w-5" />
+              <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                2
+              </span>
+            </Button>
+            
+            {user ? (
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="sm" className="gap-2">
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <span className="hidden md:inline">{user.email?.split('@')[0]}</span>
+                  </Button>
+                </SheetTrigger>
+                <SheetContent>
+                  <div className="flex flex-col h-full">
+                    <div className="flex items-center space-x-4 py-4">
+                      <Avatar className="h-10 w-10">
+                        <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <h3 className="font-medium">{user.email?.split('@')[0]}</h3>
+                        <p className="text-sm text-muted-foreground">{user.email}</p>
+                      </div>
+                    </div>
+                    <div className="space-y-3 py-4">
+                      <NavItem to="/profile" icon={<User className="h-5 w-5" />} label="Profile" />
+                      <NavItem to="/settings" icon={<Settings className="h-5 w-5" />} label="Settings" />
+                    </div>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            ) : (
+              <Button asChild>
+                <NavLink to="/auth">Sign In</NavLink>
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default Navbar;
