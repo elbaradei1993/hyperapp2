@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -12,7 +11,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { H1, FadeIn, PageHeader } from "@/components/ui/design-system";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MapPin, Bell, Calendar, TrendingUp } from "lucide-react";
+import { MapPin, Bell, Calendar, TrendingUp, Plus } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import AddVibeReportDialog from "@/components/AddVibeReportDialog";
 

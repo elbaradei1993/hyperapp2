@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -250,7 +249,7 @@ const Trending = () => {
     <div className="min-h-screen pb-24 md:pb-6 bg-background">
       <div className="container max-w-4xl mx-auto p-4 pt-20">
         <FadeIn>
-          <PageHeader>
+          <PageHeader title="Trending Vibes">
             <div className="flex items-center space-x-3">
               <div className="bg-primary/20 p-2 rounded-full">
                 <TrendingUp className="h-6 w-6 text-primary" />

@@ -1,4 +1,3 @@
-
 import React from "react";
 import { cn } from "@/lib/utils";
 
@@ -139,17 +138,23 @@ export function PageSection({ children, className }: PageSectionProps) {
   );
 }
 
+// Update the PageHeaderProps interface to accept children
 interface PageHeaderProps {
-  title: string;
+  children?: React.ReactNode;
+  title?: string;
   subtitle?: string;
   className?: string;
 }
 
-export function PageHeader({ title, subtitle, className }: PageHeaderProps) {
+export function PageHeader({ title, subtitle, children, className }: PageHeaderProps) {
   return (
     <div className={cn("mb-8 space-y-2", className)}>
-      <H1>{title}</H1>
-      {subtitle && <Subtitle>{subtitle}</Subtitle>}
+      {children ? children : (
+        <>
+          <H1>{title}</H1>
+          {subtitle && <Subtitle>{subtitle}</Subtitle>}
+        </>
+      )}
     </div>
   );
 }

@@ -51,7 +51,7 @@ const Auth = () => {
       
       <div className="w-full max-w-md space-y-8">
         <FadeIn>
-          <PageHeader className="text-center">
+          <PageHeader>
             <H1>Welcome to HyperApp</H1>
             <p className="text-muted-foreground mt-2">{t('signIn')} to access your account</p>
           </PageHeader>

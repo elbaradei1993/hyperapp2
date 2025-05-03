@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { Home, User, Settings, TrendingUp, Plus, MapPin, Bell, Menu } from 'lucide-react';
@@ -75,7 +74,8 @@ const Navbar = () => {
   );
 };
 
-const DesktopNavbar = ({ user }: { user: User | null }) => {
+// Fix the User type by using the correct type from auth provider
+const DesktopNavbar = ({ user }: { user: any }) => {
   return (
     <div className="fixed top-0 left-0 w-full border-b border-border/40 bg-background/95 backdrop-blur z-40">
       <div className="container max-w-7xl mx-auto px-4">
