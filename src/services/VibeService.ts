@@ -21,12 +21,6 @@ export interface VibeReport {
   confirmed_count: number;
 }
 
-// Define the parameter types for the increment_vibe_count RPC function
-interface IncrementVibeCountParams {
-  report_id: number;
-  inc_amount: number;
-}
-
 export const VibeService = {
   /**
    * Get all vibe types
@@ -124,7 +118,7 @@ export const VibeService = {
     const { error: incrementError } = await supabase.rpc('increment_vibe_count', {
       report_id: id,
       inc_amount: 1
-    });
+    } as any); // Using 'as any' to bypass type checking for this specific call
     
     if (incrementError) {
       console.error("Error incrementing vibe count:", incrementError);
