@@ -118,7 +118,7 @@ export const VibeService = {
     const { error: incrementError } = await supabase.rpc('increment_vibe_count', {
       report_id: id,
       inc_amount: 1
-    });
+    } as { report_id: number, inc_amount: number });
     
     if (incrementError) {
       console.error("Error incrementing vibe count:", incrementError);
