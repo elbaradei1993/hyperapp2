@@ -21,6 +21,12 @@ export interface VibeReport {
   confirmed_count: number;
 }
 
+// Define the parameter types for the increment_vibe_count RPC function
+interface IncrementVibeCountParams {
+  report_id: number;
+  inc_amount: number;
+}
+
 export const VibeService = {
   /**
    * Get all vibe types
@@ -115,10 +121,10 @@ export const VibeService = {
    */
   confirmVibeReport: async (id: number): Promise<VibeReport | null> => {
     // First call the RPC function to increment the counter
-    const { error: incrementError } = await supabase.rpc('increment_vibe_count', {
+    const { error: incrementError } = await supabase.rpc<void>('increment_vibe_count', {
       report_id: id,
       inc_amount: 1
-    } as { report_id: number, inc_amount: number });
+    } as IncrementVibeCountParams);
     
     if (incrementError) {
       console.error("Error incrementing vibe count:", incrementError);
