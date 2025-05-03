@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { Home, User, Settings, TrendingUp, Plus, MapPin, Bell, Menu } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -8,6 +9,15 @@ import AddVibeReportDialog from '@/components/AddVibeReportDialog';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useToast } from '@/hooks/use-toast';
 
 interface NavItemProps {
   to: string;
@@ -43,7 +53,7 @@ const Navbar = () => {
   }
 
   return (
-    <nav className="mobile-nav">
+    <nav className="mobile-nav fixed bottom-0 left-0 right-0 z-40 bg-background border-t border-border/40 py-1">
       <div className="container max-w-md mx-auto">
         <div className="flex items-center justify-around">
           <NavItem to="/" icon={<Home className="h-5 w-5" />} label="Home" />
@@ -74,10 +84,70 @@ const Navbar = () => {
   );
 };
 
-// Fix the User type by using the correct type from auth provider
+const NotificationDropdown = () => {
+  const { toast } = useToast();
+  const [notificationCount, setNotificationCount] = useState(2);
+
+  const notifications = [
+    { id: 1, title: "New vibe reported", message: "A new vibe was reported near you", time: "10 minutes ago" },
+    { id: 2, title: "Safety Alert", message: "Safety concern reported in your area", time: "1 hour ago" }
+  ];
+
+  const handleReadAll = () => {
+    setNotificationCount(0);
+    toast({
+      title: "Notifications cleared",
+      description: "All notifications have been marked as read",
+    });
+  };
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="relative">
+          <Bell className="h-5 w-5" />
+          {notificationCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full w-4 h-4 flex items-center justify-center">
+              {notificationCount}
+            </span>
+          )}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-80">
+        <DropdownMenuLabel className="flex justify-between items-center">
+          <span>Notifications</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-xs h-auto p-1 hover:bg-transparent hover:text-primary"
+            onClick={handleReadAll}
+          >
+            Mark all as read
+          </Button>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {notifications.map((notification) => (
+          <DropdownMenuItem key={notification.id} className="flex flex-col items-start p-3 cursor-pointer">
+            <div className="font-medium">{notification.title}</div>
+            <div className="text-sm text-muted-foreground">{notification.message}</div>
+            <div className="text-xs text-muted-foreground mt-1">{notification.time}</div>
+          </DropdownMenuItem>
+        ))}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem className="flex justify-center">
+          <Button variant="ghost" size="sm" className="w-full text-primary" asChild>
+            <NavLink to="/notifications">View all notifications</NavLink>
+          </Button>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
+
+// Fix the User type by using the correct type
 const DesktopNavbar = ({ user }: { user: any }) => {
   return (
-    <div className="fixed top-0 left-0 w-full border-b border-border/40 bg-background/95 backdrop-blur z-40">
+    <div className="fixed top-0 left-0 w-full border-b border-border/40 bg-background/95 backdrop-blur z-40 h-16">
       <div className="container max-w-7xl mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center space-x-8">
@@ -120,12 +190,7 @@ const DesktopNavbar = ({ user }: { user: any }) => {
               }
             />
             
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="h-5 w-5" />
-              <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                2
-              </span>
-            </Button>
+            <NotificationDropdown />
             
             {user ? (
               <Sheet>

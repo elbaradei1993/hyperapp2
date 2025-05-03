@@ -155,7 +155,7 @@ const Welcome = () => {
                       <IndividualRegisterForm />
                     </TabsContent>
                     
-                    <TabsContent value="organization" className="mt-0 text-foreground">
+                    <TabsContent value="organization" className="mt-0 text-foreground h-[500px] overflow-auto">
                       <OrganizationRegisterForm />
                     </TabsContent>
                   </Tabs>

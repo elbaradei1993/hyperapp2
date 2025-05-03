@@ -13,6 +13,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import {
+  Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
@@ -24,9 +25,6 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-
-// Import the correct Radix UI Select component
-import * as SelectPrimitive from "@radix-ui/react-select";
 
 interface VibeType {
   id: number;
@@ -70,18 +68,32 @@ const AddVibeReportDialog = ({ trigger }: AddVibeReportDialogProps) => {
         },
         (error) => {
           console.error('Error getting location:', error);
+          // Default to a fallback location if user denies permission
+          const fallbackLocation = {
+            lat: 40.7128, // New York City coordinates as fallback
+            lng: -74.0060
+          };
+          setLocation(fallbackLocation);
+          
           toast({
-            title: 'Location Error',
-            description: 'Unable to get your location. Please enable location services.',
-            variant: 'destructive'
+            title: 'Using default location',
+            description: 'We\'re using a default location since we couldn\'t access your current location.',
+            variant: 'default'
           });
-        }
+        },
+        { timeout: 10000, enableHighAccuracy: true }
       );
     } else {
+      const fallbackLocation = {
+        lat: 40.7128,
+        lng: -74.0060
+      };
+      setLocation(fallbackLocation);
+      
       toast({
         title: 'Location Not Supported',
-        description: 'Your device does not support geolocation.',
-        variant: 'destructive'
+        description: 'Your device does not support geolocation. Using default location.',
+        variant: 'default'
       });
     }
   };
@@ -212,7 +224,7 @@ const AddVibeReportDialog = ({ trigger }: AddVibeReportDialogProps) => {
                 <span className="text-sm text-muted-foreground">Loading vibe types...</span>
               </div>
             ) : (
-              <SelectPrimitive.Root
+              <Select
                 value={vibeTypeId?.toString() || ''}
                 onValueChange={(value) => setVibeTypeId(parseInt(value))}
               >
@@ -235,7 +247,7 @@ const AddVibeReportDialog = ({ trigger }: AddVibeReportDialogProps) => {
                     </SelectItem>
                   ))}
                 </SelectContent>
-              </SelectPrimitive.Root>
+              </Select>
             )}
           </div>
           
@@ -295,7 +307,7 @@ const AddVibeReportDialog = ({ trigger }: AddVibeReportDialogProps) => {
           </Button>
           <Button 
             onClick={handleSubmit} 
-            disabled={isLoading || !location || !vibeTypeId}
+            disabled={isLoading || !vibeTypeId}
             className="btn-gradient"
           >
             {isLoading ? (

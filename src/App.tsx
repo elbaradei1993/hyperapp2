@@ -53,18 +53,20 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
-              <Routes>
-                <Route path="/welcome" element={<Welcome />} />
-                <Route path="/" element={<Index />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/trending" element={<Trending />} />
-                <Route path="/events/create" element={<EventCreate />} />
-                {/* Catch-all route */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-              <SosButton />
+              <div className="min-h-screen">
+                <Routes>
+                  <Route path="/welcome" element={<Welcome />} />
+                  <Route path="/" element={<Index />} />
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/settings" element={<Settings />} />
+                  <Route path="/trending" element={<Trending />} />
+                  <Route path="/events/create" element={<EventCreate />} />
+                  {/* Catch-all route */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+                <SosButton />
+              </div>
             </BrowserRouter>
           </TooltipProvider>
         </LanguageProvider>

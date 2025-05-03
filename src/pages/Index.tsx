@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -8,7 +9,7 @@ import VibesTab from "@/components/tabs/VibesTab";
 import EventsTab from "@/components/tabs/EventsTab";
 import AlertsTab from "@/components/tabs/AlertsTab";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { H1, FadeIn, PageHeader } from "@/components/ui/design-system";
+import { H1, FadeIn } from "@/components/ui/design-system";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MapPin, Bell, Calendar, TrendingUp, Plus } from "lucide-react";
@@ -29,11 +30,11 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-background pt-16 pb-20">
       {/* Main Content */}
-      <div className="flex flex-col flex-1 container max-w-7xl mx-auto px-4 pt-20 pb-24 md:pb-6 h-[calc(100vh-128px)]">
+      <div className="flex flex-col flex-1 container max-w-7xl mx-auto px-4 py-6 h-[calc(100vh-160px)]">
         <FadeIn>
-          <PageHeader className="md:flex md:justify-between md:items-center">
+          <div className="md:flex md:justify-between md:items-center mb-6">
             <div>
               <span className="inline-block mb-2 text-sm bg-primary/10 text-primary px-3 py-1 rounded-full">
                 Explore your surroundings
@@ -42,7 +43,7 @@ const Index = () => {
                 Discover what's happening <span className="text-gradient">around you</span>
               </H1>
             </div>
-          </PageHeader>
+          </div>
         </FadeIn>
 
         <Tabs 

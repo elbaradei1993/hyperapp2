@@ -20,7 +20,37 @@ interface Vibe {
 const MapTab = () => {
   const [vibes, setVibes] = useState<Vibe[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const { toast } = useToast();
+
+  // Get user location
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+          // Set default fallback location
+          setUserLocation({
+            lat: 40.7128, // New York City coordinates as fallback
+            lng: -74.0060
+          });
+        },
+        { timeout: 10000, enableHighAccuracy: true }
+      );
+    } else {
+      // Fallback if geolocation is not supported
+      setUserLocation({
+        lat: 40.7128,
+        lng: -74.0060
+      });
+    }
+  }, []);
 
   useEffect(() => {
     const fetchVibes = async () => {

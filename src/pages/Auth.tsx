@@ -9,7 +9,7 @@ import LoginForm from "@/components/auth/LoginForm";
 import RegisterForm from "@/components/auth/RegisterForm";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { FadeIn, H1, PageHeader } from "@/components/ui/design-system";
+import { FadeIn, H1 } from "@/components/ui/design-system";
 import { Loader2, LogIn, UserPlus, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -51,10 +51,10 @@ const Auth = () => {
       
       <div className="w-full max-w-md space-y-8">
         <FadeIn>
-          <PageHeader>
+          <div>
             <H1>Welcome to HyperApp</H1>
             <p className="text-muted-foreground mt-2">{t('signIn')} to access your account</p>
-          </PageHeader>
+          </div>
         </FadeIn>
 
         <FadeIn delay="100ms">
