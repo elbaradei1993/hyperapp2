@@ -1,27 +1,18 @@
+
 "use client";
 
 import React, { useState, useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
-import { Select } from "@/components/ui/select";
 import Navbar from "@/components/Navbar";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Json } from "@/integrations/supabase/types";
-import { useLanguage, LanguageType } from "@/contexts/LanguageContext";
-
-const languages = [
-  { value: "en", label: "English" },
-  { value: "es", label: "Español" },
-  { value: "fr", label: "Français" },
-  { value: "ar", label: "العربية" }
-];
 
 interface UserSettings {
-  language: LanguageType;
   radius: number;
   darkTheme: boolean;
   notifications: boolean;
@@ -30,7 +21,6 @@ interface UserSettings {
 // Helper function to safely extract settings from Json
 const extractSettings = (settings: Json | null): UserSettings => {
   const defaultSettings: UserSettings = {
-    language: 'en' as LanguageType,
     radius: 10,
     darkTheme: true,
     notifications: true
@@ -47,7 +37,6 @@ const extractSettings = (settings: Json | null): UserSettings => {
   const settingsObj = settings as Record<string, unknown>;
   
   return {
-    language: (settingsObj.language as LanguageType) || defaultSettings.language,
     radius: typeof settingsObj.radius === 'number' ? settingsObj.radius : defaultSettings.radius,
     darkTheme: typeof settingsObj.darkTheme === 'boolean' ? settingsObj.darkTheme : defaultSettings.darkTheme,
     notifications: typeof settingsObj.notifications === 'boolean' ? settingsObj.notifications : defaultSettings.notifications
@@ -56,9 +45,7 @@ const extractSettings = (settings: Json | null): UserSettings => {
 
 const Settings = () => {
   const { toast } = useToast();
-  const { language: currentLanguage, setLanguage, t } = useLanguage();
   const [settings, setSettings] = useState<UserSettings>({
-    language: currentLanguage as LanguageType,
     radius: 10,
     darkTheme: true,
     notifications: true
@@ -106,7 +93,6 @@ const Settings = () => {
             try {
               const parsedSettings = JSON.parse(savedSettings);
               setSettings({
-                language: (parsedSettings.language as LanguageType) || 'en',
                 radius: parsedSettings.radius || 10,
                 darkTheme: parsedSettings.darkTheme !== undefined ? parsedSettings.darkTheme : true,
                 notifications: parsedSettings.notifications !== undefined ? parsedSettings.notifications : true
@@ -125,16 +111,6 @@ const Settings = () => {
     
     fetchUserSettings();
   }, []);
-
-  const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newLanguage = e.target.value as LanguageType;
-    setSettings({
-      ...settings,
-      language: newLanguage
-    });
-    // Update the global language context immediately
-    setLanguage(newLanguage);
-  };
 
   const handleRadiusChange = (value: number[]) => {
     setSettings({
@@ -181,13 +157,13 @@ const Settings = () => {
       }
       
       toast({
-        title: t('saved'),
+        title: "Settings saved",
         duration: 3000,
       });
     } catch (error) {
       console.error("Error saving settings:", error);
       toast({
-        title: t('error'),
+        title: "Error saving settings",
         variant: "destructive",
       });
     } finally {
@@ -197,35 +173,19 @@ const Settings = () => {
 
   if (loading) {
     return (
-      <div className="max-w-md mx-auto p-4 min-h-screen pb-16 flex items-center justify-center">
+      <div className="max-w-md mx-auto p-4 min-h-screen mt-16 pb-16 flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className={`max-w-md mx-auto p-4 min-h-screen pb-16 space-y-8 ${settings.language === 'ar' ? 'text-right' : 'text-left'}`}>
-      <h1 className="text-3xl font-bold mb-6">{t('settings')}</h1>
+    <div className="max-w-md mx-auto p-4 min-h-screen mt-16 pb-16 space-y-8">
+      <h1 className="text-3xl font-bold mb-6">Settings</h1>
 
       <div className="space-y-8">
         <div className="space-y-2">
-          <Label htmlFor="language">{t('language')}</Label>
-          <Select
-            id="language"
-            value={settings.language}
-            onChange={handleLanguageChange}
-            className={settings.language === 'ar' ? 'text-right' : 'text-left'}
-          >
-            {languages.map((lang) => (
-              <option key={lang.value} value={lang.value}>
-                {lang.label}
-              </option>
-            ))}
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="radius">{t('radius')}: {settings.radius}</Label>
+          <Label htmlFor="radius">Map Radius: {settings.radius}km</Label>
           <Slider
             id="radius"
             min={5}
@@ -237,25 +197,25 @@ const Settings = () => {
           />
         </div>
 
-        <div className={`flex items-center space-x-2 ${settings.language === 'ar' ? 'flex-row-reverse space-x-reverse' : ''}`}>
+        <div className="flex items-center space-x-2">
           <Switch 
             id="theme" 
             checked={settings.darkTheme} 
             onCheckedChange={handleThemeChange} 
           />
           <Label htmlFor="theme" className="select-none">
-            {t('darkTheme')}
+            Dark Theme
           </Label>
         </div>
         
-        <div className={`flex items-center space-x-2 ${settings.language === 'ar' ? 'flex-row-reverse space-x-reverse' : ''}`}>
+        <div className="flex items-center space-x-2">
           <Switch 
             id="notifications" 
             checked={settings.notifications} 
             onCheckedChange={handleNotificationsChange} 
           />
           <Label htmlFor="notifications" className="select-none">
-            {t('notifications')}
+            Enable Notifications
           </Label>
         </div>
         
@@ -265,7 +225,7 @@ const Settings = () => {
           className="w-full"
         >
           {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
-          {t('save')}
+          Save Settings
         </Button>
       </div>
       

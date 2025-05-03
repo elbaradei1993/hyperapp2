@@ -2,12 +2,26 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from 'react';
-import maplibregl from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
+import { MapContainer, TileLayer, Circle, Marker, Popup, useMap } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 import { Compass } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { safeParseInt } from "@/utils/typeConverters";
+
+// Fix Leaflet icon issue
+import icon from 'leaflet/dist/images/marker-icon.png';
+import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+
+let DefaultIcon = L.icon({
+  iconUrl: icon,
+  shadowUrl: iconShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41]
+});
+
+L.Marker.prototype.options.icon = DefaultIcon;
 
 interface Vibe {
   id: string;
@@ -25,31 +39,21 @@ interface MapProps {
   initialCenter?: [number, number];
 }
 
+// Component to handle map center changes
+function ChangeView({ center }: { center: [number, number] }) {
+  const map = useMap();
+  map.setView(center, map.getZoom());
+  return null;
+}
+
 const Map = ({ vibes: initialVibes = [], initialCenter = [-74.006, 40.7128], radiusKm = 10 }: MapProps) => {
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<maplibregl.Map | null>(null);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [isLocating, setIsLocating] = useState(false);
   const [vibes, setVibes] = useState<Vibe[]>(initialVibes);
-  const markersRef = useRef<{[key: string]: maplibregl.Marker}>({});
-  const sourceIdsRef = useRef<string[]>([]);
-  const layerIdsRef = useRef<string[]>([]);
+  const [mapCenter, setMapCenter] = useState<[number, number]>(initialCenter);
+  const [mapInitialized, setMapInitialized] = useState(false);
   const { toast } = useToast();
-  const mapInitializedRef = useRef(false);
-
-  // Convert kilometers to pixels at the current zoom level and latitude
-  const kmToPixels = (km: number, latitude: number, zoom: number) => {
-    // Earth's radius in kilometers
-    const earthRadius = 6371;
-    // Pixels per tile at zoom level 0
-    const pixelsPerTile = 256;
-    // Number of tiles at zoom level
-    const tilesAtZoom = Math.pow(2, zoom);
-    // Earth's circumference in pixels at zoom level
-    const pixelsPerKm = (tilesAtZoom * pixelsPerTile) / (2 * Math.PI * earthRadius * Math.cos(latitude * Math.PI / 180));
-    
-    return km * pixelsPerKm;
-  };
+  const mapRef = useRef<L.Map | null>(null);
 
   // Get user's location
   const getUserLocation = () => {
@@ -58,38 +62,12 @@ const Map = ({ vibes: initialVibes = [], initialCenter = [-74.006, 40.7128], rad
       
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          const userCoordinates: [number, number] = [position.coords.longitude, position.coords.latitude];
+          const userCoordinates: [number, number] = [position.coords.latitude, position.coords.longitude];
           setUserLocation(userCoordinates);
+          setMapCenter(userCoordinates);
           
-          if (map.current) {
-            map.current.flyTo({
-              center: userCoordinates,
-              zoom: 14,
-              speed: 1.5,
-            });
-
-            // Create or update user location marker
-            const el = document.createElement('div');
-            el.className = 'user-location-marker';
-            el.style.background = '#3b82f6';
-            el.style.width = '16px';
-            el.style.height = '16px';
-            el.style.borderRadius = '50%';
-            el.style.border = '3px solid white';
-            el.style.boxShadow = '0 0 0 2px rgba(59, 130, 246, 0.5)';
-
-            if (markersRef.current['user-location']) {
-              markersRef.current['user-location'].setLngLat(userCoordinates);
-            } else {
-              markersRef.current['user-location'] = new maplibregl.Marker(el)
-                .setLngLat(userCoordinates)
-                .addTo(map.current);
-            }
-            
-            // Fetch vibes and SOS alerts near this location
-            fetchNearbyVibes(userCoordinates[1], userCoordinates[0], radiusKm);
-          }
-          
+          // Fetch vibes and SOS alerts near this location
+          fetchNearbyVibes(userCoordinates[0], userCoordinates[1], radiusKm);
           setIsLocating(false);
         },
         (error) => {
@@ -165,240 +143,43 @@ const Map = ({ vibes: initialVibes = [], initialCenter = [-74.006, 40.7128], rad
   };
 
   useEffect(() => {
-    if (mapInitializedRef.current || !mapContainer.current) return;
-    mapInitializedRef.current = true;
+    // Set map as initialized
+    setMapInitialized(true);
     
-    try {
-      // Initialize map
-      map.current = new maplibregl.Map({
-        container: mapContainer.current,
-        style: 'https://api.maptiler.com/maps/streets/style.json?key=QosEXQtxnqMVMLuCrptw',
-        center: initialCenter,
-        zoom: 12,
-        attributionControl: false
-      });
-
-      // Add navigation controls to bottom right instead of top right
-      map.current.addControl(new maplibregl.NavigationControl(), 'bottom-right');
-      map.current.addControl(new maplibregl.AttributionControl(), 'bottom-left');
-
-      map.current.on('load', () => {
-        if (!map.current) return;
-        
-        // Add popup functionality for vibes
-        map.current.on('click', (e) => {
-          const features = map.current?.queryRenderedFeatures(e.point, {
-            layers: layerIdsRef.current
-          });
+    // Get initial user location automatically
+    getUserLocation();
+    
+    // Set up real-time subscription for new vibes
+    if (userLocation) {
+      const subscription = supabase
+        .channel('public:vibe_reports')
+        .on('postgres_changes', { 
+          event: 'INSERT', 
+          schema: 'public', 
+          table: 'vibe_reports' 
+        }, (payload) => {
+          // When a new vibe is added, check if it's within our radius and fetch it
+          const newVibeLat = parseFloat(payload.new.latitude);
+          const newVibeLng = parseFloat(payload.new.longitude);
           
-          if (features && features.length > 0) {
-            const vibe = vibes.find(v => v.id === features[0].properties?.id);
-            if (vibe) {
-              new maplibregl.Popup()
-                .setLngLat([vibe.lng, vibe.lat])
-                .setHTML(`
-                  <div style="padding: 8px;">
-                    <strong>${vibe.title || vibe.type}</strong>
-                    <p>Type: ${vibe.type}</p>
-                  </div>
-                `)
-                .addTo(map.current!);
+          if (userLocation) {
+            // Approximate distance check (in degrees)
+            const distanceDegLat = Math.abs(newVibeLat - userLocation[0]);
+            const distanceDegLng = Math.abs(newVibeLng - userLocation[1]);
+            
+            // Rough check if it's within our radius (1 degree ~ 111km at equator)
+            if (distanceDegLat < radiusKm / 111 && distanceDegLng < radiusKm / 111) {
+              // Fetch complete vibe data with joins
+              fetchNewVibe(payload.new.id.toString());
             }
           }
-        });
-        
-        // Get initial user location automatically
-        getUserLocation();
-      });
-
-      return () => {
-        if (map.current) {
-          map.current.remove();
-          mapInitializedRef.current = false;
-        }
-      };
-    } catch (error) {
-      console.error("Error initializing map:", error);
-      toast({
-        title: "Map Error",
-        description: "Could not initialize map. Please try again later.",
-        variant: "destructive"
-      });
-      mapInitializedRef.current = false;
-    }
-  }, [initialCenter]);
-  
-  // Update vibes on the map when vibes state changes
-  useEffect(() => {
-    if (!map.current || !map.current.loaded()) return;
-    
-    // Clean up old sources and layers
-    layerIdsRef.current.forEach(id => {
-      if (map.current?.getLayer(id)) {
-        map.current.removeLayer(id);
-      }
-    });
-    
-    sourceIdsRef.current.forEach(id => {
-      if (map.current?.getSource(id)) {
-        map.current.removeSource(id);
-      }
-    });
-    
-    layerIdsRef.current = [];
-    sourceIdsRef.current = [];
-    
-    // Add vibe pulses
-    vibes.forEach((vibe) => {
-      const sourceId = `vibe-source-${vibe.id}`;
-      const layerId = `vibe-layer-${vibe.id}`;
+        })
+        .subscribe();
       
-      sourceIdsRef.current.push(sourceId);
-      layerIdsRef.current.push(layerId);
-
-      try {
-        // Create rainbow gradient for LGBTQIA+ vibes
-        if (vibe.type.toLowerCase() === 'lgbtq' || vibe.type.toLowerCase() === 'lgbtqia+') {
-          const canvas = document.createElement('canvas');
-          const ctx = canvas.getContext('2d');
-          if (ctx) {
-            canvas.width = 256;
-            canvas.height = 256;
-            
-            const gradient = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
-            gradient.addColorStop(0, 'violet');
-            gradient.addColorStop(0.2, 'indigo');
-            gradient.addColorStop(0.4, 'blue');
-            gradient.addColorStop(0.6, 'green');
-            gradient.addColorStop(0.8, 'yellow');
-            gradient.addColorStop(1, 'red');
-            
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, 256, 256);
-            
-            // Get the image data
-            const imageData = ctx.getImageData(0, 0, 256, 256);
-            
-            // Create an ImageData object
-            const imageDataObj = new ImageData(
-              new Uint8ClampedArray(imageData.data), 
-              imageData.width, 
-              imageData.height
-            );
-
-            // Add the image to the map
-            map.current?.addImage('rainbow-gradient', imageDataObj);
-          }
-        }
-
-        if (map.current) {
-          map.current.addSource(sourceId, {
-            type: 'geojson',
-            data: {
-              type: 'Feature',
-              properties: {
-                id: vibe.id,
-                type: vibe.type
-              },
-              geometry: {
-                type: 'Point',
-                coordinates: [vibe.lng, vibe.lat]
-              }
-            }
-          });
-
-          // Add pulse effect layer
-          map.current.addLayer({
-            id: layerId,
-            type: 'circle',
-            source: sourceId,
-            paint: {
-              'circle-radius': [
-                'interpolate',
-                ['linear'],
-                ['get', 'radius'],
-                0, vibe.radius / 30,
-                100, vibe.type.toLowerCase() === 'lgbtq' ? radiusKm / 5 : radiusKm / 8
-              ],
-              'circle-color': vibe.type.toLowerCase() === 'lgbtq' ? [
-                'match',
-                ['get', 'radius'],
-                50, 'rgba(139,92,246,0.3)',
-                vibe.color
-              ] : vibe.color,
-              'circle-opacity': [
-                'interpolate',
-                ['linear'],
-                ['get', 'radius'],
-                0, 0.5,
-                100, 0
-              ]
-            }
-          });
-
-          // Animate the pulse
-          let radius = 0;
-          const animate = () => {
-            if (!map.current) return;
-            
-            radius = (radius + 1) % 100;
-            if (map.current?.getSource(sourceId)) {
-              (map.current?.getSource(sourceId) as maplibregl.GeoJSONSource).setData({
-                type: 'Feature',
-                properties: {
-                  id: vibe.id,
-                  type: vibe.type,
-                  radius: radius
-                },
-                geometry: {
-                  type: 'Point',
-                  coordinates: [vibe.lng, vibe.lat]
-                }
-              });
-            }
-            requestAnimationFrame(animate);
-          };
-          animate();
-        }
-      } catch (error) {
-        console.error(`Error adding vibe ${vibe.id} to map:`, error);
-      }
-    });
-  }, [vibes, radiusKm]);
-  
-  // Set up real-time subscription for new vibes
-  useEffect(() => {
-    if (!userLocation) return;
-    
-    // Subscribe to new vibe reports
-    const subscription = supabase
-      .channel('public:vibe_reports')
-      .on('postgres_changes', { 
-        event: 'INSERT', 
-        schema: 'public', 
-        table: 'vibe_reports' 
-      }, (payload) => {
-        // When a new vibe is added, check if it's within our radius and fetch it
-        const newVibeLat = parseFloat(payload.new.latitude);
-        const newVibeLng = parseFloat(payload.new.longitude);
-        
-        if (userLocation) {
-          // Approximate distance check (in degrees)
-          const distanceDegLat = Math.abs(newVibeLat - userLocation[1]);
-          const distanceDegLng = Math.abs(newVibeLng - userLocation[0]);
-          
-          // Rough check if it's within our radius (1 degree ~ 111km at equator)
-          if (distanceDegLat < radiusKm / 111 && distanceDegLng < radiusKm / 111) {
-            // Fetch complete vibe data with joins
-            fetchNewVibe(payload.new.id.toString());
-          }
-        }
-      })
-      .subscribe();
-    
-    return () => {
-      supabase.removeChannel(subscription);
-    };
+      return () => {
+        supabase.removeChannel(subscription);
+      };
+    }
   }, [userLocation, radiusKm]);
   
   // Fetch a single new vibe by ID
@@ -418,7 +199,7 @@ const Map = ({ vibes: initialVibes = [], initialCenter = [-74.006, 40.7128], rad
             color
           )
         `)
-        .eq('id', safeParseInt(id))  // Convert id to number safely
+        .eq('id', safeParseInt(id) as any)
         .single();
       
       if (error) throw error;
@@ -447,11 +228,57 @@ const Map = ({ vibes: initialVibes = [], initialCenter = [-74.006, 40.7128], rad
     }
   };
 
+  // Save map reference when it's available
+  const saveMapRef = (map: L.Map) => {
+    mapRef.current = map;
+  };
+
   return (
     <div className="w-full h-full relative">
-      <div ref={mapContainer} className="w-full h-full" />
+      {mapInitialized && (
+        <MapContainer
+          center={mapCenter}
+          zoom={13}
+          style={{ height: "100%", width: "100%" }}
+          whenCreated={saveMapRef}
+        >
+          <ChangeView center={mapCenter} />
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          
+          {userLocation && (
+            <Marker position={[userLocation[0], userLocation[1]]}>
+              <Popup>You are here</Popup>
+            </Marker>
+          )}
+          
+          {vibes.map((vibe) => (
+            <React.Fragment key={vibe.id}>
+              <Circle
+                center={[vibe.lat, vibe.lng]}
+                pathOptions={{
+                  color: vibe.color,
+                  fillColor: vibe.color,
+                  fillOpacity: 0.2
+                }}
+                radius={vibe.radius}
+              />
+              <Marker position={[vibe.lat, vibe.lng]}>
+                <Popup>
+                  <div>
+                    <strong>{vibe.title || vibe.type}</strong>
+                    <p>Type: {vibe.type}</p>
+                  </div>
+                </Popup>
+              </Marker>
+            </React.Fragment>
+          ))}
+        </MapContainer>
+      )}
       
-      {/* User location button - moved to the bottom right */}
+      {/* User location button */}
       <button 
         onClick={getUserLocation}
         disabled={isLocating}

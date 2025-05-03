@@ -1,36 +1,39 @@
 
 import React, { useState, useEffect } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { Plus, Loader2 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { MapPin, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { createVibeReport, fetchVibeTypes, VibeType } from '@/services/VibeService';
 
-interface VibeType {
-  id: number;
-  name: string;
-  color: string;
-}
+// Form schema
+const formSchema = z.object({
+  title: z.string().min(3, { message: 'Title must be at least 3 characters' }),
+  description: z.string().min(10, { message: 'Description must be at least 10 characters' }),
+  vibeTypeId: z.string().min(1, { message: 'Please select a vibe type' }),
+});
+
+type FormValues = z.infer<typeof formSchema>;
 
 interface AddVibeReportDialogProps {
   trigger: React.ReactNode;
@@ -38,288 +41,219 @@ interface AddVibeReportDialogProps {
 
 const AddVibeReportDialog = ({ trigger }: AddVibeReportDialogProps) => {
   const [open, setOpen] = useState(false);
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [vibeTypeId, setVibeTypeId] = useState<number | null>(null);
   const [vibeTypes, setVibeTypes] = useState<VibeType[]>([]);
-  const [isAnonymous, setIsAnonymous] = useState(false);
-  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isLoadingTypes, setIsLoadingTypes] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const { toast } = useToast();
+  
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      title: '',
+      description: '',
+      vibeTypeId: '',
+    },
+  });
 
-  // Fetch vibe types when the dialog opens
+  // Get vibe types
   useEffect(() => {
+    const getVibeTypes = async () => {
+      const types = await fetchVibeTypes();
+      setVibeTypes(types);
+    };
+    
     if (open) {
-      fetchVibeTypes();
-      getCurrentLocation();
+      getVibeTypes();
+      getUserLocation();
     }
   }, [open]);
 
-  // Get current location
-  const getCurrentLocation = () => {
+  // Get user location
+  const getUserLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setLocation({
+          setUserLocation({
             lat: position.coords.latitude,
             lng: position.coords.longitude
           });
         },
         (error) => {
           console.error('Error getting location:', error);
-          // Default to a fallback location if user denies permission
-          const fallbackLocation = {
-            lat: 40.7128, // New York City coordinates as fallback
-            lng: -74.0060
-          };
-          setLocation(fallbackLocation);
-          
           toast({
-            title: 'Using default location',
-            description: 'We\'re using a default location since we couldn\'t access your current location.',
-            variant: 'default'
+            title: "Location Error",
+            description: "Could not get your location. Please try again or enter coordinates manually.",
+            variant: "destructive"
           });
-        },
-        { timeout: 10000, enableHighAccuracy: true }
+        }
       );
     } else {
-      const fallbackLocation = {
-        lat: 40.7128,
-        lng: -74.0060
-      };
-      setLocation(fallbackLocation);
-      
       toast({
-        title: 'Location Not Supported',
-        description: 'Your device does not support geolocation. Using default location.',
-        variant: 'default'
+        title: "Geolocation Not Supported",
+        description: "Your browser doesn't support geolocation",
+        variant: "destructive"
       });
     }
   };
 
-  // Fetch vibe types from Supabase
-  const fetchVibeTypes = async () => {
+  // Form submission
+  const onSubmit = async (values: FormValues) => {
+    if (!userLocation) {
+      toast({
+        title: "Location Required",
+        description: "Please allow access to your location to continue",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setLoading(true);
+    
     try {
-      setIsLoadingTypes(true);
-      const { data, error } = await supabase
-        .from('vibe_types')
-        .select('id, name, color')
-        .order('name');
-
-      if (error) throw error;
+      // Get current user (if logged in)
+      const { data: { session } } = await supabase.auth.getSession();
       
-      if (data) {
-        setVibeTypes(data);
-        if (data.length > 0) {
-          setVibeTypeId(data[0].id);
-        }
+      const vibeData = {
+        title: values.title,
+        description: values.description,
+        latitude: userLocation.lat.toString(),
+        longitude: userLocation.lng.toString(),
+        vibe_type_id: parseInt(values.vibeTypeId),
+        user_id: session?.user?.id || null,
+      };
+      
+      const { success, error } = await createVibeReport(vibeData);
+      
+      if (success) {
+        toast({
+          title: "Vibe Reported",
+          description: "Your vibe report has been submitted successfully",
+          variant: "default",
+        });
+        setOpen(false);
+        form.reset();
+      } else {
+        throw error;
       }
-    } catch (error) {
-      console.error('Error fetching vibe types:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load vibe types.',
-        variant: 'destructive'
-      });
-    } finally {
-      setIsLoadingTypes(false);
-    }
-  };
-
-  // Submit vibe report
-  const handleSubmit = async () => {
-    if (!location) {
-      toast({
-        title: 'Location Required',
-        description: 'Your location is required to submit a vibe report.',
-        variant: 'destructive'
-      });
-      return;
-    }
-
-    if (!vibeTypeId) {
-      toast({
-        title: 'Vibe Type Required',
-        description: 'Please select a vibe type.',
-        variant: 'destructive'
-      });
-      return;
-    }
-
-    if (!title.trim()) {
-      toast({
-        title: 'Title Required',
-        description: 'Please provide a title for your vibe report.',
-        variant: 'destructive'
-      });
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-
-      // Get user session
-      const { data: sessionData } = await supabase.auth.getSession();
-      const userId = sessionData?.session?.user?.id;
-
-      const newVibeReport = {
-        title,
-        description: description.trim() || null,
-        latitude: location.lat.toString(),
-        longitude: location.lng.toString(),
-        vibe_type_id: vibeTypeId,
-        is_anonymous: isAnonymous,
-        user_id: null, // Set to null since user_id expects a number in DB but auth returns string
-      };
-
-      const { error } = await supabase
-        .from('vibe_reports')
-        .insert(newVibeReport);
-
-      if (error) throw error;
-
-      toast({
-        title: 'Success',
-        description: 'Your vibe report has been submitted.',
-      });
-
-      // Reset form and close dialog
-      setTitle('');
-      setDescription('');
-      setIsAnonymous(false);
-      setOpen(false);
     } catch (error) {
       console.error('Error submitting vibe report:', error);
       toast({
-        title: 'Submission Failed',
-        description: 'Failed to submit your vibe report. Please try again.',
-        variant: 'destructive'
+        title: "Submission Failed",
+        description: "There was an error submitting your vibe report. Please try again.",
+        variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
+      <div onClick={() => setOpen(true)}>
         {trigger}
-      </DialogTrigger>
+      </div>
       
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Report a Vibe</DialogTitle>
           <DialogDescription>
-            Share the vibe of your current location with the community.
+            Share what's happening around you with the community
           </DialogDescription>
         </DialogHeader>
-        
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="vibe-type">Vibe Type</Label>
-            {isLoadingTypes ? (
-              <div className="flex items-center space-x-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span className="text-sm text-muted-foreground">Loading vibe types...</span>
-              </div>
-            ) : (
-              <Select
-                value={vibeTypeId?.toString() || ''}
-                onValueChange={(value) => setVibeTypeId(parseInt(value))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a vibe type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {vibeTypes.map((type) => (
-                    <SelectItem
-                      key={type.id}
-                      value={type.id.toString()}
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Title</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g. Amazing Street Festival" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Describe what's happening here..." 
+                      className="min-h-[100px]"
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="vibeTypeId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Vibe Type</FormLabel>
+                  <FormControl>
+                    <select
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      onChange={e => field.onChange(e.target.value)}
+                      onBlur={field.onBlur}
+                      value={field.value}
                     >
-                      <div className="flex items-center">
-                        <div 
-                          className="w-3 h-3 rounded-full mr-2" 
-                          style={{ backgroundColor: type.color }}
-                        />
-                        {type.name}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
-            <Input
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Give your vibe a title"
+                      <option value="" disabled>Select vibe type</option>
+                      {vibeTypes.map(type => (
+                        <option key={type.id} value={type.id}>{type.name}</option>
+                      ))}
+                    </select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="description">Description (Optional)</Label>
-            <Textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Describe the vibe in more detail..."
-              rows={3}
-            />
-          </div>
-          
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex justify-between items-center">
-                <Label htmlFor="anonymous" className="font-medium">Report Anonymously</Label>
-                <Switch 
-                  id="anonymous" 
-                  checked={isAnonymous}
-                  onCheckedChange={setIsAnonymous}
-                />
+
+            <div className="bg-muted p-3 rounded-md flex items-center">
+              <MapPin className="h-5 w-5 mr-2 text-muted-foreground" />
+              <div>
+                <h4 className="text-sm font-medium">Location</h4>
+                {userLocation ? (
+                  <p className="text-xs text-muted-foreground">
+                    Lat: {userLocation.lat.toFixed(6)}, Long: {userLocation.lng.toFixed(6)}
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">Detecting your location...</p>
+                )}
               </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                Your identity will not be associated with this report.
-              </p>
-            </CardContent>
-          </Card>
-          
-          {location ? (
-            <p className="text-xs text-muted-foreground flex items-center">
-              <span className="bg-primary/20 text-primary px-2 py-1 rounded-full mr-2">Location Found</span>
-              {location.lat.toFixed(6)}, {location.lng.toFixed(6)}
-            </p>
-          ) : (
-            <p className="text-xs text-rose-500 flex items-center">
-              <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-              Detecting your location...
-            </p>
-          )}
-        </div>
-        
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)} disabled={isLoading}>
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleSubmit} 
-            disabled={isLoading || !vibeTypeId}
-            className="btn-gradient"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Submitting...
-              </>
-            ) : (
-              'Submit Report'
-            )}
-          </Button>
-        </DialogFooter>
+              <Button 
+                type="button" 
+                variant="outline" 
+                size="sm" 
+                className="ml-auto"
+                onClick={getUserLocation}
+              >
+                Refresh
+              </Button>
+            </div>
+
+            <div className="flex justify-end space-x-2">
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+              <Button 
+                type="submit" 
+                disabled={loading || !userLocation}
+              >
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Submit Report
+              </Button>
+            </div>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

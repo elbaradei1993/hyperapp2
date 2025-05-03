@@ -37,7 +37,7 @@ const SosButton = () => {
       <Button
         variant="destructive"
         size="sm"
-        className="fixed bottom-24 right-6 z-30 rounded-full shadow-lg px-4 py-2"
+        className="fixed bottom-24 right-6 z-30 rounded-full shadow-lg px-4 py-2 animate-pulse bg-red-600 hover:bg-red-700"
         onClick={() => setOpen(true)}
       >
         SOS
@@ -75,7 +75,7 @@ const SosButton = () => {
                 
                 <Button 
                   variant="destructive"
-                  className="animate-pulse"
+                  className="animate-pulse bg-red-600 hover:bg-red-700"
                   disabled={calling}
                   onClick={handleEmergencyCall}
                 >

@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
-import { Select } from "@/components/ui/select";
 import {
   Form,
   FormControl,
@@ -136,17 +135,17 @@ const OrganizationRegisterForm = () => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2 pb-4 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
-          <h3 className="text-xl font-semibold text-white mb-2">Basic Information</h3>
+        <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2 pb-4 scrollbar-thin scrollbar-thumb-black/20 scrollbar-track-transparent">
+          <h3 className="text-xl font-semibold text-black dark:text-white mb-2">Basic Information</h3>
           
           <div className="flex flex-col md:flex-row gap-4">
             {/* Organization Logo */}
-            <div className="flex flex-col items-center justify-center bg-white/10 rounded-lg p-4 md:w-1/3">
-              <div className="w-32 h-32 rounded-lg border-2 border-dashed border-white/30 flex items-center justify-center mb-2 overflow-hidden">
+            <div className="flex flex-col items-center justify-center bg-black/10 dark:bg-white/10 rounded-lg p-4 md:w-1/3">
+              <div className="w-32 h-32 rounded-lg border-2 border-dashed border-black/30 dark:border-white/30 flex items-center justify-center mb-2 overflow-hidden">
                 {logoPreview ? (
                   <img src={logoPreview} alt="Logo preview" className="w-full h-full object-cover" />
                 ) : (
-                  <Building className="h-12 w-12 text-white/40" />
+                  <Building className="h-12 w-12 text-black/40 dark:text-white/40" />
                 )}
               </div>
               <label className="w-full">
@@ -161,7 +160,7 @@ const OrganizationRegisterForm = () => {
                   type="button" 
                   variant="outline" 
                   size="sm" 
-                  className="w-full text-white bg-white/10 border-white/20 hover:bg-white/20"
+                  className="w-full text-black dark:text-white bg-black/10 dark:bg-white/10 border-black/20 dark:border-white/20 hover:bg-black/20 dark:hover:bg-white/20"
                 >
                   Upload Logo
                 </Button>
@@ -175,18 +174,18 @@ const OrganizationRegisterForm = () => {
                 name="orgName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-white">Organization Name</FormLabel>
+                    <FormLabel className="text-black dark:text-white">Organization Name</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <Building className="absolute left-3 top-2.5 h-5 w-5 text-white/60" />
+                        <Building className="absolute left-3 top-2.5 h-5 w-5 text-black/60 dark:text-white/60" />
                         <Input
                           placeholder="Organization Name"
-                          className="bg-white/10 border-white/20 text-white pl-10 placeholder:text-white/40 focus-visible:ring-blue-400"
+                          className="bg-white dark:bg-black/10 border-black/20 dark:border-white/20 text-black dark:text-white pl-10 placeholder:text-black/40 dark:placeholder:text-white/40 focus-visible:ring-blue-400"
                           {...field}
                         />
                       </div>
                     </FormControl>
-                    <FormMessage className="text-red-300" />
+                    <FormMessage className="text-red-500 dark:text-red-300" />
                   </FormItem>
                 )}
               />
@@ -197,18 +196,18 @@ const OrganizationRegisterForm = () => {
                 name="contactName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-white">Contact Person</FormLabel>
+                    <FormLabel className="text-black dark:text-white">Contact Person</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <User className="absolute left-3 top-2.5 h-5 w-5 text-white/60" />
+                        <User className="absolute left-3 top-2.5 h-5 w-5 text-black/60 dark:text-white/60" />
                         <Input
                           placeholder="Contact Person's Name"
-                          className="bg-white/10 border-white/20 text-white pl-10 placeholder:text-white/40 focus-visible:ring-blue-400"
+                          className="bg-white dark:bg-black/10 border-black/20 dark:border-white/20 text-black dark:text-white pl-10 placeholder:text-black/40 dark:placeholder:text-white/40 focus-visible:ring-blue-400"
                           {...field}
                         />
                       </div>
                     </FormControl>
-                    <FormMessage className="text-red-300" />
+                    <FormMessage className="text-red-500 dark:text-red-300" />
                   </FormItem>
                 )}
               />
@@ -221,18 +220,18 @@ const OrganizationRegisterForm = () => {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-white">Email Address</FormLabel>
+                <FormLabel className="text-black dark:text-white">Email Address</FormLabel>
                 <FormControl>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-2.5 h-5 w-5 text-white/60" />
+                    <Mail className="absolute left-3 top-2.5 h-5 w-5 text-black/60 dark:text-white/60" />
                     <Input
                       placeholder="organization@email.com"
-                      className="bg-white/10 border-white/20 text-white pl-10 placeholder:text-white/40 focus-visible:ring-blue-400"
+                      className="bg-white dark:bg-black/10 border-black/20 dark:border-white/20 text-black dark:text-white pl-10 placeholder:text-black/40 dark:placeholder:text-white/40 focus-visible:ring-blue-400"
                       {...field}
                     />
                   </div>
                 </FormControl>
-                <FormMessage className="text-red-300" />
+                <FormMessage className="text-red-500 dark:text-red-300" />
               </FormItem>
             )}
           />
@@ -243,19 +242,19 @@ const OrganizationRegisterForm = () => {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-white">Password</FormLabel>
+                <FormLabel className="text-black dark:text-white">Password</FormLabel>
                 <FormControl>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-2.5 h-5 w-5 text-white/60" />
+                    <Lock className="absolute left-3 top-2.5 h-5 w-5 text-black/60 dark:text-white/60" />
                     <Input
                       type="password"
                       placeholder="••••••••"
-                      className="bg-white/10 border-white/20 text-white pl-10 placeholder:text-white/40 focus-visible:ring-blue-400"
+                      className="bg-white dark:bg-black/10 border-black/20 dark:border-white/20 text-black dark:text-white pl-10 placeholder:text-black/40 dark:placeholder:text-white/40 focus-visible:ring-blue-400"
                       {...field}
                     />
                   </div>
                 </FormControl>
-                <FormMessage className="text-red-300" />
+                <FormMessage className="text-red-500 dark:text-red-300" />
               </FormItem>
             )}
           />
@@ -267,15 +266,15 @@ const OrganizationRegisterForm = () => {
               name="country"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-white">Country</FormLabel>
+                  <FormLabel className="text-black dark:text-white">Country</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="Country"
-                      className="bg-white/10 border-white/20 text-white placeholder:text-white/40 focus-visible:ring-blue-400"
+                      className="bg-white dark:bg-black/10 border-black/20 dark:border-white/20 text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus-visible:ring-blue-400"
                       {...field}
                     />
                   </FormControl>
-                  <FormMessage className="text-red-300" />
+                  <FormMessage className="text-red-500 dark:text-red-300" />
                 </FormItem>
               )}
             />
@@ -285,15 +284,15 @@ const OrganizationRegisterForm = () => {
               name="city"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-white">City</FormLabel>
+                  <FormLabel className="text-black dark:text-white">City</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="City"
-                      className="bg-white/10 border-white/20 text-white placeholder:text-white/40 focus-visible:ring-blue-400"
+                      className="bg-white dark:bg-black/10 border-black/20 dark:border-white/20 text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus-visible:ring-blue-400"
                       {...field}
                     />
                   </FormControl>
-                  <FormMessage className="text-red-300" />
+                  <FormMessage className="text-red-500 dark:text-red-300" />
                 </FormItem>
               )}
             />
@@ -305,19 +304,22 @@ const OrganizationRegisterForm = () => {
             name="orgType"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-white">Organization Type</FormLabel>
+                <FormLabel className="text-black dark:text-white">Organization Type</FormLabel>
                 <FormControl>
-                  <Select
-                    {...field}
-                    className="bg-white/10 border-white/20 text-white focus-visible:ring-blue-400"
+                  <select
+                    className="flex h-10 w-full rounded-md border border-black/20 dark:border-white/20 bg-white dark:bg-black/10 px-3 py-2 text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-blue-400 focus-visible:ring-blue-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    onChange={e => field.onChange(e.target.value)}
+                    onBlur={field.onBlur}
+                    value={field.value}
+                    name={field.name}
                   >
                     <option value="" disabled>Select organization type</option>
                     {organizationTypes.map(type => (
                       <option key={type.value} value={type.value}>{type.label}</option>
                     ))}
-                  </Select>
+                  </select>
                 </FormControl>
-                <FormMessage className="text-red-300" />
+                <FormMessage className="text-red-500 dark:text-red-300" />
               </FormItem>
             )}
           />
@@ -328,23 +330,23 @@ const OrganizationRegisterForm = () => {
             name="website"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-white">Website or Social Media (Optional)</FormLabel>
+                <FormLabel className="text-black dark:text-white">Website or Social Media (Optional)</FormLabel>
                 <FormControl>
                   <div className="relative">
-                    <Globe className="absolute left-3 top-2.5 h-5 w-5 text-white/60" />
+                    <Globe className="absolute left-3 top-2.5 h-5 w-5 text-black/60 dark:text-white/60" />
                     <Input
                       placeholder="https://your-website.com"
-                      className="bg-white/10 border-white/20 text-white pl-10 placeholder:text-white/40 focus-visible:ring-blue-400"
+                      className="bg-white dark:bg-black/10 border-black/20 dark:border-white/20 text-black dark:text-white pl-10 placeholder:text-black/40 dark:placeholder:text-white/40 focus-visible:ring-blue-400"
                       {...field}
                     />
                   </div>
                 </FormControl>
-                <FormMessage className="text-red-300" />
+                <FormMessage className="text-red-500 dark:text-red-300" />
               </FormItem>
             )}
           />
 
-          <h3 className="text-xl font-semibold text-white mb-2 mt-6">Service Details</h3>
+          <h3 className="text-xl font-semibold text-black dark:text-white mb-2 mt-6">Service Details</h3>
 
           {/* Description */}
           <FormField
@@ -352,15 +354,15 @@ const OrganizationRegisterForm = () => {
             name="description"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-white">Description of Services</FormLabel>
+                <FormLabel className="text-black dark:text-white">Description of Services</FormLabel>
                 <FormControl>
                   <Textarea
                     placeholder="Describe your organization's services..."
-                    className="bg-white/10 border-white/20 text-white placeholder:text-white/40 min-h-[100px] focus-visible:ring-blue-400"
+                    className="bg-white dark:bg-black/10 border-black/20 dark:border-white/20 text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 min-h-[100px] focus-visible:ring-blue-400"
                     {...field}
                   />
                 </FormControl>
-                <FormMessage className="text-red-300" />
+                <FormMessage className="text-red-500 dark:text-red-300" />
               </FormItem>
             )}
           />
@@ -371,15 +373,15 @@ const OrganizationRegisterForm = () => {
             name="areasOfOperation"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-white">Areas of Operation</FormLabel>
+                <FormLabel className="text-black dark:text-white">Areas of Operation</FormLabel>
                 <FormControl>
                   <Input
                     placeholder="e.g. Downtown, North Side, entire city"
-                    className="bg-white/10 border-white/20 text-white placeholder:text-white/40 focus-visible:ring-blue-400"
+                    className="bg-white dark:bg-black/10 border-black/20 dark:border-white/20 text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus-visible:ring-blue-400"
                     {...field}
                   />
                 </FormControl>
-                <FormMessage className="text-red-300" />
+                <FormMessage className="text-red-500 dark:text-red-300" />
               </FormItem>
             )}
           />
@@ -390,19 +392,22 @@ const OrganizationRegisterForm = () => {
             name="eventTypes"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-white">Types of Events</FormLabel>
+                <FormLabel className="text-black dark:text-white">Types of Events</FormLabel>
                 <FormControl>
-                  <Select
-                    {...field}
-                    className="bg-white/10 border-white/20 text-white focus-visible:ring-blue-400"
+                  <select
+                    className="flex h-10 w-full rounded-md border border-black/20 dark:border-white/20 bg-white dark:bg-black/10 px-3 py-2 text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-blue-400 focus-visible:ring-blue-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    onChange={e => field.onChange(e.target.value)}
+                    onBlur={field.onBlur}
+                    value={field.value}
+                    name={field.name}
                   >
                     <option value="" disabled>Select primary event type</option>
                     {eventTypes.map(type => (
                       <option key={type.value} value={type.value}>{type.label}</option>
                     ))}
-                  </Select>
+                  </select>
                 </FormControl>
-                <FormMessage className="text-red-300" />
+                <FormMessage className="text-red-500 dark:text-red-300" />
               </FormItem>
             )}
           />
@@ -414,7 +419,7 @@ const OrganizationRegisterForm = () => {
             render={() => (
               <FormItem>
                 <div className="mb-2">
-                  <FormLabel className="text-white">Vibe Categories</FormLabel>
+                  <FormLabel className="text-black dark:text-white">Vibe Categories</FormLabel>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                   {vibeCategories.map((item) => (
@@ -426,7 +431,7 @@ const OrganizationRegisterForm = () => {
                         return (
                           <FormItem
                             key={item.id}
-                            className="flex flex-row items-start space-x-2 space-y-0 rounded-md p-2 bg-white/5 hover:bg-white/10"
+                            className="flex flex-row items-start space-x-2 space-y-0 rounded-md p-2 bg-black/5 hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10"
                           >
                             <FormControl>
                               <Checkbox
@@ -443,7 +448,7 @@ const OrganizationRegisterForm = () => {
                                 className="data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
                               />
                             </FormControl>
-                            <FormLabel className="text-white text-sm font-normal">
+                            <FormLabel className="text-black dark:text-white text-sm font-normal">
                               {item.label}
                             </FormLabel>
                           </FormItem>
@@ -452,7 +457,7 @@ const OrganizationRegisterForm = () => {
                     />
                   ))}
                 </div>
-                <FormMessage className="text-red-300 mt-1" />
+                <FormMessage className="text-red-500 dark:text-red-300 mt-1" />
               </FormItem>
             )}
           />
@@ -463,7 +468,7 @@ const OrganizationRegisterForm = () => {
             name="sosParticipation"
             render={({ field }) => (
               <FormItem className="space-y-3">
-                <FormLabel className="text-white">SOS Participation</FormLabel>
+                <FormLabel className="text-black dark:text-white">SOS Participation</FormLabel>
                 <FormControl>
                   <RadioGroup
                     onValueChange={field.onChange}
@@ -474,7 +479,7 @@ const OrganizationRegisterForm = () => {
                       <FormControl>
                         <RadioGroupItem value="yes" className="text-blue-500" />
                       </FormControl>
-                      <FormLabel className="text-white font-normal">
+                      <FormLabel className="text-black dark:text-white font-normal">
                         Yes, receive SOS alerts within service radius
                       </FormLabel>
                     </FormItem>
@@ -482,13 +487,13 @@ const OrganizationRegisterForm = () => {
                       <FormControl>
                         <RadioGroupItem value="no" className="text-blue-500" />
                       </FormControl>
-                      <FormLabel className="text-white font-normal">
+                      <FormLabel className="text-black dark:text-white font-normal">
                         No, opt out of SOS program
                       </FormLabel>
                     </FormItem>
                   </RadioGroup>
                 </FormControl>
-                <FormMessage className="text-red-300" />
+                <FormMessage className="text-red-500 dark:text-red-300" />
               </FormItem>
             )}
           />
@@ -507,10 +512,10 @@ const OrganizationRegisterForm = () => {
                   />
                 </FormControl>
                 <div className="space-y-1 leading-none">
-                  <FormLabel className="text-white text-sm">
+                  <FormLabel className="text-black dark:text-white text-sm">
                     I agree to the <a href="#" className="underline">Terms of Service</a>, <a href="#" className="underline">Privacy Policy</a>, and to receive communications from HyperApp
                   </FormLabel>
-                  <FormMessage className="text-red-300" />
+                  <FormMessage className="text-red-500 dark:text-red-300" />
                 </div>
               </FormItem>
             )}
@@ -519,7 +524,7 @@ const OrganizationRegisterForm = () => {
 
         <Button 
           type="submit" 
-          className="w-full bg-white hover:bg-blue-100 text-blue-900 p-6 text-lg font-semibold rounded-xl"
+          className="w-full bg-white hover:bg-blue-100 text-blue-900 p-6 text-lg font-semibold rounded-xl dark:bg-blue-600 dark:hover:bg-blue-700 dark:text-white"
         >
           Register Organization
         </Button>
