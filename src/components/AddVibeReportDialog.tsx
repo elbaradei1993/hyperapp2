@@ -13,7 +13,6 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import {
-  Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
@@ -25,6 +24,9 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+
+// Import the correct Radix UI Select component
+import * as SelectPrimitive from "@radix-ui/react-select";
 
 interface VibeType {
   id: number;
@@ -210,7 +212,7 @@ const AddVibeReportDialog = ({ trigger }: AddVibeReportDialogProps) => {
                 <span className="text-sm text-muted-foreground">Loading vibe types...</span>
               </div>
             ) : (
-              <Select
+              <SelectPrimitive.Root
                 value={vibeTypeId?.toString() || ''}
                 onValueChange={(value) => setVibeTypeId(parseInt(value))}
               >
@@ -233,7 +235,7 @@ const AddVibeReportDialog = ({ trigger }: AddVibeReportDialogProps) => {
                     </SelectItem>
                   ))}
                 </SelectContent>
-              </Select>
+              </SelectPrimitive.Root>
             )}
           </div>
           

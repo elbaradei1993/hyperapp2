@@ -64,6 +64,7 @@ const Trending = () => {
             longitude,
             created_at,
             confirmed_count,
+            vibe_type_id,
             vibe_type: vibe_type_id (
               name,
               color
@@ -149,6 +150,7 @@ const Trending = () => {
         longitude,
         created_at,
         confirmed_count,
+        vibe_type_id,
         vibe_type: vibe_type_id (
           name,
           color
