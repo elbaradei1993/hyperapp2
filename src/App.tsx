@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { useState, useEffect } from "react";
@@ -15,7 +15,6 @@ import Settings from "./pages/Settings";
 import Trending from "./pages/Trending";
 import EventCreate from "./pages/EventCreate";
 import NotFound from "./pages/NotFound";
-import SosButton from "./components/SosButton";
 import { useTheme } from "./hooks/use-theme";
 
 const queryClient = new QueryClient({
@@ -65,7 +64,6 @@ const App = () => (
                   {/* Catch-all route */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
-                <SosButton />
               </div>
             </BrowserRouter>
           </TooltipProvider>

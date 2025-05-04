@@ -1,12 +1,10 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, User, Settings, TrendingUp, Plus, MapPin, Bell, Menu } from 'lucide-react';
+import { Home, User, Settings, Bell } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import AddVibeReportDialog from '@/components/AddVibeReportDialog';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -18,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from '@/hooks/use-toast';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 interface NavItemProps {
   to: string;
@@ -57,19 +56,7 @@ const Navbar = () => {
       <div className="container max-w-md mx-auto">
         <div className="flex items-center justify-around">
           <NavItem to="/" icon={<Home className="h-5 w-5" />} label="Home" />
-          <NavItem to="/trending" icon={<TrendingUp className="h-5 w-5" />} label="Trending" />
           
-          <AddVibeReportDialog 
-            trigger={
-              <button className="flex flex-col items-center py-2 px-3 transition-colors text-primary">
-                <div className="mb-1 bg-primary text-white p-2 rounded-full">
-                  <Plus className="h-5 w-5" />
-                </div>
-                <span className="text-xs">Add Vibe</span>
-              </button>
-            }
-          />
-
           {user ? (
             <>
               <NavItem to="/profile" icon={<User className="h-5 w-5" />} label="Profile" />
@@ -86,7 +73,7 @@ const Navbar = () => {
 
 const NotificationDropdown = () => {
   const { toast } = useToast();
-  const [notificationCount, setNotificationCount] = useState(2);
+  const [notificationCount, setNotificationCount] = React.useState(2);
 
   const notifications = [
     { id: 1, title: "New vibe reported", message: "A new vibe was reported near you", time: "10 minutes ago" },
@@ -152,44 +139,11 @@ const DesktopNavbar = ({ user }: { user: any }) => {
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center space-x-8">
             <NavLink to="/" className="flex items-center space-x-2 text-primary">
-              <MapPin className="h-6 w-6" />
               <span className="font-bold text-xl">HyperApp</span>
             </NavLink>
-            
-            <div className="hidden md:flex items-center space-x-6">
-              <NavLink 
-                to="/" 
-                className={({ isActive }) => 
-                  cn("text-sm font-medium transition-colors", 
-                     isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground"
-                  )
-                }
-              >
-                Map
-              </NavLink>
-              <NavLink 
-                to="/trending" 
-                className={({ isActive }) => 
-                  cn("text-sm font-medium transition-colors", 
-                     isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground"
-                  )
-                }
-              >
-                Trending
-              </NavLink>
-            </div>
           </div>
           
           <div className="flex items-center space-x-4">
-            <AddVibeReportDialog 
-              trigger={
-                <Button size="sm" className="hidden md:flex">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Vibe
-                </Button>
-              }
-            />
-            
             <NotificationDropdown />
             
             {user ? (

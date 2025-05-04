@@ -239,17 +239,18 @@ const Map = ({ vibes: initialVibes = [], initialCenter = [40.7128, -74.006], rad
     <div className="w-full h-full relative">
       {mapInitialized && (
         <MapContainer
-          ref={saveMapRef as any}
+          ref={saveMapRef}
           className="h-full w-full"
           center={mapCenter}
           zoom={13}
           minZoom={3} 
           maxZoom={18}
+          scrollWheelZoom={false}
         >
           <ChangeView center={mapCenter} />
           <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           />
           
           {userLocation && (
