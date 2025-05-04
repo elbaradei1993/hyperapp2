@@ -238,13 +238,7 @@ const Map = ({ vibes: initialVibes = [], initialCenter = [40.7128, -74.006], rad
         <MapContainer
           ref={saveMapRef as any}
           className="h-full w-full"
-          zoom={13}
-          minZoom={3}
-          maxZoom={19}
           scrollWheelZoom={true}
-          whenCreated={(map) => {
-            map.setView(mapCenter, 13);
-          }}
         >
           <ChangeView center={mapCenter} />
           <TileLayer
