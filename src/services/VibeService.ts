@@ -186,7 +186,7 @@ export const VibeService = {
     try {
       const { data, error } = await supabase.rpc(
         'increment_vibe_confirmed_count',
-        { vibe_id: vibe_id }
+        { vibe_id } // Pass as a proper object parameter
       );
       
       if (error) {

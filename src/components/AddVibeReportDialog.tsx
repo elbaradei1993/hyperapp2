@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -24,7 +23,7 @@ import * as z from 'zod';
 import { MapPin, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { createVibeReport, fetchVibeTypes, VibeType } from '@/services/VibeService';
+import { VibeService, fetchVibeTypes, VibeType } from '@/services/VibeService';
 
 // Form schema
 const formSchema = z.object({
@@ -119,10 +118,10 @@ const AddVibeReportDialog = ({ trigger }: AddVibeReportDialogProps) => {
         latitude: userLocation.lat.toString(),
         longitude: userLocation.lng.toString(),
         vibe_type_id: parseInt(values.vibeTypeId),
-        user_id: session?.user?.id || null,
+        user_id: session?.user?.id ? Number(session.user.id) : null,
       };
       
-      const { success, error } = await createVibeReport(vibeData);
+      const { success, error } = await VibeService.createVibeReport(vibeData);
       
       if (success) {
         toast({
