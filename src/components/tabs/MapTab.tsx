@@ -96,7 +96,6 @@ const MapTab = () => {
     <div className="h-full w-full rounded-lg overflow-hidden border border-border/40">
       <MapContainer 
         className="h-full w-full"
-        // Fix TypeScript errors by using spread with type assertion
         {...{
           center: userLocation,
           zoom: 14,
@@ -107,7 +106,6 @@ const MapTab = () => {
       >
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          // Fix TypeScript error with attribution
           {...{
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           } as any}

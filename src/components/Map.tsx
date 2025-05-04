@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useRef, useState } from 'react';
@@ -241,7 +240,6 @@ const Map = ({ vibes: initialVibes = [], initialCenter = [40.7128, -74.006], rad
         <MapContainer
           ref={saveMapRef}
           className="h-full w-full"
-          // Apply proper typing for react-leaflet props
           {...{
             center: mapCenter,
             zoom: 13,

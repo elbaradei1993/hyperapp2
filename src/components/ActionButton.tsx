@@ -85,12 +85,11 @@ const ActionButton = ({ isMobile }: ActionButtonProps) => {
         SOS
       </Button>
       
-      {isSosDialogOpen && 
-        <SosButtonHome 
-          open={isSosDialogOpen} 
-          onOpenChange={setIsSosDialogOpen}
-        />
-      }
+      {/* Always rendering SosButtonHome but controlling visibility with open prop */}
+      <SosButtonHome 
+        open={isSosDialogOpen} 
+        onOpenChange={setIsSosDialogOpen}
+      />
     </div>
   );
 };
