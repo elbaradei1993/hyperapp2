@@ -32,7 +32,7 @@ function LocationMarker() {
     <Circle 
       center={[position.lat, position.lng]} 
       pathOptions={{ color: 'blue', fillColor: '#3388ff', fillOpacity: 0.2 }}
-      radius={200}
+      radius={200 as number}
     />
   );
 }
@@ -96,11 +96,11 @@ const MapTab = () => {
     <div className="h-full w-full rounded-lg overflow-hidden border border-border/40">
       <MapContainer 
         className="h-full w-full"
-        center={userLocation}
         zoom={14}
         minZoom={3}
         maxZoom={19}
         scrollWheelZoom={true}
+        center={userLocation}
       >
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

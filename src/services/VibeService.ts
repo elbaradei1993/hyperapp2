@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -205,12 +204,10 @@ export const VibeService: VibeServiceInterface = {
       if (error) {
         throw error;
       }
-      
-      return;
     } catch (error) {
       console.error('Error incrementing vibe count:', error);
       toast.error('Failed to confirm vibe');
-      return;
+      throw error;
     }
   }
 };

@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -44,22 +43,21 @@ const VibesTab = () => {
 
   const handleUpvote = async (id: number) => {
     try {
-      const success = await VibeService.upvoteVibe(id);
-      if (success) {
-        // Update the local state after successful upvote
-        setVibeReports(prevReports => 
-          prevReports.map(report => 
-            report.id === id 
-              ? { ...report, confirmed_count: report.confirmed_count + 1 } 
-              : report
-          )
-        );
-        
-        toast({
-          title: "Vibe upvoted",
-          description: "Thank you for confirming this vibe!",
-        });
-      }
+      await VibeService.upvoteVibe(id);
+      
+      // Update the local state after successful upvote
+      setVibeReports(prevReports => 
+        prevReports.map(report => 
+          report.id === id 
+            ? { ...report, confirmed_count: report.confirmed_count + 1 } 
+            : report
+        )
+      );
+      
+      toast({
+        title: "Vibe upvoted",
+        description: "Thank you for confirming this vibe!",
+      });
     } catch (error) {
       console.error("Error upvoting vibe:", error);
       toast({

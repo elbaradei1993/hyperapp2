@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -121,9 +122,9 @@ const AddVibeReportDialog = ({ trigger }: AddVibeReportDialogProps) => {
         user_id: session?.user?.id ? Number(session.user.id) : null,
       };
       
-      const { success, error } = await VibeService.createVibeReport(vibeData);
+      const newVibe = await VibeService.createVibeReport(vibeData);
       
-      if (success) {
+      if (newVibe) {
         toast({
           title: "Vibe Reported",
           description: "Your vibe report has been submitted successfully",
@@ -132,7 +133,7 @@ const AddVibeReportDialog = ({ trigger }: AddVibeReportDialogProps) => {
         setOpen(false);
         form.reset();
       } else {
-        throw error;
+        throw new Error("Failed to create vibe report");
       }
     } catch (error) {
       console.error('Error submitting vibe report:', error);

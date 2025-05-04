@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useRef, useState } from 'react';
@@ -241,11 +240,11 @@ const Map = ({ vibes: initialVibes = [], initialCenter = [40.7128, -74.006], rad
         <MapContainer
           ref={saveMapRef}
           className="h-full w-full"
-          center={mapCenter}
           zoom={13}
           minZoom={3} 
           maxZoom={18}
           scrollWheelZoom={false}
+          center={mapCenter}
         >
           <ChangeView center={mapCenter} />
           <TileLayer
@@ -268,7 +267,7 @@ const Map = ({ vibes: initialVibes = [], initialCenter = [40.7128, -74.006], rad
                   fillColor: vibe.color,
                   fillOpacity: 0.2
                 }}
-                radius={vibe.radius}
+                radius={vibe.radius as number}
               />
               <Marker position={[vibe.lat, vibe.lng]}>
                 <Popup>
