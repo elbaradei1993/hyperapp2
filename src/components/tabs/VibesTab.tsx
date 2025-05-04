@@ -6,12 +6,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Search, ThumbsUp, MapPin, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { VibeService, VibeType, Vibe } from "@/services/VibeService";
+import { VibeService, VibeType, VibeReport } from "@/services/VibeService";
 import { useToast } from "@/hooks/use-toast";
 
 const VibesTab = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [vibeReports, setVibeReports] = useState<Vibe[]>([]);
+  const [vibeReports, setVibeReports] = useState<VibeReport[]>([]);
   const [vibeTypes, setVibeTypes] = useState<VibeType[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -140,12 +140,12 @@ const VibesTab = () => {
                   <span 
                     className="text-xs px-2 py-1 rounded-full border" 
                     style={{ 
-                      backgroundColor: `${getVibeColor(vibe.vibe_type_id)}20`,
-                      color: getVibeColor(vibe.vibe_type_id),
-                      borderColor: `${getVibeColor(vibe.vibe_type_id)}40`
+                      backgroundColor: `${vibe.vibe_type ? vibe.vibe_type.color : getVibeColor(vibe.vibe_type_id)}20`,
+                      color: vibe.vibe_type ? vibe.vibe_type.color : getVibeColor(vibe.vibe_type_id),
+                      borderColor: `${vibe.vibe_type ? vibe.vibe_type.color : getVibeColor(vibe.vibe_type_id)}40`
                     }}
                   >
-                    {getVibeName(vibe.vibe_type_id)}
+                    {vibe.vibe_type ? vibe.vibe_type.name : getVibeName(vibe.vibe_type_id)}
                   </span>
                   <span className="text-xs text-muted-foreground flex items-center">
                     <Clock className="h-3 w-3 mr-1" />

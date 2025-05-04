@@ -46,7 +46,7 @@ function ChangeView({ center }: { center: [number, number] }) {
   return null;
 }
 
-const Map = ({ vibes: initialVibes = [], initialCenter = [-74.006, 40.7128], radiusKm = 10 }: MapProps) => {
+const Map = ({ vibes: initialVibes = [], initialCenter = [40.7128, -74.006], radiusKm = 10 }: MapProps) => {
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [isLocating, setIsLocating] = useState(false);
   const [vibes, setVibes] = useState<Vibe[]>(initialVibes);
@@ -237,19 +237,19 @@ const Map = ({ vibes: initialVibes = [], initialCenter = [-74.006, 40.7128], rad
     <div className="w-full h-full relative">
       {mapInitialized && (
         <MapContainer
+          ref={saveMapRef}
+          className="h-full w-full"
           center={mapCenter}
           zoom={13}
-          style={{ height: "100%", width: "100%" }}
-          whenCreated={saveMapRef}
         >
           <ChangeView center={mapCenter} />
           <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           />
           
           {userLocation && (
-            <Marker position={[userLocation[0], userLocation[1]]}>
+            <Marker position={userLocation}>
               <Popup>You are here</Popup>
             </Marker>
           )}

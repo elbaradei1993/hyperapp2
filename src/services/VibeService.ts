@@ -32,6 +32,10 @@ export interface VibeReport {
   created_at: string;
   confirmed_count: number;
   vibe_type_id: number;
+  vibe_type?: {
+    name: string;
+    color: string;
+  };
   user_id?: number;
 }
 
@@ -41,7 +45,7 @@ interface CreateVibeReport {
   latitude: string;
   longitude: string;
   vibe_type_id: number;
-  user_id?: string | null;
+  user_id?: number | null;
 }
 
 interface IncrementVibeCountParams {
@@ -152,9 +156,15 @@ export const VibeService = {
    */
   async createVibeReport(vibeData: CreateVibeReport): Promise<{ success: boolean; data?: any; error?: any }> {
     try {
+      // Convert user_id to number if it's a string, or null if it's null/undefined
+      const formattedData = {
+        ...vibeData,
+        user_id: vibeData.user_id ? Number(vibeData.user_id) : null,
+      };
+
       const { data, error } = await supabase
         .from('vibe_reports')
-        .insert(vibeData)
+        .insert(formattedData)
         .select();
       
       if (error) {
@@ -176,7 +186,7 @@ export const VibeService = {
     try {
       const { data, error } = await supabase.rpc(
         'increment_vibe_confirmed_count',
-        { vibe_id: vibe_id.toString() } as any
+        { vibe_id: vibe_id }
       );
       
       if (error) {
