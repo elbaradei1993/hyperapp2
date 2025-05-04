@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useRef, useState } from 'react';
@@ -41,7 +42,9 @@ interface MapProps {
 // Component to handle map center changes
 function ChangeView({ center }: { center: [number, number] }) {
   const map = useMap();
-  map.setView(center, map.getZoom());
+  useEffect(() => {
+    map.setView(center, 13);
+  }, [center, map]);
   return null;
 }
 
@@ -238,10 +241,14 @@ const Map = ({ vibes: initialVibes = [], initialCenter = [40.7128, -74.006], rad
         <MapContainer
           ref={saveMapRef as any}
           className="h-full w-full"
-          scrollWheelZoom={true}
+          center={mapCenter}
+          zoom={13}
+          minZoom={3} 
+          maxZoom={18}
         >
           <ChangeView center={mapCenter} />
           <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           
@@ -260,6 +267,7 @@ const Map = ({ vibes: initialVibes = [], initialCenter = [40.7128, -74.006], rad
                   fillColor: vibe.color,
                   fillOpacity: 0.2
                 }}
+                radius={vibe.radius}
               >
                 <Popup>
                   <div>
