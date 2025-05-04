@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -48,6 +47,7 @@ interface CreateVibeReport {
   user_id?: number | null;
 }
 
+// Define the type for the increment vibe count params to match the RPC expectation
 interface IncrementVibeCountParams {
   vibe_id: number;
 }
