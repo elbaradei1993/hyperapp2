@@ -184,9 +184,12 @@ export const VibeService = {
    */
   async upvoteVibe(vibe_id: number): Promise<boolean> {
     try {
+      // Explicitly specify the parameter object type to match the expected server-side parameter
+      const params: IncrementVibeCountParams = { vibe_id };
+      
       const { data, error } = await supabase.rpc(
         'increment_vibe_confirmed_count',
-        { vibe_id } as IncrementVibeCountParams // Cast to the correct parameter type
+        params
       );
       
       if (error) {
