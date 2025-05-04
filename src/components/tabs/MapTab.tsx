@@ -32,8 +32,7 @@ function LocationMarker() {
     <Circle 
       center={[position.lat, position.lng]} 
       pathOptions={{ color: 'blue', fillColor: '#3388ff', fillOpacity: 0.2 }}
-      // Cast radius to any to fix TypeScript error
-      radius={200 as any}
+      {...{ radius: 200 } as any}
     />
   );
 }
@@ -97,17 +96,21 @@ const MapTab = () => {
     <div className="h-full w-full rounded-lg overflow-hidden border border-border/40">
       <MapContainer 
         className="h-full w-full"
-        // Fix TypeScript errors by casting props to any
-        center={userLocation as any}
-        zoom={14 as any}
-        minZoom={3 as any}
-        maxZoom={19 as any}
-        scrollWheelZoom={true}
+        // Fix TypeScript errors by using spread with type assertion
+        {...{
+          center: userLocation,
+          zoom: 14,
+          minZoom: 3,
+          maxZoom: 19,
+          scrollWheelZoom: true
+        } as any}
       >
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          // Cast attribution to any to fix TypeScript error
-          attribution={'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' as any}
+          // Fix TypeScript error with attribution
+          {...{
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          } as any}
         />
         
         <LocationMarker />

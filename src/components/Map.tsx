@@ -241,18 +241,21 @@ const Map = ({ vibes: initialVibes = [], initialCenter = [40.7128, -74.006], rad
         <MapContainer
           ref={saveMapRef}
           className="h-full w-full"
-          // Fix TypeScript errors by casting props to any
-          center={mapCenter as any}
-          zoom={13 as any}
-          minZoom={3 as any} 
-          maxZoom={18 as any}
-          scrollWheelZoom={false}
+          // Apply proper typing for react-leaflet props
+          {...{
+            center: mapCenter,
+            zoom: 13,
+            minZoom: 3,
+            maxZoom: 18,
+            scrollWheelZoom: false
+          } as any}
         >
           <ChangeView center={mapCenter} />
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            // Cast attribution to any
-            attribution={'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' as any}
+            {...{
+              attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            } as any}
           />
           
           {userLocation && (
@@ -270,8 +273,7 @@ const Map = ({ vibes: initialVibes = [], initialCenter = [40.7128, -74.006], rad
                   fillColor: vibe.color,
                   fillOpacity: 0.2
                 }}
-                // Cast radius to any to fix TypeScript error
-                radius={vibe.radius as any}
+                {...{ radius: vibe.radius } as any}
               />
               <Marker position={[vibe.lat, vibe.lng]}>
                 <Popup>
