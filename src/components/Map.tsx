@@ -241,8 +241,8 @@ const Map = ({ vibes: initialVibes = [], initialCenter = [40.7128, -74.006], rad
         <MapContainer
           ref={saveMapRef}
           className="h-full w-full"
-          center={mapCenter}
-          zoom={13}
+          defaultCenter={mapCenter}
+          defaultZoom={13}
           minZoom={3} 
           maxZoom={18}
           scrollWheelZoom={false}
@@ -269,14 +269,7 @@ const Map = ({ vibes: initialVibes = [], initialCenter = [40.7128, -74.006], rad
                   fillOpacity: 0.2
                 }}
                 radius={vibe.radius}
-              >
-                <Popup>
-                  <div>
-                    <strong>{vibe.title || vibe.type}</strong>
-                    <p>Type: {vibe.type}</p>
-                  </div>
-                </Popup>
-              </Circle>
+              />
               <Marker position={[vibe.lat, vibe.lng]}>
                 <Popup>
                   <div>
