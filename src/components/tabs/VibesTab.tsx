@@ -6,12 +6,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Search, ThumbsUp, MapPin, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { VibeService, VibeType, VibeReport } from "@/services/VibeService";
+import { VibeService, VibeType, Vibe } from "@/services/VibeService";
 import { useToast } from "@/hooks/use-toast";
 
 const VibesTab = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [vibeReports, setVibeReports] = useState<VibeReport[]>([]);
+  const [vibeReports, setVibeReports] = useState<Vibe[]>([]);
   const [vibeTypes, setVibeTypes] = useState<VibeType[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -44,11 +44,14 @@ const VibesTab = () => {
 
   const handleUpvote = async (id: number) => {
     try {
-      const updatedReport = await VibeService.upvoteVibe(id);
-      if (updatedReport) {
+      const success = await VibeService.upvoteVibe(id);
+      if (success) {
+        // Update the local state after successful upvote
         setVibeReports(prevReports => 
           prevReports.map(report => 
-            report.id === id ? updatedReport : report
+            report.id === id 
+              ? { ...report, confirmed_count: report.confirmed_count + 1 } 
+              : report
           )
         );
         
