@@ -5,10 +5,11 @@ import React, { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import AlertsTab from "@/components/tabs/AlertsTab";
+import MapTab from "@/components/tabs/MapTab";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { H1, FadeIn } from "@/components/ui/design-system";
 import { Card, CardContent } from "@/components/ui/card";
-import { Bell } from "lucide-react";
+import { Bell, Map } from "lucide-react";
 import AddVibeReportDialog from "@/components/AddVibeReportDialog";
 import SosButtonHome from "@/components/SosButtonHome";
 
@@ -51,10 +52,14 @@ const Index = () => {
           <FadeIn delay="100ms">
             <Card className="mb-6 border border-border/40">
               <CardContent className="p-2">
-                <TabsList className="grid w-full grid-cols-1">
+                <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="alerts" className="flex items-center gap-2">
                     <Bell className="h-4 w-4" />
                     <span>Alerts</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="map" className="flex items-center gap-2">
+                    <Map className="h-4 w-4" />
+                    <span>Map</span>
                   </TabsTrigger>
                 </TabsList>
               </CardContent>
@@ -65,6 +70,9 @@ const Index = () => {
             <FadeIn delay="200ms" className="h-full">
               <TabsContent value="alerts" className="h-full m-0 overflow-auto">
                 <AlertsTab />
+              </TabsContent>
+              <TabsContent value="map" className="h-full m-0">
+                <MapTab />
               </TabsContent>
             </FadeIn>
             
@@ -82,8 +90,10 @@ const Index = () => {
         </Tabs>
       </div>
       
-      {/* SOS Button */}
-      <SosButtonHome />
+      {/* SOS Button positioned correctly below the content */}
+      <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 z-30">
+        <SosButtonHome />
+      </div>
       
       <Navbar />
     </div>

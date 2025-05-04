@@ -75,7 +75,7 @@ const SosButtonHome = () => {
     <>
       <Button
         variant="destructive"
-        className="fixed bottom-24 left-1/2 transform -translate-x-1/2 z-30 rounded-full shadow-lg w-16 h-16 flex items-center justify-center animate-pulse bg-red-600 hover:bg-red-700 focus:ring-4 focus:ring-red-400"
+        className="rounded-full shadow-lg w-16 h-16 flex items-center justify-center animate-pulse bg-red-600 hover:bg-red-700 focus:ring-4 focus:ring-red-400"
         onClick={() => setOpen(true)}
       >
         <AlertTriangle className="h-8 w-8" />

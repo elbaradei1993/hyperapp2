@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -39,7 +38,7 @@ export interface VibeReport {
   user_id?: number;
 }
 
-interface CreateVibeReport {
+interface CreateVibeReportInput {
   title: string;
   description: string;
   latitude: string;
@@ -54,7 +53,7 @@ interface IncrementVibeCountParams {
 }
 
 // Export a single VibeService object with all the functions as methods
-export const VibeService = {
+export const VibeService: VibeServiceInterface = {
   /**
    * Fetch all vibe types from Supabase
    */
@@ -155,12 +154,12 @@ export const VibeService = {
   /**
    * Create a new vibe report
    */
-  async createVibeReport(vibeData: CreateVibeReport): Promise<{ success: boolean; data?: any; error?: any }> {
+  async createVibeReport(data: CreateVibeReportInput): Promise<VibeReport | null> {
     try {
       // Convert user_id to number if it's a string, or null if it's null/undefined
       const formattedData = {
-        ...vibeData,
-        user_id: vibeData.user_id ? Number(vibeData.user_id) : null,
+        ...data,
+        user_id: data.user_id ? Number(data.user_id) : null,
       };
 
       const { data, error } = await supabase
@@ -172,21 +171,21 @@ export const VibeService = {
         throw error;
       }
       
-      return { success: true, data };
+      return data ? data[0] : null;
     } catch (error) {
       console.error('Error creating vibe report:', error);
       toast.error('Failed to create vibe report');
-      return { success: false, error };
+      return null;
     }
   },
 
   /**
    * Increment the confirmed count for a vibe
    */
-  async upvoteVibe(vibe_id: number): Promise<boolean> {
+  async upvoteVibe(id: number): Promise<void> {
     try {
       // Explicitly specify the parameter object type to match the expected server-side parameter
-      const params: IncrementVibeCountParams = { vibe_id };
+      const params: IncrementVibeCountParams = { vibe_id: id };
       
       const { data, error } = await supabase.rpc(
         'increment_vibe_confirmed_count',
@@ -197,11 +196,11 @@ export const VibeService = {
         throw error;
       }
       
-      return true;
+      return;
     } catch (error) {
       console.error('Error incrementing vibe count:', error);
       toast.error('Failed to confirm vibe');
-      return false;
+      return;
     }
   }
 };

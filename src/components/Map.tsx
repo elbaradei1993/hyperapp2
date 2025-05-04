@@ -201,7 +201,7 @@ const Map = ({ vibes: initialVibes = [], initialCenter = [40.7128, -74.006], rad
             color
           )
         `)
-        .eq('id', safeParseInt(id) as any)
+        .eq('id', safeParseInt(id))
         .single();
       
       if (error) throw error;
@@ -241,8 +241,8 @@ const Map = ({ vibes: initialVibes = [], initialCenter = [40.7128, -74.006], rad
         <MapContainer
           ref={saveMapRef}
           className="h-full w-full"
-          defaultCenter={mapCenter}
-          defaultZoom={13}
+          center={mapCenter}
+          zoom={13}
           minZoom={3} 
           maxZoom={18}
           scrollWheelZoom={false}
