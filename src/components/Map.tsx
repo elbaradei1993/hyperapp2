@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useRef, useState } from 'react';
@@ -242,7 +243,6 @@ const Map = ({ vibes: initialVibes = [], initialCenter = [40.7128, -74.006], rad
           <ChangeView center={mapCenter} />
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           />
           
           {userLocation && (
@@ -260,8 +260,14 @@ const Map = ({ vibes: initialVibes = [], initialCenter = [40.7128, -74.006], rad
                   fillColor: vibe.color,
                   fillOpacity: 0.2
                 }}
-                radius={vibe.radius}
-              />
+              >
+                <Popup>
+                  <div>
+                    <strong>{vibe.title || vibe.type}</strong>
+                    <p>Type: {vibe.type}</p>
+                  </div>
+                </Popup>
+              </Circle>
               <Marker position={[vibe.lat, vibe.lng]}>
                 <Popup>
                   <div>
