@@ -1,142 +1,146 @@
 
-"use client";
+import React, { useEffect, useState } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import { Map as MapIcon } from 'lucide-react';
+import { VibeService } from '@/services/VibeService';
+import { Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import L from 'leaflet';
 
-import React, { useEffect, useState } from "react";
-import Map from "@/components/Map";
-import { Card } from "@/components/ui/card";
-import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+// Fix Leaflet icon issues
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
+  iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+});
 
-interface Vibe {
-  id: string;
-  lat: number;
-  lng: number;
-  type: string;
-  radius: number;
-  color: string;
+// Location finder component
+function LocationMarker() {
+  const [position, setPosition] = useState<L.LatLng | null>(null);
+  const map = useMap();
+
+  useEffect(() => {
+    map.locate().on("locationfound", function (e) {
+      setPosition(e.latlng);
+      map.flyTo(e.latlng, map.getZoom());
+    });
+  }, [map]);
+
+  return position === null ? null : (
+    <Circle 
+      center={[position.lat, position.lng]} 
+      pathOptions={{ color: 'blue', fillColor: '#3388ff', fillOpacity: 0.2 }}
+      radius={200}
+    />
+  );
 }
 
 const MapTab = () => {
-  const [vibes, setVibes] = useState<Vibe[]>([]);
+  const [vibes, setVibes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const { toast } = useToast();
 
-  // Get user location
   useEffect(() => {
+    // Get user location
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          });
+        position => {
+          setUserLocation([position.coords.latitude, position.coords.longitude]);
         },
-        (error) => {
-          console.error('Error getting location:', error);
-          // Set default fallback location
-          setUserLocation({
-            lat: 40.7128, // New York City coordinates as fallback
-            lng: -74.0060
-          });
-        },
-        { timeout: 10000, enableHighAccuracy: true }
+        error => {
+          console.error("Error getting location:", error);
+          // Default to a location if we can't get the user's
+          setUserLocation([37.7749, -122.4194]); // San Francisco
+        }
       );
     } else {
-      // Fallback if geolocation is not supported
-      setUserLocation({
-        lat: 40.7128,
-        lng: -74.0060
-      });
+      // Default location
+      setUserLocation([37.7749, -122.4194]); // San Francisco
     }
-  }, []);
-
-  useEffect(() => {
-    const fetchVibes = async () => {
+    
+    // Load vibes
+    async function loadVibes() {
       try {
-        const { data, error } = await supabase
-          .from('vibe_reports')
-          .select(`
-            id,
-            latitude,
-            longitude,
-            vibe_type: vibe_type_id (
-              name, 
-              color
-            )
-          `)
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
-
-        const formattedVibes = data.map(vibe => ({
-          id: vibe.id.toString(),
-          lat: parseFloat(vibe.latitude),
-          lng: parseFloat(vibe.longitude),
-          type: vibe.vibe_type?.name || 'unknown',
-          radius: 400,
-          color: vibe.vibe_type?.color || '#888888'
-        }));
-
-        setVibes(formattedVibes);
+        const data = await VibeService.getVibeReports();
+        setVibes(data);
       } catch (error) {
-        console.error("Error fetching vibes:", error);
+        console.error("Error loading vibes:", error);
         toast({
-          title: "Error loading vibes",
+          title: "Failed to load vibes",
           description: "Could not load vibe data from the server",
           variant: "destructive"
         });
-        
-        // Empty array as fallback
-        setVibes([]);
       } finally {
         setLoading(false);
       }
-    };
-
-    fetchVibes();
+    }
+    
+    loadVibes();
   }, [toast]);
 
-  const getLegendItems = () => {
-    // Get unique vibe types
-    const uniqueVibeTypes = vibes.reduce((acc: {type: string, color: string}[], vibe) => {
-      if (!acc.some(item => item.type === vibe.type)) {
-        acc.push({type: vibe.type, color: vibe.color});
-      }
-      return acc;
-    }, []);
-
-    return uniqueVibeTypes;
-  };
+  if (loading || !userLocation) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        <p className="mt-4 text-sm text-muted-foreground">
+          Loading map...
+        </p>
+      </div>
+    );
+  }
 
   return (
-    <div className="h-full space-y-4">
-      <div className="flex justify-end items-center">
-        {loading ? (
-          <div className="flex items-center space-x-2">
-            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-            <span className="text-xs text-muted-foreground">Loading vibes...</span>
-          </div>
-        ) : (
-          <div className="space-x-3">
-            {getLegendItems().map((item, index) => (
-              <span key={index} className="inline-flex items-center text-xs">
-                <span 
-                  className="w-3 h-3 rounded-full mr-1 opacity-80" 
-                  style={{ backgroundColor: item.color }}
-                />
-                {item.type}
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
-      <Card className="h-[calc(100vh-10rem)] overflow-hidden shadow-2xl border border-white/10">
-        <div className="h-full rounded-md overflow-hidden">
-          <Map radiusKm={10} vibes={vibes} />
-        </div>
-      </Card>
+    <div className="h-full w-full rounded-lg overflow-hidden border border-border/40">
+      <MapContainer 
+        className="h-full w-full"
+        center={userLocation}
+        zoom={14}
+        minZoom={3}
+        maxZoom={19}
+        scrollWheelZoom={true}
+      >
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        />
+        
+        <LocationMarker />
+        
+        {vibes.map((vibe) => {
+          if (!vibe.latitude || !vibe.longitude) return null;
+          
+          const lat = parseFloat(vibe.latitude);
+          const lng = parseFloat(vibe.longitude);
+          
+          if (isNaN(lat) || isNaN(lng)) return null;
+          
+          return (
+            <Marker 
+              key={vibe.id} 
+              position={[lat, lng]}
+            >
+              <Popup>
+                <div className="p-1">
+                  <h3 className="font-medium text-sm">{vibe.title}</h3>
+                  <p className="text-xs text-muted-foreground mt-1">{vibe.description}</p>
+                  {vibe.vibe_type && (
+                    <div className="flex items-center gap-1 mt-2">
+                      <span 
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: vibe.vibe_type.color }}
+                      />
+                      <span className="text-xs">{vibe.vibe_type.name}</span>
+                    </div>
+                  )}
+                </div>
+              </Popup>
+            </Marker>
+          );
+        })}
+      </MapContainer>
     </div>
   );
 };

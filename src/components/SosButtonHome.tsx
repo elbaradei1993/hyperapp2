@@ -13,10 +13,21 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from "@/integrations/supabase/client";
 
-const SosButtonHome = () => {
-  const [open, setOpen] = useState(false);
+interface SosButtonHomeProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+const SosButtonHome = ({ open: controlledOpen, onOpenChange }: SosButtonHomeProps) => {
+  const [open, setOpen] = useState(controlledOpen || false);
   const [calling, setCalling] = useState(false);
   const { toast } = useToast();
+  
+  // Handle state from both controlled and uncontrolled modes
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    onOpenChange?.(newOpen);
+  };
 
   const handleEmergencyCall = async () => {
     setCalling(true);
@@ -53,7 +64,7 @@ const SosButtonHome = () => {
       });
     } finally {
       setCalling(false);
-      setOpen(false);
+      handleOpenChange(false);
     }
   };
   
@@ -72,60 +83,51 @@ const SosButtonHome = () => {
   };
 
   return (
-    <>
-      <Button
-        variant="destructive"
-        className="rounded-full shadow-lg w-16 h-16 flex items-center justify-center animate-pulse bg-red-600 hover:bg-red-700 focus:ring-4 focus:ring-red-400"
-        onClick={() => setOpen(true)}
-      >
-        <AlertTriangle className="h-8 w-8" />
-      </Button>
-
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-red-500">Emergency Assistance</DialogTitle>
-            <DialogDescription>
-              Activate emergency services and alert nearby community members.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="py-4">
-            <div className="space-y-4">
-              <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-md">
-                <h3 className="font-semibold text-red-600 dark:text-red-400 mb-2">This will:</h3>
-                <ul className="list-disc list-inside space-y-1 text-sm text-red-600 dark:text-red-400">
-                  <li>Share your current location with emergency services</li>
-                  <li>Alert nearby community members who have opted in to help</li>
-                  <li>Notify your emergency contacts (if configured)</li>
-                </ul>
-              </div>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-red-500">Emergency Assistance</DialogTitle>
+          <DialogDescription>
+            Activate emergency services and alert nearby community members.
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="py-4">
+          <div className="space-y-4">
+            <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-md">
+              <h3 className="font-semibold text-red-600 dark:text-red-400 mb-2">This will:</h3>
+              <ul className="list-disc list-inside space-y-1 text-sm text-red-600 dark:text-red-400">
+                <li>Share your current location with emergency services</li>
+                <li>Alert nearby community members who have opted in to help</li>
+                <li>Notify your emergency contacts (if configured)</li>
+              </ul>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="border-red-200 hover:bg-red-50 dark:border-red-900 dark:hover:bg-red-900/20"
+                onClick={() => handleOpenChange(false)}
+              >
+                <X className="h-4 w-4 mr-2" />
+                Cancel
+              </Button>
               
-              <div className="grid grid-cols-2 gap-4">
-                <Button 
-                  variant="outline" 
-                  className="border-red-200 hover:bg-red-50 dark:border-red-900 dark:hover:bg-red-900/20"
-                  onClick={() => setOpen(false)}
-                >
-                  <X className="h-4 w-4 mr-2" />
-                  Cancel
-                </Button>
-                
-                <Button 
-                  variant="destructive"
-                  className="animate-pulse bg-red-600 hover:bg-red-700"
-                  disabled={calling}
-                  onClick={handleEmergencyCall}
-                >
-                  <Phone className="h-4 w-4 mr-2" />
-                  {calling ? "Sending..." : "Send Alert"}
-                </Button>
-              </div>
+              <Button 
+                variant="destructive"
+                className="animate-pulse bg-red-600 hover:bg-red-700"
+                disabled={calling}
+                onClick={handleEmergencyCall}
+              >
+                <Phone className="h-4 w-4 mr-2" />
+                {calling ? "Sending..." : "Send Alert"}
+              </Button>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
-    </>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 

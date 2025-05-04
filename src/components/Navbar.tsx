@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, User, Settings, Bell } from 'lucide-react';
+import { Home, User, Settings, Bell, Map, TrendingUp } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from '@/hooks/use-toast';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import ActionButton from './ActionButton';
 
 interface NavItemProps {
   to: string;
@@ -54,8 +55,17 @@ const Navbar = () => {
   return (
     <nav className="mobile-nav fixed bottom-0 left-0 right-0 z-40 bg-background border-t border-border/40 py-1">
       <div className="container max-w-md mx-auto">
-        <div className="flex items-center justify-around">
+        <div className="flex items-center justify-around relative">
           <NavItem to="/" icon={<Home className="h-5 w-5" />} label="Home" />
+          <NavItem to="/trending" icon={<TrendingUp className="h-5 w-5" />} label="Trending" />
+          
+          {/* Action button - positioned in the middle */}
+          <div className="absolute left-1/2 -translate-x-1/2 -top-7">
+            <ActionButton isMobile={true} />
+          </div>
+          
+          {/* Empty space for the action button */}
+          <div className="h-5 w-5 opacity-0"></div>
           
           {user ? (
             <>
@@ -141,9 +151,32 @@ const DesktopNavbar = ({ user }: { user: any }) => {
             <NavLink to="/" className="flex items-center space-x-2 text-primary">
               <span className="font-bold text-xl">HyperApp</span>
             </NavLink>
+            <div className="hidden md:flex space-x-4">
+              <NavLink to="/" className={({isActive}) => cn(
+                "text-sm font-medium transition-colors",
+                isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
+              )}>
+                <span className="flex items-center gap-1">
+                  <Map className="h-4 w-4" />
+                  Map
+                </span>
+              </NavLink>
+              <NavLink to="/trending" className={({isActive}) => cn(
+                "text-sm font-medium transition-colors",
+                isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
+              )}>
+                <span className="flex items-center gap-1">
+                  <TrendingUp className="h-4 w-4" />
+                  Trending
+                </span>
+              </NavLink>
+            </div>
           </div>
           
           <div className="flex items-center space-x-4">
+            <div className="hidden md:block">
+              <ActionButton isMobile={false} />
+            </div>
             <NotificationDropdown />
             
             {user ? (

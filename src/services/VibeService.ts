@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -50,6 +51,15 @@ interface CreateVibeReportInput {
 // Define the type for the increment vibe count params to match the RPC expectation
 interface IncrementVibeCountParams {
   vibe_id: number;
+}
+
+// Define the interface for the VibeService
+interface VibeServiceInterface {
+  getVibeTypes(): Promise<VibeType[]>;
+  getVibeReports(page?: number, limit?: number): Promise<VibeReport[]>;
+  getTrendingVibes(limit?: number): Promise<Vibe[]>;
+  createVibeReport(data: CreateVibeReportInput): Promise<VibeReport | null>;
+  upvoteVibe(id: number): Promise<void>;
 }
 
 // Export a single VibeService object with all the functions as methods
@@ -154,15 +164,15 @@ export const VibeService: VibeServiceInterface = {
   /**
    * Create a new vibe report
    */
-  async createVibeReport(data: CreateVibeReportInput): Promise<VibeReport | null> {
+  async createVibeReport(formData: CreateVibeReportInput): Promise<VibeReport | null> {
     try {
       // Convert user_id to number if it's a string, or null if it's null/undefined
       const formattedData = {
-        ...data,
-        user_id: data.user_id ? Number(data.user_id) : null,
+        ...formData,
+        user_id: formData.user_id ? Number(formData.user_id) : null,
       };
 
-      const { data, error } = await supabase
+      const { data: newData, error } = await supabase
         .from('vibe_reports')
         .insert(formattedData)
         .select();
@@ -171,7 +181,7 @@ export const VibeService: VibeServiceInterface = {
         throw error;
       }
       
-      return data ? data[0] : null;
+      return newData ? newData[0] : null;
     } catch (error) {
       console.error('Error creating vibe report:', error);
       toast.error('Failed to create vibe report');
@@ -187,7 +197,7 @@ export const VibeService: VibeServiceInterface = {
       // Explicitly specify the parameter object type to match the expected server-side parameter
       const params: IncrementVibeCountParams = { vibe_id: id };
       
-      const { data, error } = await supabase.rpc(
+      const { error } = await supabase.rpc(
         'increment_vibe_confirmed_count',
         params
       );
