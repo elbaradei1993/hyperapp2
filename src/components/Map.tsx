@@ -238,7 +238,6 @@ const Map = ({ vibes: initialVibes = [], initialCenter = [40.7128, -74.006], rad
         <MapContainer
           ref={saveMapRef as any}
           className="h-full w-full"
-          zoom={13}
         >
           <ChangeView center={mapCenter} />
           <TileLayer
@@ -261,7 +260,7 @@ const Map = ({ vibes: initialVibes = [], initialCenter = [40.7128, -74.006], rad
                   fillColor: vibe.color,
                   fillOpacity: 0.2
                 }}
-                radius={vibe.radius as any}
+                radius={vibe.radius}
               />
               <Marker position={[vibe.lat, vibe.lng]}>
                 <Popup>
