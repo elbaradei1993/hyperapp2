@@ -2,10 +2,11 @@
 import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Map as MapIcon } from 'lucide-react';
-import { VibeService } from '@/services/VibeService';
+import { Map as MapIcon, ThumbsUp } from 'lucide-react';
+import { VibeService, Vibe } from '@/services/VibeService';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
 import L from 'leaflet';
 
 // Fix Leaflet icon issues
@@ -32,7 +33,7 @@ function LocationMarker() {
     <Circle 
       center={[position.lat, position.lng]} 
       pathOptions={{ color: 'blue', fillColor: '#3388ff', fillOpacity: 0.2 }}
-      {...{ radius: 200 } as any}
+      radius={200}
     />
   );
 }
@@ -42,6 +43,7 @@ const MapTab = () => {
   const [loading, setLoading] = useState(true);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const { toast } = useToast();
+  const [isUpvoting, setIsUpvoting] = useState<number | null>(null);
 
   useEffect(() => {
     // Get user location
@@ -81,6 +83,32 @@ const MapTab = () => {
     loadVibes();
   }, [toast]);
 
+  const handleConfirmVibe = async (id: number) => {
+    try {
+      setIsUpvoting(id);
+      await VibeService.upvoteVibe(id);
+      
+      // Update local state to reflect the new count
+      setVibes(prevVibes => prevVibes.map(vibe => 
+        vibe.id === id ? { ...vibe, confirmed_count: vibe.confirmed_count + 1 } : vibe
+      ));
+      
+      toast({
+        title: "Vibe confirmed",
+        description: "Thanks for confirming this vibe!",
+      });
+    } catch (error) {
+      console.error("Error confirming vibe:", error);
+      toast({
+        title: "Failed to confirm vibe",
+        description: "Could not register your confirmation",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUpvoting(null);
+    }
+  };
+
   if (loading || !userLocation) {
     return (
       <div className="flex flex-col items-center justify-center h-full">
@@ -96,19 +124,15 @@ const MapTab = () => {
     <div className="h-full w-full rounded-lg overflow-hidden border border-border/40">
       <MapContainer 
         className="h-full w-full"
-        {...{
-          center: userLocation,
-          zoom: 14,
-          minZoom: 3,
-          maxZoom: 19,
-          scrollWheelZoom: true
-        } as any}
+        center={userLocation}
+        zoom={14}
+        minZoom={3}
+        maxZoom={19}
+        scrollWheelZoom={true}
       >
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          {...{
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          } as any}
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
         
         <LocationMarker />
@@ -139,6 +163,25 @@ const MapTab = () => {
                       <span className="text-xs">{vibe.vibe_type.name}</span>
                     </div>
                   )}
+                  <div className="flex items-center justify-between mt-3">
+                    <span className="text-xs text-muted-foreground">
+                      {vibe.confirmed_count} confirmations
+                    </span>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      className="h-7 px-2 flex items-center gap-1 text-xs"
+                      onClick={() => handleConfirmVibe(vibe.id)}
+                      disabled={isUpvoting === vibe.id}
+                    >
+                      {isUpvoting === vibe.id ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <ThumbsUp className="h-3 w-3" />
+                      )}
+                      Confirm
+                    </Button>
+                  </div>
                 </div>
               </Popup>
             </Marker>

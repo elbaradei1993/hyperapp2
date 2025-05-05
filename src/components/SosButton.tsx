@@ -37,14 +37,15 @@ const SosButton = () => {
       <Button
         variant="destructive"
         size="sm"
-        className="fixed bottom-24 right-6 z-30 rounded-full shadow-lg px-4 py-2 animate-pulse bg-red-600 hover:bg-red-700"
+        className="fixed bottom-24 right-6 z-50 rounded-full shadow-lg w-14 h-14 flex items-center justify-center text-lg font-bold hover:bg-red-700 active:bg-red-800 animate-pulse bg-red-600"
         onClick={() => setOpen(true)}
+        aria-label="Emergency SOS button"
       >
         SOS
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md" onClick={(e) => e.stopPropagation()}>
           <DialogHeader>
             <DialogTitle className="text-red-500">Emergency Assistance</DialogTitle>
             <DialogDescription>
