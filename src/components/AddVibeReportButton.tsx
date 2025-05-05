@@ -1,5 +1,6 @@
 
 import React from 'react';
+// Fixed import (Navigate instead of Redirect)
 import { Navigate } from 'react-router-dom';
 
 const AddVibeReportButton = () => {
