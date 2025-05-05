@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -38,8 +39,7 @@ function LocationMarker() {
         fillColor: '#3388ff', 
         fillOpacity: 0.2
       }}
-      // Fix: Use properly typed radius
-      {...{ radius: 200 } as any}
+      radius={200}
     />
   );
 }
@@ -162,22 +162,16 @@ const MapTab = () => {
     <div className="h-full w-full rounded-lg overflow-hidden border border-border/40">
       <MapContainer 
         className="h-full w-full z-0"
-        // Fix: Add properly typed props for MapContainer
-        {...{
-          center: centerPosition,
-          zoom: 14,
-          minZoom: 3,
-          maxZoom: 19,
-          scrollWheelZoom: true
-        } as any}
+        center={centerPosition}
+        zoom={14}
+        minZoom={3}
+        maxZoom={19}
+        scrollWheelZoom={true}
         style={{ height: isMobile ? '70vh' : '100%' }}
       >
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          // Fix: Add attribution as any
-          {...{
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          } as any}
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
         
         <LocationMarker />

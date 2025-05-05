@@ -3,15 +3,15 @@
 
 import React, { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
-import { TrendingUp, MapPin, Clock, ThumbsUp, Filter, ChevronUp, Tag, Loader2 } from "lucide-react";
+import { TrendingUp, MapPin, Clock, ThumbsUp, ChevronUp, Tag, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { safeParseInt, safeToString } from "@/utils/typeConverters";
-import { VibeService, Vibe, VibeType } from "@/services/VibeService";
-import { H1, H2, PageHeader, FadeIn } from "@/components/ui/design-system";
+import { VibeService, Vibe, VibeType } from '@/services/VibeService';
+import { H1, PageHeader, FadeIn } from "@/components/ui/design-system";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface TrendingVibe {
@@ -384,7 +384,7 @@ const Trending = () => {
               <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
                 <TrendingUp className="w-8 h-8 text-primary opacity-80" />
               </div>
-              <H2 className="text-center">No trending vibes</H2>
+              <h2 className="text-2xl font-semibold text-center">No trending vibes</h2>
               <p className="text-center text-muted-foreground max-w-sm">
                 {selectedTab === "all" 
                   ? "There are no trending vibes available at the moment" 

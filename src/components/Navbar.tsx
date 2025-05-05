@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from '@/hooks/use-toast';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import ActionButton from './ActionButton';
+import ActionMenu from './ActionMenu';
 
 interface NavItemProps {
   to: string;
@@ -61,7 +61,7 @@ const Navbar = () => {
           
           {/* Action button - positioned in the middle */}
           <div className="absolute left-1/2 -translate-x-1/2 -top-7">
-            <ActionButton isMobile={true} />
+            <ActionMenu />
           </div>
           
           {/* Empty space for the action button */}
@@ -175,7 +175,7 @@ const DesktopNavbar = ({ user }: { user: any }) => {
           
           <div className="flex items-center space-x-4">
             <div className="hidden md:block">
-              <ActionButton isMobile={false} />
+              <ActionMenu />
             </div>
             <NotificationDropdown />
             

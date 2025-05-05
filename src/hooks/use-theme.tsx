@@ -94,12 +94,16 @@ export function useTheme() {
           darkTheme: isDark
         };
         
-        await supabase
+        const { error } = await supabase
           .from('profiles')
           .update({ 
             settings: newSettings
           })
           .eq('id', session.user.id);
+          
+        if (error) {
+          console.error("Failed to save theme preference to profile:", error);
+        }
       }
     } catch (err) {
       console.error("Failed to save theme preference", err);
