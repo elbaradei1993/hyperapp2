@@ -413,7 +413,6 @@ const Profile = () => {
   }
 
   return (
-    
     <div className="max-w-md mx-auto p-4 flex flex-col min-h-screen pb-16">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">{t('profile')}</h1>
@@ -926,4 +925,119 @@ const Profile = () => {
                 </DialogTitle>
                 <DialogDescription>
                   {selectedItemType === 'event' && (
-                    <>Event on {new Date(selectedItem.start_
+                    <>Event on {new Date(selectedItem.start_date_time).toLocaleDateString()}</>
+                  )}
+                  {selectedItemType === 'vibe' && 'Reported vibe details'}
+                  {selectedItemType === 'saved' && 'Saved vibe details'}
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="py-4">
+                {selectedItemType === 'event' && (
+                  <div className="space-y-4">
+                    {selectedItem.description && (
+                      <div>
+                        <h4 className="text-sm font-medium">Description</h4>
+                        <p className="text-sm text-muted-foreground">{selectedItem.description}</p>
+                      </div>
+                    )}
+                    
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <h4 className="font-medium">Start</h4>
+                        <p className="text-muted-foreground">
+                          {new Date(selectedItem.start_date_time).toLocaleString()}
+                        </p>
+                      </div>
+                      <div>
+                        <h4 className="font-medium">End</h4>
+                        <p className="text-muted-foreground">
+                          {new Date(selectedItem.end_date_time).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {selectedItem.address && (
+                      <div>
+                        <h4 className="text-sm font-medium">Location</h4>
+                        <p className="text-sm text-muted-foreground">{selectedItem.address}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                {selectedItemType === 'vibe' && (
+                  <div className="space-y-4">
+                    {selectedItem.description && (
+                      <div>
+                        <h4 className="text-sm font-medium">Description</h4>
+                        <p className="text-sm text-muted-foreground">{selectedItem.description}</p>
+                      </div>
+                    )}
+                    
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <h4 className="font-medium">Type</h4>
+                        <p className="text-muted-foreground">
+                          {selectedItem.vibe_type?.name || 'Unknown'}
+                        </p>
+                      </div>
+                      <div>
+                        <h4 className="font-medium">Confirmed</h4>
+                        <p className="text-muted-foreground">
+                          {selectedItem.confirmed_count} times
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="text-sm font-medium">Reported on</h4>
+                      <p className="text-sm text-muted-foreground">
+                        {selectedItem.created_at && new Date(selectedItem.created_at).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                )}
+                
+                {selectedItemType === 'saved' && selectedItem.vibe && (
+                  <div className="space-y-4">
+                    {selectedItem.vibe.description && (
+                      <div>
+                        <h4 className="text-sm font-medium">Description</h4>
+                        <p className="text-sm text-muted-foreground">{selectedItem.vibe.description}</p>
+                      </div>
+                    )}
+                    
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <h4 className="font-medium">Type</h4>
+                        <p className="text-muted-foreground">
+                          {selectedItem.vibe.vibe_type?.name || 'Unknown'}
+                        </p>
+                      </div>
+                      <div>
+                        <h4 className="font-medium">Saved on</h4>
+                        <p className="text-muted-foreground">
+                          {new Date(selectedItem.saved_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setViewDialogOpen(false)}>
+                  Close
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+      <Navbar />
+    </div>
+  );
+};
+
+export default Profile;
