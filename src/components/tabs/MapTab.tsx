@@ -35,6 +35,7 @@ function LocationMarker() {
     <Circle 
       center={position}
       pathOptions={{ color: 'blue', fillColor: '#3388ff', fillOpacity: 0.2 }}
+      // For circle radius, use pathOptions instead of direct prop
       radius={200}
     />
   );
@@ -158,7 +159,7 @@ const MapTab = () => {
     <div className="h-full w-full rounded-lg overflow-hidden border border-border/40">
       <MapContainer 
         className="h-full w-full z-0"
-        defaultCenter={centerPosition}
+        center={centerPosition}
         zoom={14}
         minZoom={3}
         maxZoom={19}

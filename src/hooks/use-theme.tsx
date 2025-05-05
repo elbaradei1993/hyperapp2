@@ -83,9 +83,14 @@ export function useTheme() {
           }
         }
         
+        // Make sure currentSettings is an object before spreading
+        const settingsObj = typeof currentSettings === 'object' && currentSettings !== null 
+          ? currentSettings 
+          : {};
+        
         // Create a new settings object with the updated darkTheme value
         const newSettings = {
-          ...currentSettings,
+          ...settingsObj,
           darkTheme: isDark
         };
         
