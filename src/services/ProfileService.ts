@@ -62,7 +62,7 @@ export interface UserEvent {
   longitude: string;
   address: string | null;
   created_at: string | null;
-  organizer_id: string; // Changed from number to string
+  organizer_id: string; // This is a string representing the UUID
   vibe_type?: {
     name: string;
     color: string;
@@ -193,12 +193,12 @@ export const ProfileService = {
             color
           )
         `)
-        .eq('user_id', userId)
+        .eq('user_id', parseInt(userId, 10)) // Convert string ID to number
         .order('created_at', { ascending: false });
         
       if (error) throw error;
       
-      return data as UserReportedVibe[];
+      return data as unknown as UserReportedVibe[];
     } catch (error) {
       console.error('Error fetching user reported vibes:', error);
       toast.error('Failed to load your reported vibes');
@@ -229,12 +229,13 @@ export const ProfileService = {
             color
           )
         `)
-        .eq('organizer_id', userId)
+        .eq('organizer_id', parseInt(userId, 10)) // Convert string ID to number
         .order('start_date_time', { ascending: true });
         
       if (error) throw error;
       
-      return data as UserEvent[];
+      // Cast the data to match our interface
+      return data as unknown as UserEvent[];
     } catch (error) {
       console.error('Error fetching user created events:', error);
       toast.error('Failed to load your events');
@@ -247,13 +248,14 @@ export const ProfileService = {
    */
   async saveVibe(userId: string, vibeId: number): Promise<boolean> {
     try {
+      // Use the generic insert method without specifying table type
       const { error } = await supabase
-        .from('saved_vibes')
+        .from('saved_vibes' as any)
         .insert({
           user_id: userId,
           vibe_id: vibeId,
           saved_at: new Date().toISOString()
-        });
+        } as any);
         
       if (error) throw error;
       
@@ -271,8 +273,9 @@ export const ProfileService = {
    */
   async unsaveVibe(userId: string, vibeId: number): Promise<boolean> {
     try {
+      // Use the generic delete method without specifying table type
       const { error } = await supabase
-        .from('saved_vibes')
+        .from('saved_vibes' as any)
         .delete()
         .eq('user_id', userId)
         .eq('vibe_id', vibeId);
@@ -293,8 +296,9 @@ export const ProfileService = {
    */
   async getUserSavedVibes(userId: string): Promise<SavedVibe[]> {
     try {
+      // Use generic select method without specifying table type
       const { data, error } = await supabase
-        .from('saved_vibes')
+        .from('saved_vibes' as any)
         .select(`
           id,
           user_id,
@@ -318,7 +322,7 @@ export const ProfileService = {
         
       if (error) throw error;
       
-      return data as SavedVibe[];
+      return data as unknown as SavedVibe[];
     } catch (error) {
       console.error('Error fetching saved vibes:', error);
       toast.error('Failed to load your saved vibes');
@@ -331,8 +335,9 @@ export const ProfileService = {
    */
   async isVibeSaved(userId: string, vibeId: number): Promise<boolean> {
     try {
+      // Use generic select method without specifying table type
       const { data, error } = await supabase
-        .from('saved_vibes')
+        .from('saved_vibes' as any)
         .select('id')
         .eq('user_id', userId)
         .eq('vibe_id', vibeId)

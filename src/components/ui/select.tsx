@@ -5,6 +5,7 @@ import { Check, ChevronDown } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
+// Support for both Radix UI and native select
 const Select = SelectPrimitive.Root
 
 const SelectGroup = SelectPrimitive.Group
@@ -108,6 +109,27 @@ const SelectSeparator = React.forwardRef<
 ))
 SelectSeparator.displayName = SelectPrimitive.Separator.displayName
 
+// Add HTMLSelectElement interface for backwards compatibility with native select
+interface NativeSelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
+  onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+}
+
+const NativeSelect = React.forwardRef<HTMLSelectElement, NativeSelectProps>(
+  ({ className, children, ...props }, ref) => (
+    <select
+      ref={ref}
+      className={cn(
+        "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </select>
+  )
+);
+NativeSelect.displayName = "NativeSelect";
+
 export {
   Select,
   SelectGroup,
@@ -117,4 +139,5 @@ export {
   SelectLabel,
   SelectItem,
   SelectSeparator,
+  NativeSelect,
 }

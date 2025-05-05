@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
-import { Select } from "@/components/ui/select";
+import { NativeSelect } from "@/components/ui/select";
 import Navbar from "@/components/Navbar";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -245,7 +245,7 @@ const Settings = () => {
       <div className="space-y-8">
         <div className="space-y-2">
           <Label htmlFor="language">{t.language}</Label>
-          <Select
+          <NativeSelect
             id="language"
             value={settings.language}
             onChange={handleLanguageChange}
@@ -256,7 +256,7 @@ const Settings = () => {
                 {lang.label}
               </option>
             ))}
-          </Select>
+          </NativeSelect>
         </div>
 
         <div className="space-y-2">

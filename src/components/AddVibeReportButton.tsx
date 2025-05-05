@@ -1,10 +1,9 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Loader2 } from 'lucide-react';
+import { Plus, MapPin, X, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Dialog,
@@ -27,6 +26,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { safeParseInt } from '@/utils/typeConverters';
+import { NativeSelect } from "@/components/ui/select";
+import { VibeService } from '@/services/VibeService';
+import { useAuth } from '@/components/auth/AuthProvider';
 
 interface VibeType {
   id: number;
@@ -45,6 +47,8 @@ const AddVibeReportButton = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingTypes, setIsLoadingTypes] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
+  const [selectedType, setSelectedType] = useState('');
 
   // Fetch vibe types when the dialog opens
   useEffect(() => {
@@ -205,7 +209,7 @@ const AddVibeReportButton = () => {
         </DialogHeader>
         
         <div className="space-y-4 py-4">
-          <div className="space-y-2">
+          <div className="grid gap-2">
             <Label htmlFor="vibe-type">Vibe Type</Label>
             {isLoadingTypes ? (
               <div className="flex items-center space-x-2">
@@ -213,9 +217,9 @@ const AddVibeReportButton = () => {
                 <span className="text-sm text-muted-foreground">Loading vibe types...</span>
               </div>
             ) : (
-              <Select
-                value={vibeTypeId?.toString() || ''}
-                onChange={(e) => setVibeTypeId(parseInt(e.target.value))}
+              <NativeSelect
+                value={selectedType}
+                onChange={(e) => setSelectedType(e.target.value)}
               >
                 {vibeTypes.map((type) => (
                   <option 
@@ -225,7 +229,7 @@ const AddVibeReportButton = () => {
                     {type.name}
                   </option>
                 ))}
-              </Select>
+              </NativeSelect>
             )}
           </div>
           
