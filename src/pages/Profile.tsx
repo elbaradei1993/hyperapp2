@@ -924,6 +924,6 @@ const Profile = () => {
                   {selectedItemType === 'vibe' && (selectedItem.title || 'Untitled Vibe')}
                   {selectedItemType === 'saved' && selectedItem.vibe && (selectedItem.vibe.title || 'Untitled Vibe')}
                 </DialogTitle>
-                {selectedItemType === 'event' && (
-                  <DialogDescription>
-                    Event on {new Date(selectedItem.start_date_time).
+                <DialogDescription>
+                  {selectedItemType === 'event' && (
+                    <>Event on {new Date(selectedItem.start_
