@@ -39,7 +39,7 @@ function LocationMarker() {
         fillColor: '#3388ff', 
         fillOpacity: 0.2
       }}
-      radius={200}
+      radius={200 as unknown as number}
     />
   );
 }
@@ -155,23 +155,20 @@ const MapTab = () => {
     );
   }
 
-  // Create Leaflet LatLngTuple from our location for proper typing
-  const centerPosition: L.LatLngTuple = userLocation;
-
   return (
     <div className="h-full w-full rounded-lg overflow-hidden border border-border/40">
       <MapContainer 
         className="h-full w-full z-0"
-        center={centerPosition}
-        zoom={14}
-        minZoom={3}
-        maxZoom={19}
-        scrollWheelZoom={true}
+        center={userLocation as unknown as L.LatLngExpression}
+        zoom={14 as unknown as number}
+        minZoom={3 as unknown as number}
+        maxZoom={19 as unknown as number}
+        scrollWheelZoom={true as unknown as boolean}
         style={{ height: isMobile ? '70vh' : '100%' }}
       >
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          attribution={'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' as unknown as string}
         />
         
         <LocationMarker />
