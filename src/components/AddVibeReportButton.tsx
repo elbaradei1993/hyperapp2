@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -12,23 +13,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { safeParseInt } from '@/utils/typeConverters';
-import { NativeSelect } from "@/components/ui/select";
 import { VibeService } from '@/services/VibeService';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface VibeType {
   id: number;
@@ -48,7 +40,6 @@ const AddVibeReportButton = () => {
   const [isLoadingTypes, setIsLoadingTypes] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
-  const [selectedType, setSelectedType] = useState('');
 
   // Fetch vibe types when the dialog opens
   useEffect(() => {
@@ -90,18 +81,11 @@ const AddVibeReportButton = () => {
   const fetchVibeTypes = async () => {
     try {
       setIsLoadingTypes(true);
-      const { data, error } = await supabase
-        .from('vibe_types')
-        .select('id, name, color')
-        .order('name');
-
-      if (error) throw error;
+      const data = await VibeService.getVibeTypes();
       
-      if (data) {
+      if (data && data.length > 0) {
         setVibeTypes(data);
-        if (data.length > 0) {
-          setVibeTypeId(data[0].id);
-        }
+        setVibeTypeId(data[0].id);
       }
     } catch (error) {
       console.error('Error fetching vibe types:', error);
@@ -147,25 +131,19 @@ const AddVibeReportButton = () => {
     try {
       setIsLoading(true);
 
-      // Get user session
-      const { data: sessionData } = await supabase.auth.getSession();
-      const userId = sessionData?.session?.user?.id;
-
-      const newVibeReport = {
+      // Create vibe report
+      const newVibeReport = await VibeService.createVibeReport({
         title,
-        description: description.trim() || null,
+        description: description.trim() || "",
         latitude: location.lat.toString(),
         longitude: location.lng.toString(),
         vibe_type_id: vibeTypeId,
-        is_anonymous: isAnonymous,
-        user_id: isAnonymous ? null : userId ? null : null, // Set to null since user_id expects a number in DB but auth returns string
-      };
+        user_id: null, // Set to appropriate user_id if available
+      });
 
-      const { error } = await supabase
-        .from('vibe_reports')
-        .insert(newVibeReport);
-
-      if (error) throw error;
+      if (!newVibeReport) {
+        throw new Error("Failed to create vibe report");
+      }
 
       toast({
         title: 'Success',
@@ -191,14 +169,13 @@ const AddVibeReportButton = () => {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button
-          size="icon"
-          className="fixed bottom-24 right-6 h-14 w-14 rounded-full shadow-lg z-20"
-        >
-          <Plus className="h-6 w-6" />
-        </Button>
-      </DialogTrigger>
+      <Button
+        size="icon"
+        className="fixed bottom-24 left-6 h-14 w-14 rounded-full shadow-lg z-20"
+        onClick={() => setOpen(true)}
+      >
+        <Plus className="h-6 w-6" />
+      </Button>
       
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
@@ -217,19 +194,24 @@ const AddVibeReportButton = () => {
                 <span className="text-sm text-muted-foreground">Loading vibe types...</span>
               </div>
             ) : (
-              <NativeSelect
-                value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value)}
+              <Select
+                value={vibeTypeId?.toString()}
+                onValueChange={(value) => setVibeTypeId(parseInt(value, 10))}
               >
-                {vibeTypes.map((type) => (
-                  <option 
-                    key={type.id} 
-                    value={type.id.toString()}
-                  >
-                    {type.name}
-                  </option>
-                ))}
-              </NativeSelect>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a vibe type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {vibeTypes.map((type) => (
+                    <SelectItem 
+                      key={type.id} 
+                      value={type.id.toString()}
+                    >
+                      {type.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             )}
           </div>
           

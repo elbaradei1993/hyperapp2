@@ -9,6 +9,8 @@ import MapTab from "@/components/tabs/MapTab";
 import Banner from "@/components/Banner";
 import { useIsMobile } from "@/hooks/use-mobile";
 import TrendingVibesSection from "@/components/TrendingVibesSection";
+import SosButtonHome from "@/components/SosButtonHome";
+import AddVibeReportButton from "@/components/AddVibeReportButton";
 
 const Index = () => {
   const { user } = useAuth();
@@ -24,7 +26,7 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background pt-16 pb-20">
+    <div className="min-h-screen flex flex-col bg-background pt-16 pb-28">
       {/* Main Content */}
       <div className="flex flex-col flex-1 container max-w-7xl mx-auto px-4 py-6 h-[calc(100vh-160px)]">
         <FadeIn>
@@ -45,31 +47,33 @@ const Index = () => {
         </FadeIn>
 
         <div className="flex flex-1 gap-6 relative">
-          <div className="flex-grow">
+          <div className="flex-grow h-full">
             <FadeIn delay="200ms" className="h-full">
               <MapTab />
             </FadeIn>
           </div>
           
-          {/* Trending Vibes Sidebar - Only visible on desktop */}
-          {!isMobile && (
-            <div className="w-80 hidden md:block">
-              <FadeIn delay="300ms">
-                <TrendingVibesSection />
-              </FadeIn>
-            </div>
-          )}
+          {/* Trending Vibes Sidebar - Show on both mobile and desktop */}
+          <div className={`${isMobile ? 'hidden' : 'w-80'} md:block`}>
+            <FadeIn delay="300ms">
+              <TrendingVibesSection />
+            </FadeIn>
+          </div>
         </div>
         
-        {/* Show Trending Vibes at bottom on mobile */}
+        {/* Show Trending Vibes at bottom on mobile with proper padding */}
         {isMobile && (
-          <div className="mt-6">
+          <div className="mt-6 mb-20">
             <FadeIn delay="300ms">
               <TrendingVibesSection />
             </FadeIn>
           </div>
         )}
       </div>
+      
+      {/* Fixed position buttons */}
+      <SosButtonHome />
+      <AddVibeReportButton />
       
       <Navbar />
     </div>

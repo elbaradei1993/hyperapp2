@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Map as MapIcon, ThumbsUp } from 'lucide-react';
@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import L from 'leaflet';
 import { supabase } from "@/integrations/supabase/client";
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // Fix Leaflet icon issues
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -17,17 +18,6 @@ L.Icon.Default.mergeOptions({
   iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
   shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
 });
-
-// Properly type the Circle component props
-interface CircleMarkerProps {
-  center: L.LatLng;
-  radius: number;
-  pathOptions: {
-    color: string;
-    fillColor: string;
-    fillOpacity: number;
-  };
-}
 
 // Location finder component
 function LocationMarker() {
@@ -45,7 +35,7 @@ function LocationMarker() {
     <Circle 
       center={position}
       pathOptions={{ color: 'blue', fillColor: '#3388ff', fillOpacity: 0.2 }}
-      {...{ radius: 200 } as any}
+      radius={200}
     />
   );
 }
@@ -57,6 +47,23 @@ const MapTab = () => {
   const { toast } = useToast();
   const [isUpvoting, setIsUpvoting] = useState<number | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
+  const isMobile = useIsMobile();
+
+  const loadVibes = useCallback(async () => {
+    try {
+      const data = await VibeService.getVibeReports();
+      setVibes(data);
+    } catch (error) {
+      console.error("Error loading vibes:", error);
+      toast({
+        title: "Failed to load vibes",
+        description: "Could not load vibe data from the server",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
 
   useEffect(() => {
     // Get user location
@@ -86,22 +93,6 @@ const MapTab = () => {
     }
     
     // Load vibes
-    async function loadVibes() {
-      try {
-        const data = await VibeService.getVibeReports();
-        setVibes(data);
-      } catch (error) {
-        console.error("Error loading vibes:", error);
-        toast({
-          title: "Failed to load vibes",
-          description: "Could not load vibe data from the server",
-          variant: "destructive"
-        });
-      } finally {
-        setLoading(false);
-      }
-    }
-    
     loadVibes();
 
     // Set up subscription for real-time updates
@@ -111,7 +102,7 @@ const MapTab = () => {
         event: 'INSERT', 
         schema: 'public', 
         table: 'vibe_reports' 
-      }, (payload) => {
+      }, () => {
         // Add new vibe to the list
         loadVibes(); // Reload all vibes
       })
@@ -121,7 +112,7 @@ const MapTab = () => {
       supabase.removeChannel(channel);
     };
     
-  }, [toast]);
+  }, [loadVibes, toast]);
 
   const handleConfirmVibe = async (id: number) => {
     try {
@@ -166,20 +157,17 @@ const MapTab = () => {
   return (
     <div className="h-full w-full rounded-lg overflow-hidden border border-border/40">
       <MapContainer 
-        className="h-full w-full"
-        {...{
-          center: centerPosition,
-          zoom: 14,
-          minZoom: 3,
-          maxZoom: 19,
-          scrollWheelZoom: true
-        } as any}
+        className="h-full w-full z-0"
+        center={centerPosition}
+        zoom={14}
+        minZoom={3}
+        maxZoom={19}
+        scrollWheelZoom={true}
+        style={{ height: isMobile ? '70vh' : '100%' }}
       >
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          {...{
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          } as any}
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
         
         <LocationMarker />
