@@ -8,6 +8,7 @@ import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import L from 'leaflet';
+import { supabase } from "@/integrations/supabase/client";
 
 // Fix Leaflet icon issues
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -16,6 +17,17 @@ L.Icon.Default.mergeOptions({
   iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
   shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
 });
+
+// Properly type the Circle component props
+interface CircleMarkerProps {
+  center: L.LatLng;
+  radius: number;
+  pathOptions: {
+    color: string;
+    fillColor: string;
+    fillOpacity: number;
+  };
+}
 
 // Location finder component
 function LocationMarker() {
@@ -33,7 +45,6 @@ function LocationMarker() {
     <Circle 
       center={position}
       pathOptions={{ color: 'blue', fillColor: '#3388ff', fillOpacity: 0.2 }}
-      radius={200}
       {...{ radius: 200 } as any}
     />
   );
@@ -45,6 +56,7 @@ const MapTab = () => {
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const { toast } = useToast();
   const [isUpvoting, setIsUpvoting] = useState<number | null>(null);
+  const [locationError, setLocationError] = useState<string | null>(null);
 
   useEffect(() => {
     // Get user location
@@ -52,14 +64,23 @@ const MapTab = () => {
       navigator.geolocation.getCurrentPosition(
         position => {
           setUserLocation([position.coords.latitude, position.coords.longitude]);
+          setLocationError(null);
         },
         error => {
           console.error("Error getting location:", error);
+          setLocationError(`Could not get your location: ${error.message}`);
           // Default to a location if we can't get the user's
           setUserLocation([37.7749, -122.4194]); // San Francisco
-        }
+          toast({
+            title: "Location access denied",
+            description: "Using default location. Please enable location services for better experience.",
+            variant: "destructive"
+          });
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
     } else {
+      setLocationError("Your browser doesn't support geolocation");
       // Default location
       setUserLocation([37.7749, -122.4194]); // San Francisco
     }
@@ -82,6 +103,24 @@ const MapTab = () => {
     }
     
     loadVibes();
+
+    // Set up subscription for real-time updates
+    const channel = supabase
+      .channel('public:vibe_reports')
+      .on('postgres_changes', { 
+        event: 'INSERT', 
+        schema: 'public', 
+        table: 'vibe_reports' 
+      }, (payload) => {
+        // Add new vibe to the list
+        loadVibes(); // Reload all vibes
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+    
   }, [toast]);
 
   const handleConfirmVibe = async (id: number) => {
@@ -115,7 +154,7 @@ const MapTab = () => {
       <div className="flex flex-col items-center justify-center h-full">
         <Loader2 className="h-10 w-10 animate-spin text-primary" />
         <p className="mt-4 text-sm text-muted-foreground">
-          Loading map...
+          {locationError ? "Using default location..." : "Loading map..."}
         </p>
       </div>
     );

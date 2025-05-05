@@ -267,6 +267,12 @@ const Profile = () => {
       
       if (updated) {
         setProfile(prev => prev ? { ...prev, ...updates } : null);
+        
+        // Show success toast
+        toast({
+          title: "Profile updated",
+          description: "Your profile has been updated successfully",
+        });
       }
     } catch (error) {
       console.error("Error updating profile:", error);
@@ -332,12 +338,30 @@ const Profile = () => {
   const handleNotificationToggle = async (key: string, value: boolean) => {
     if (!user || !profile || !profile.notification_preferences) return;
     
-    const updatedPreferences = {
-      ...profile.notification_preferences,
-      [key]: value
-    };
-    
-    await handleUpdateProfile('notification_preferences', updatedPreferences);
+    try {
+      const updatedPreferences = {
+        ...profile.notification_preferences,
+        [key]: value
+      };
+      
+      // Update UI immediately for responsive feeling
+      setProfile(prev => prev ? {
+        ...prev,
+        notification_preferences: updatedPreferences
+      } : null);
+      
+      // Then save to database
+      await handleUpdateProfile('notification_preferences', updatedPreferences);
+      
+      toast({
+        title: `${key} notifications ${value ? 'enabled' : 'disabled'}`,
+        description: `You've ${value ? 'enabled' : 'disabled'} ${key} notifications`,
+      });
+    } catch (error) {
+      // Revert UI if failed
+      setProfile(prev => prev);
+      console.error("Error toggling notification:", error);
+    }
   };
   
   const handleViewItem = (item: any, type: 'vibe' | 'event' | 'saved') => {
@@ -601,68 +625,8 @@ const Profile = () => {
               </CardContent>
             </Card>
             
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Notification Preferences</CardTitle>
-                <CardDescription>Manage how you receive notifications</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm">Email Notifications</p>
-                    <p className="text-xs text-muted-foreground">Receive email updates</p>
-                  </div>
-                  <Switch 
-                    checked={profile?.notification_preferences?.email || false}
-                    onCheckedChange={(checked) => handleNotificationToggle('email', checked)}
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm">Push Notifications</p>
-                    <p className="text-xs text-muted-foreground">Receive mobile notifications</p>
-                  </div>
-                  <Switch 
-                    checked={profile?.notification_preferences?.push || false}
-                    onCheckedChange={(checked) => handleNotificationToggle('push', checked)}
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm">Vibe Alerts</p>
-                    <p className="text-xs text-muted-foreground">Notifications about new vibes</p>
-                  </div>
-                  <Switch 
-                    checked={profile?.notification_preferences?.vibes || false}
-                    onCheckedChange={(checked) => handleNotificationToggle('vibes', checked)}
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm">Event Updates</p>
-                    <p className="text-xs text-muted-foreground">Notifications about events</p>
-                  </div>
-                  <Switch 
-                    checked={profile?.notification_preferences?.events || false}
-                    onCheckedChange={(checked) => handleNotificationToggle('events', checked)}
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm">Emergency Alerts</p>
-                    <p className="text-xs text-muted-foreground">Critical safety notifications</p>
-                  </div>
-                  <Switch 
-                    checked={profile?.notification_preferences?.alerts || false}
-                    onCheckedChange={(checked) => handleNotificationToggle('alerts', checked)}
-                  />
-                </div>
-              </CardContent>
-            </Card>
+            {/* Notification Preferences Section */}
+            {renderNotificationPreferences()}
           </TabsContent>
           
           {/* Reported Vibes Tab */}
@@ -789,81 +753,7 @@ const Profile = () => {
           </TabsContent>
           
           {/* Saved Vibes Tab */}
-          <TabsContent value="saved" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Saved Vibes</CardTitle>
-                <CardDescription>Vibes you've bookmarked</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {savedVibes.length > 0 ? (
-                  <div className="space-y-3">
-                    {savedVibes.map(saved => (
-                      <div 
-                        key={saved.id} 
-                        className="p-3 border rounded-md cursor-pointer hover:bg-accent/50 transition-colors"
-                        onClick={() => handleViewItem(saved, 'saved')}
-                      >
-                        {saved.vibe && (
-                          <>
-                            <div className="flex justify-between items-start mb-1">
-                              <h3 className="font-medium text-sm">{saved.vibe.title || 'Untitled Vibe'}</h3>
-                              {saved.vibe.vibe_type && (
-                                <div 
-                                  className="w-3 h-3 rounded-full" 
-                                  style={{ backgroundColor: saved.vibe.vibe_type.color }}
-                                ></div>
-                              )}
-                            </div>
-                            
-                            <p className="text-xs text-muted-foreground line-clamp-1 mb-2">
-                              {saved.vibe.description || 'No description'}
-                            </p>
-                            
-                            <div className="flex justify-between items-center text-xs text-muted-foreground">
-                              <span>Saved {new Date(saved.saved_at).toLocaleDateString()}</span>
-                              
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 px-2 text-xs"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (user) {
-                                    ProfileService.unsaveVibe(user.id, saved.vibe_id)
-                                      .then(success => {
-                                        if (success) {
-                                          setSavedVibes(prev => prev.filter(v => v.id !== saved.id));
-                                        }
-                                      });
-                                  }
-                                }}
-                              >
-                                Remove
-                              </Button>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="py-8 text-center">
-                    <ThumbsUp className="h-8 w-8 mx-auto text-muted-foreground opacity-50" />
-                    <p className="mt-2 text-sm text-muted-foreground">You haven't saved any vibes yet</p>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="mt-4"
-                      onClick={() => navigate('/')}
-                    >
-                      Explore Vibes
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
+          {savedVibesTabContent()}
         </Tabs>
       </div>
       

@@ -8,6 +8,7 @@ import { H1, FadeIn } from "@/components/ui/design-system";
 import MapTab from "@/components/tabs/MapTab";
 import Banner from "@/components/Banner";
 import { useIsMobile } from "@/hooks/use-mobile";
+import TrendingVibesSection from "@/components/TrendingVibesSection";
 
 const Index = () => {
   const { user } = useAuth();
@@ -43,11 +44,31 @@ const Index = () => {
           )}
         </FadeIn>
 
-        <div className="flex-1 relative">
-          <FadeIn delay="200ms" className="h-full">
-            <MapTab />
-          </FadeIn>
+        <div className="flex flex-1 gap-6 relative">
+          <div className="flex-grow">
+            <FadeIn delay="200ms" className="h-full">
+              <MapTab />
+            </FadeIn>
+          </div>
+          
+          {/* Trending Vibes Sidebar - Only visible on desktop */}
+          {!isMobile && (
+            <div className="w-80 hidden md:block">
+              <FadeIn delay="300ms">
+                <TrendingVibesSection />
+              </FadeIn>
+            </div>
+          )}
         </div>
+        
+        {/* Show Trending Vibes at bottom on mobile */}
+        {isMobile && (
+          <div className="mt-6">
+            <FadeIn delay="300ms">
+              <TrendingVibesSection />
+            </FadeIn>
+          </div>
+        )}
       </div>
       
       <Navbar />
