@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useRef, ChangeEvent } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -398,6 +399,151 @@ const Profile = () => {
         <Icon className="h-3 w-3" />
         <span>{roleObj.label}</span>
       </Badge>
+    );
+  };
+
+  // Adding the missing renderNotificationPreferences function
+  const renderNotificationPreferences = () => {
+    if (!profile || !profile.notification_preferences) return null;
+    
+    const preferences = profile.notification_preferences;
+    
+    return (
+      <Card className="mt-4">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg">Notifications</CardTitle>
+          <CardDescription>Manage your notification preferences</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="font-medium">Email Notifications</Label>
+              <p className="text-sm text-muted-foreground">
+                Receive notifications via email
+              </p>
+            </div>
+            <Switch
+              checked={preferences.email}
+              onCheckedChange={(checked) => handleNotificationToggle('email', checked)}
+            />
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="font-medium">Push Notifications</Label>
+              <p className="text-sm text-muted-foreground">
+                Receive push notifications in-app
+              </p>
+            </div>
+            <Switch
+              checked={preferences.push}
+              onCheckedChange={(checked) => handleNotificationToggle('push', checked)}
+            />
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="font-medium">Vibe Updates</Label>
+              <p className="text-sm text-muted-foreground">
+                Get notified about vibes near you
+              </p>
+            </div>
+            <Switch
+              checked={preferences.vibes}
+              onCheckedChange={(checked) => handleNotificationToggle('vibes', checked)}
+            />
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="font-medium">Event Notifications</Label>
+              <p className="text-sm text-muted-foreground">
+                Get notified about upcoming events
+              </p>
+            </div>
+            <Switch
+              checked={preferences.events}
+              onCheckedChange={(checked) => handleNotificationToggle('events', checked)}
+            />
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="font-medium">Safety Alerts</Label>
+              <p className="text-sm text-muted-foreground">
+                Receive important safety alerts
+              </p>
+            </div>
+            <Switch
+              checked={preferences.alerts}
+              onCheckedChange={(checked) => handleNotificationToggle('alerts', checked)}
+            />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  // Adding the missing savedVibesTabContent function
+  const savedVibesTabContent = () => {
+    return (
+      <TabsContent value="saved" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Saved Vibes</CardTitle>
+            <CardDescription>Vibes you've saved for later</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {savedVibes.length > 0 ? (
+              <div className="space-y-3">
+                {savedVibes.map(saved => (
+                  <div 
+                    key={saved.id} 
+                    className="p-3 border rounded-md cursor-pointer hover:bg-accent/50 transition-colors"
+                    onClick={() => handleViewItem(saved, 'saved')}
+                  >
+                    <div className="flex justify-between items-start mb-1">
+                      <h3 className="font-medium text-sm">
+                        {saved.vibe?.title || 'Untitled Vibe'}
+                      </h3>
+                      {saved.vibe?.vibe_type && (
+                        <div 
+                          className="w-3 h-3 rounded-full" 
+                          style={{ backgroundColor: saved.vibe.vibe_type.color }}
+                        ></div>
+                      )}
+                    </div>
+                    
+                    <p className="text-xs text-muted-foreground line-clamp-1 mb-2">
+                      {saved.vibe?.description || 'No description'}
+                    </p>
+                    
+                    <div className="flex justify-between items-center text-xs text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <Save className="h-3 w-3" />
+                        <span>{new Date(saved.saved_at).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="py-8 text-center">
+                <Save className="h-8 w-8 mx-auto text-muted-foreground opacity-50" />
+                <p className="mt-2 text-sm text-muted-foreground">You haven't saved any vibes yet</p>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="mt-4"
+                  onClick={() => navigate('/')}
+                >
+                  Explore Vibes
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </TabsContent>
     );
   };
 
