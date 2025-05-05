@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef, ChangeEvent } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -414,6 +413,7 @@ const Profile = () => {
   }
 
   return (
+    
     <div className="max-w-md mx-auto p-4 flex flex-col min-h-screen pb-16">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">{t('profile')}</h1>
@@ -926,127 +926,4 @@ const Profile = () => {
                 </DialogTitle>
                 {selectedItemType === 'event' && (
                   <DialogDescription>
-                    Event on {new Date(selectedItem.start_date_time).toLocaleDateString()}
-                  </DialogDescription>
-                )}
-                {selectedItemType === 'vibe' && (
-                  <DialogDescription>
-                    Vibe reported on {new Date(selectedItem.created_at).toLocaleDateString()}
-                  </DialogDescription>
-                )}
-                {selectedItemType === 'saved' && selectedItem.vibe && (
-                  <DialogDescription>
-                    Saved on {new Date(selectedItem.saved_at).toLocaleDateString()}
-                  </DialogDescription>
-                )}
-              </DialogHeader>
-              
-              <div className="space-y-4">
-                {/* Vibe or Event Details */}
-                {(selectedItemType === 'vibe' || (selectedItemType === 'saved' && selectedItem.vibe)) && (
-                  <>
-                    <div className="space-y-2">
-                      <Label className="text-xs text-muted-foreground">Description</Label>
-                      <p className="text-sm border rounded-md p-3">
-                        {selectedItemType === 'vibe' 
-                          ? (selectedItem.description || 'No description') 
-                          : (selectedItem.vibe?.description || 'No description')}
-                      </p>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label className="text-xs text-muted-foreground">Type</Label>
-                        <div className="flex items-center gap-2 border rounded-md p-3 mt-1">
-                          <div 
-                            className="w-3 h-3 rounded-full" 
-                            style={{ 
-                              backgroundColor: selectedItemType === 'vibe' 
-                                ? selectedItem.vibe_type?.color 
-                                : selectedItem.vibe?.vibe_type?.color 
-                            }}
-                          ></div>
-                          <span className="text-sm">
-                            {selectedItemType === 'vibe' 
-                              ? selectedItem.vibe_type?.name 
-                              : selectedItem.vibe?.vibe_type?.name}
-                          </span>
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <Label className="text-xs text-muted-foreground">Confirmations</Label>
-                        <div className="flex items-center gap-2 border rounded-md p-3 mt-1">
-                          <ThumbsUp className="h-4 w-4" />
-                          <span className="text-sm">
-                            {selectedItemType === 'vibe' 
-                              ? selectedItem.confirmed_count 
-                              : selectedItem.vibe?.confirmed_count}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                )}
-                
-                {selectedItemType === 'event' && (
-                  <>
-                    <div className="space-y-2">
-                      <Label className="text-xs text-muted-foreground">Description</Label>
-                      <p className="text-sm border rounded-md p-3">
-                        {selectedItem.description || 'No description'}
-                      </p>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label className="text-xs text-muted-foreground">Start Time</Label>
-                        <p className="text-sm border rounded-md p-3 mt-1">
-                          {new Date(selectedItem.start_date_time).toLocaleString()}
-                        </p>
-                      </div>
-                      
-                      <div>
-                        <Label className="text-xs text-muted-foreground">End Time</Label>
-                        <p className="text-sm border rounded-md p-3 mt-1">
-                          {new Date(selectedItem.end_date_time).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    {selectedItem.address && (
-                      <div className="space-y-2">
-                        <Label className="text-xs text-muted-foreground">Address</Label>
-                        <p className="text-sm border rounded-md p-3">
-                          {selectedItem.address}
-                        </p>
-                      </div>
-                    )}
-                  </>
-                )}
-                
-                <div className="pt-2">
-                  <Button 
-                    onClick={() => {
-                      setViewDialogOpen(false);
-                      // Handle navigation to item on map
-                      navigate('/');
-                    }}
-                    className="w-full"
-                  >
-                    <MapIcon className="h-4 w-4 mr-2" />
-                    View on Map
-                  </Button>
-                </div>
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      <Navbar />
-    </div>
-  );
-};
-
-export default Profile;
+                    Event on {new Date(selectedItem.start_date_time).
