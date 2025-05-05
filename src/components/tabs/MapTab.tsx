@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Map as MapIcon, ThumbsUp } from 'lucide-react';
+import { MapIcon, ThumbsUp } from 'lucide-react';
 import { VibeService, Vibe } from '@/services/VibeService';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -158,7 +158,7 @@ const MapTab = () => {
     <div className="h-full w-full rounded-lg overflow-hidden border border-border/40">
       <MapContainer 
         className="h-full w-full z-0"
-        center={centerPosition}
+        defaultCenter={centerPosition}
         zoom={14}
         minZoom={3}
         maxZoom={19}

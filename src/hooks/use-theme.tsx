@@ -25,12 +25,20 @@ export function useTheme() {
             .eq('id', session.user.id)
             .single();
           
-          if (!error && profileData?.settings?.darkTheme !== undefined) {
-            // If we have a user preference, set it
-            const userTheme: Theme = profileData.settings.darkTheme === true ? 'dark' : 'light';
-            setThemeState(userTheme);
-            localStorage.setItem("theme", userTheme); 
-            updateDocumentClass(userTheme);
+          if (!error && profileData?.settings) {
+            // Parse settings if it's a string
+            const settings = typeof profileData.settings === 'string' 
+              ? JSON.parse(profileData.settings) 
+              : profileData.settings;
+            
+            // Check if darkTheme setting exists
+            if (settings && typeof settings === 'object' && 'darkTheme' in settings) {
+              // If we have a user preference, set it
+              const userTheme: Theme = settings.darkTheme === true ? 'dark' : 'light';
+              setThemeState(userTheme);
+              localStorage.setItem("theme", userTheme); 
+              updateDocumentClass(userTheme);
+            }
           }
         }
       } catch (err) {
@@ -56,12 +64,35 @@ export function useTheme() {
         const isDark = newTheme === 'dark' || 
           (newTheme === 'system' && window.matchMedia("(prefers-color-scheme: dark)").matches);
         
+        // Get current profile settings first
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('settings')
+          .eq('id', session.user.id)
+          .single();
+        
+        // Prepare the settings object
+        let currentSettings = profileData?.settings || {};
+        
+        // Convert from string if needed
+        if (typeof currentSettings === 'string') {
+          try {
+            currentSettings = JSON.parse(currentSettings);
+          } catch (e) {
+            currentSettings = {};
+          }
+        }
+        
+        // Create a new settings object with the updated darkTheme value
+        const newSettings = {
+          ...currentSettings,
+          darkTheme: isDark
+        };
+        
         await supabase
           .from('profiles')
           .update({ 
-            settings: {
-              darkTheme: isDark
-            }
+            settings: newSettings
           })
           .eq('id', session.user.id);
       }
