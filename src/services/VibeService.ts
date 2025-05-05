@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -194,7 +193,7 @@ export const VibeService: VibeServiceInterface = {
    */
   async upvoteVibe(id: number): Promise<void> {
     try {
-      // Explicitly specify the parameter object type to match the expected server-side parameter
+      // Fix: Explicitly type the parameters to match the RPC's expected input
       const params: IncrementVibeCountParams = { vibe_id: id };
       
       const { error } = await supabase.rpc(
