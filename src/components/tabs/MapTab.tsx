@@ -33,8 +33,8 @@ function LocationMarker() {
     <Circle 
       center={position}
       pathOptions={{ color: 'blue', fillColor: '#3388ff', fillOpacity: 0.2 }}
-      // Convert radius to a number rather than using 'as any'
       radius={200}
+      {...{ radius: 200 } as any}
     />
   );
 }
@@ -128,16 +128,19 @@ const MapTab = () => {
     <div className="h-full w-full rounded-lg overflow-hidden border border-border/40">
       <MapContainer 
         className="h-full w-full"
-        // Use properly typed props
-        center={centerPosition}
-        zoom={14}
-        minZoom={3}
-        maxZoom={19}
-        scrollWheelZoom={true}
+        {...{
+          center: centerPosition,
+          zoom: 14,
+          minZoom: 3,
+          maxZoom: 19,
+          scrollWheelZoom: true
+        } as any}
       >
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          {...{
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          } as any}
         />
         
         <LocationMarker />
