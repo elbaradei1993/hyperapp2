@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -198,7 +199,7 @@ export const VibeService: VibeServiceInterface = {
       
       const { error } = await supabase.rpc(
         'increment_vibe_confirmed_count',
-        params
+        params as any // Use type assertion to resolve the TypeScript error
       );
       
       if (error) {
