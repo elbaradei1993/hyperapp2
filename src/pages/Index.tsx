@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { H1, FadeIn } from "@/components/ui/design-system";
+import { FadeIn } from "@/components/ui/design-system";
 import MapTab from "@/components/tabs/MapTab";
 import Banner from "@/components/Banner";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -24,22 +24,22 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background pt-16 pb-28 md:pb-6">
-      {/* Banner at the top */}
+    <div className="min-h-screen flex flex-col bg-background">
+      {/* Banner at the top with no margin/padding */}
       <Banner />
       
-      {/* Main Content */}
-      <div className="flex flex-col flex-1 container max-w-7xl mx-auto px-4 py-6 h-[calc(100vh-160px)]">
-        <div className="flex flex-col md:flex-row gap-6 relative h-full">
+      {/* Main Content with adjusted height */}
+      <div className="flex flex-col flex-1 container max-w-7xl mx-auto px-2 py-2 md:h-[calc(100vh-130px)] overflow-hidden">
+        <div className="flex flex-col md:flex-row gap-4 h-full">
           {/* Map */}
-          <div className="flex-grow h-full md:w-3/4">
+          <div className="flex-grow h-[60vh] md:h-full md:w-3/4">
             <FadeIn delay="200ms" className="h-full">
               <MapTab />
             </FadeIn>
           </div>
           
           {/* Trending Vibes Sidebar */}
-          <div className="md:w-1/4 md:min-w-80">
+          <div className="md:w-1/4 md:min-w-72 overflow-y-auto max-h-[40vh] md:max-h-full">
             <FadeIn delay="300ms">
               <TrendingVibesSection />
             </FadeIn>

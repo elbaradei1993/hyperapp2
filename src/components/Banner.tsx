@@ -4,9 +4,9 @@ import { motion } from 'framer-motion';
 
 const Banner = () => {
   return (
-    <div className="w-full overflow-hidden relative mb-0">
+    <div className="w-full overflow-hidden relative">
       <motion.div 
-        className="bg-gradient-to-r from-purple-600 via-primary to-blue-600 p-6 rounded-b-xl"
+        className="bg-gradient-to-r from-purple-600 via-primary to-blue-600 p-4 rounded-b-xl"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -18,11 +18,11 @@ const Banner = () => {
             transition={{ delay: 0.1, duration: 0.4 }}
             className="text-center"
           >
-            <h2 className="font-bold text-white text-2xl tracking-tight">
+            <h2 className="font-bold text-white text-xl tracking-tight">
               HyperApp
             </h2>
             <motion.p 
-              className="text-white/90 text-sm mt-1"
+              className="text-white/90 text-xs mt-0.5"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2, duration: 0.4 }}

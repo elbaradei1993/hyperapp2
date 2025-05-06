@@ -1,8 +1,8 @@
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { MapIcon, ThumbsUp } from 'lucide-react';
+import { MapPin, ThumbsUp, Rainbow } from 'lucide-react';
 import { VibeService, Vibe } from '@/services/VibeService';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -18,6 +18,13 @@ L.Icon.Default.mergeOptions({
   iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
   shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
 });
+
+// Rainbow gradient colors for LGBTQIA+ friendly vibes
+const rainbowGradient = {
+  color: 'linear-gradient(90deg, #ea384c, #F97316, #FEF7CD, #F2FCE2, #0EA5E9, #7E69AB, #D946EF)',
+  cssColor: 'url(#rainbow-gradient)',
+  name: 'LGBTQIA+ Friendly',
+};
 
 // Location finder component
 function LocationMarker() {
@@ -44,6 +51,95 @@ function LocationMarker() {
     />
   );
 }
+
+// Pulse effect component for vibes
+const PulsingMarker = ({ position, color, vibe }: { position: [number, number], color: string, vibe: Vibe }) => {
+  const [isLGBTQIAFriendly, setIsLGBTQIAFriendly] = useState(false);
+  
+  useEffect(() => {
+    // Check if this is LGBTQIA+ friendly vibe based on vibe_type name
+    if (vibe?.vibe_type?.name?.toLowerCase().includes('lgbtq')) {
+      setIsLGBTQIAFriendly(true);
+    }
+  }, [vibe]);
+
+  // Create multiple circles for pulse effect
+  return (
+    <>
+      {/* Rainbow gradient definition for SVG elements */}
+      <svg style={{ position: 'absolute', width: 0, height: 0 }}>
+        <defs>
+          <linearGradient id="rainbow-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#ea384c" />
+            <stop offset="16.6%" stopColor="#F97316" />
+            <stop offset="33.3%" stopColor="#FEF7CD" />
+            <stop offset="50%" stopColor="#F2FCE2" />
+            <stop offset="66.6%" stopColor="#0EA5E9" />
+            <stop offset="83.3%" stopColor="#7E69AB" />
+            <stop offset="100%" stopColor="#D946EF" />
+          </linearGradient>
+        </defs>
+      </svg>
+      
+      {/* Main vibe circle */}
+      <Circle 
+        center={position}
+        pathOptions={{ 
+          color: isLGBTQIAFriendly ? '#D946EF' : color,
+          fillColor: isLGBTQIAFriendly ? '#D946EF' : color,
+          fillOpacity: 0.6,
+          weight: 2
+        }}
+        {...{ radius: 100 }}
+      />
+      
+      {/* Pulse circles with animation - 15km radius (15000m) */}
+      {[5000, 10000, 15000].map((radius, i) => (
+        <Circle 
+          key={`pulse-${vibe.id}-${i}`}
+          center={position}
+          pathOptions={{ 
+            color: isLGBTQIAFriendly ? '#D946EF' : color,
+            fillColor: isLGBTQIAFriendly ? '#D946EF' : color,
+            fillOpacity: 0.05 - (i * 0.01),
+            weight: 1,
+            dashArray: '5, 10',
+            className: `animate-pulse-slow`
+          }}
+          {...{ radius }}
+        />
+      ))}
+      
+      {/* Marker */}
+      <Marker position={position}>
+        <Popup>
+          <div className="p-1">
+            <h3 className="font-medium text-sm">{vibe.title}</h3>
+            <p className="text-xs text-muted-foreground mt-1">{vibe.description}</p>
+            {vibe.vibe_type && (
+              <div className="flex items-center gap-1 mt-2">
+                {isLGBTQIAFriendly ? (
+                  <Rainbow className="h-3 w-3" />
+                ) : (
+                  <span 
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: vibe.vibe_type.color }}
+                  />
+                )}
+                <span className="text-xs">{vibe.vibe_type.name}</span>
+              </div>
+            )}
+            <div className="flex items-center justify-between mt-3">
+              <span className="text-xs text-muted-foreground">
+                {vibe.confirmed_count} confirmations
+              </span>
+            </div>
+          </div>
+        </Popup>
+      </Marker>
+    </>
+  );
+};
 
 const MapTab = () => {
   const [vibes, setVibes] = useState<any[]>([]);
@@ -189,47 +285,15 @@ const MapTab = () => {
           if (isNaN(lat) || isNaN(lng)) return null;
           
           const position: L.LatLngTuple = [lat, lng];
+          const isLGBTQIAFriendly = vibe?.vibe_type?.name?.toLowerCase().includes('lgbtq');
           
           return (
-            <Marker 
-              key={vibe.id} 
+            <PulsingMarker 
+              key={vibe.id}
               position={position}
-            >
-              <Popup>
-                <div className="p-1">
-                  <h3 className="font-medium text-sm">{vibe.title}</h3>
-                  <p className="text-xs text-muted-foreground mt-1">{vibe.description}</p>
-                  {vibe.vibe_type && (
-                    <div className="flex items-center gap-1 mt-2">
-                      <span 
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: vibe.vibe_type.color }}
-                      />
-                      <span className="text-xs">{vibe.vibe_type.name}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center justify-between mt-3">
-                    <span className="text-xs text-muted-foreground">
-                      {vibe.confirmed_count} confirmations
-                    </span>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      className="h-7 px-2 flex items-center gap-1 text-xs"
-                      onClick={() => handleConfirmVibe(vibe.id)}
-                      disabled={isUpvoting === vibe.id}
-                    >
-                      {isUpvoting === vibe.id ? (
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                      ) : (
-                        <ThumbsUp className="h-3 w-3" />
-                      )}
-                      Confirm
-                    </Button>
-                  </div>
-                </div>
-              </Popup>
-            </Marker>
+              color={vibe.vibe_type?.color || '#888888'}
+              vibe={vibe}
+            />
           );
         })}
       </MapContainer>

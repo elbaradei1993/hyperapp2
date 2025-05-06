@@ -1,16 +1,15 @@
 
 import React, { useEffect, useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { VibeService, VibeType, Vibe } from "@/services/VibeService";
 import { useToast } from "@/hooks/use-toast";
-import { ThumbsUp, MapPin, Clock, Loader2 } from "lucide-react";
+import { ThumbsUp, Loader2, Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 
 const TrendingVibesSection = () => {
   const [trendingVibes, setTrendingVibes] = useState<Vibe[]>([]);
-  const [vibeTypes, setVibeTypes] = useState<VibeType[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -19,12 +18,7 @@ const TrendingVibesSection = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [types, trending] = await Promise.all([
-          VibeService.getVibeTypes(),
-          VibeService.getTrendingVibes(5) // Get top 5 trending vibes
-        ]);
-        
-        setVibeTypes(types);
+        const trending = await VibeService.getTrendingVibes(5); // Get top 5 trending vibes
         setTrendingVibes(trending);
       } catch (error) {
         console.error("Error fetching trending data:", error);
@@ -88,9 +82,9 @@ const TrendingVibesSection = () => {
   
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-8">
+      <div className="flex flex-col items-center justify-center py-4">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="mt-4 text-sm text-muted-foreground">
+        <p className="mt-2 text-sm text-muted-foreground">
           Loading trending vibes...
         </p>
       </div>
@@ -98,100 +92,85 @@ const TrendingVibesSection = () => {
   }
   
   return (
-    <Card className="mb-6 border border-border/40">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <ThumbsUp className="h-5 w-5" />
-          Trending Vibes
+    <Card className="border border-border/40 shadow-sm">
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <Heart className="h-5 w-5 text-rose-500" />
+          <span>Trending Vibes</span>
         </CardTitle>
-        <CardDescription>See what's happening around you</CardDescription>
       </CardHeader>
       
-      <CardContent className="space-y-4">
-        {/* Vibe Types Section */}
-        <div className="mb-4">
-          <h3 className="text-sm font-medium mb-2">Popular Vibes Categories</h3>
-          <div className="flex flex-wrap gap-2">
-            {vibeTypes.map(type => (
-              <Badge 
-                key={type.id}
-                className="py-1 px-2"
-                style={{ 
-                  backgroundColor: `${type.color}20`, 
-                  color: type.color,
-                  borderColor: `${type.color}40` 
-                }}
-                variant="outline"
+      <CardContent className="space-y-3 pt-0">
+        {trendingVibes.length > 0 ? (
+          <div className="space-y-3">
+            {trendingVibes.map((vibe, index) => (
+              <motion.div 
+                key={vibe.id} 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1, duration: 0.3 }}
+                className="relative overflow-hidden"
               >
-                {type.name}
-              </Badge>
-            ))}
-          </div>
-        </div>
-        
-        {/* Trending Vibes List */}
-        <div>
-          <h3 className="text-sm font-medium mb-2">Top Vibes</h3>
-          
-          {trendingVibes.length > 0 ? (
-            <div className="space-y-3">
-              {trendingVibes.map(vibe => (
-                <div key={vibe.id} className="p-3 border rounded-md">
-                  <div className="flex justify-between items-start mb-1">
+                <div 
+                  className="p-3 rounded-lg border border-transparent hover:border-border/60 transition-all duration-300 bg-gradient-to-br from-card/80 to-card"
+                  style={{ 
+                    boxShadow: `0 4px 12px ${vibe.vibe_type.color}15`
+                  }}
+                >
+                  <div className="absolute top-0 left-0 w-1 h-full" style={{ backgroundColor: vibe.vibe_type.color }}/>
+                  
+                  <div className="flex justify-between items-start mb-1 pl-2">
                     <h3 className="font-medium text-sm">{vibe.title || "Untitled Vibe"}</h3>
-                    <Badge 
-                      variant="outline"
-                      className="text-xs px-2"
+                    <div 
+                      className="text-xs px-2 py-0.5 rounded-full"
                       style={{ 
-                        backgroundColor: `${vibe.vibe_type.color}20`,
-                        color: vibe.vibe_type.color,
-                        borderColor: `${vibe.vibe_type.color}40` 
+                        backgroundColor: `${vibe.vibe_type.color}15`,
+                        color: vibe.vibe_type.color
                       }}
                     >
                       {vibe.vibe_type.name}
-                    </Badge>
+                    </div>
                   </div>
                   
                   {vibe.description && (
-                    <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
+                    <p className="text-xs text-muted-foreground mb-2 line-clamp-2 pl-2">
                       {vibe.description}
                     </p>
                   )}
                   
-                  <div className="flex justify-between items-center mt-2 text-xs text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
+                  <div className="flex justify-between items-center mt-2 text-xs text-muted-foreground pl-2">
+                    <div>
                       {formatTimestamp(vibe.created_at)}
                     </div>
                     
                     <Button 
                       variant="ghost" 
                       size="sm"
-                      className="h-7 px-2 flex items-center gap-1 text-xs"
+                      className="h-7 px-2 flex items-center gap-1 text-xs hover:bg-background/80"
                       onClick={() => handleConfirmVibe(vibe.id)}
                     >
                       <ThumbsUp className="h-3 w-3" />
-                      {vibe.confirmed_count}
+                      <span>{vibe.confirmed_count}</span>
                     </Button>
                   </div>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-6 text-muted-foreground">
-              <p>No trending vibes yet</p>
-            </div>
-          )}
-          
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full mt-4"
-            onClick={() => navigate('/trending')}
-          >
-            View All Trending Vibes
-          </Button>
-        </div>
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-6 text-muted-foreground">
+            <p>No trending vibes available</p>
+          </div>
+        )}
+        
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full mt-2"
+          onClick={() => navigate('/trending')}
+        >
+          View All Trending Vibes
+        </Button>
       </CardContent>
     </Card>
   );
