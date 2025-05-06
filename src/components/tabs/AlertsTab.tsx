@@ -1,7 +1,8 @@
+
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { VibeService } from "@/services/VibeService";
+import { VibeService } from "@/services/vibes";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDistance } from 'date-fns';
 import { useToast } from "@/hooks/use-toast";

@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -24,7 +25,7 @@ import { Switch } from "@/components/ui/switch";
 import { format } from "date-fns";
 import { CalendarIcon, Loader2, MapPin } from "lucide-react";
 import { EventData, EventService } from "@/services/EventService";
-import { VibeService } from "@/services/VibeService";
+import { VibeService } from "@/services/vibes";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useLanguage } from "@/contexts/LanguageContext";

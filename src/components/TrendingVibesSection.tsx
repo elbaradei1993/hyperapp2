@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { VibeService, VibeType, Vibe } from "@/services/VibeService";
+import { VibeService, VibeType, Vibe } from "@/services/vibes";
 import { useToast } from "@/hooks/use-toast";
 import { ThumbsUp, Loader2, Heart, Star, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";

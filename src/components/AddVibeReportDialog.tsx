@@ -23,7 +23,7 @@ import * as z from 'zod';
 import { MapPin, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { VibeService, VibeType, fetchVibeTypes } from '@/services/vibes';
+import { VibeService, VibeType } from '@/services/vibes';
 
 // Form schema
 const formSchema = z.object({
@@ -57,7 +57,7 @@ const AddVibeReportDialog = ({ trigger }: AddVibeReportDialogProps) => {
   // Get vibe types
   useEffect(() => {
     const getVibeTypes = async () => {
-      const types = await fetchVibeTypes();
+      const types = await VibeService.getVibeTypes();
       setVibeTypes(types);
     };
     

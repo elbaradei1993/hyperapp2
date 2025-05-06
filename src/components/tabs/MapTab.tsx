@@ -3,7 +3,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { MapPin } from 'lucide-react';
-import { VibeService, Vibe } from '@/services/VibeService';
+import { VibeService, Vibe } from '@/services/vibes';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import L from 'leaflet';
