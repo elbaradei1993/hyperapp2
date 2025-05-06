@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Plus, MapPin, AlertTriangle } from "lucide-react";
@@ -18,7 +17,7 @@ import { useNavigate } from 'react-router-dom';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { VibeService, VibeType } from '@/services/VibeService';
+import { VibeService, VibeType } from '@/services/vibes';
 
 interface ActionMenuProps {
   className?: string;

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -24,7 +23,7 @@ import * as z from 'zod';
 import { MapPin, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { VibeService, fetchVibeTypes, VibeType } from '@/services/VibeService';
+import { VibeService, VibeType, fetchVibeTypes } from '@/services/vibes';
 
 // Form schema
 const formSchema = z.object({

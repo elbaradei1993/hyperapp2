@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Marker, Popup, Circle } from 'react-leaflet';
 import { Rainbow } from 'lucide-react';
-import { VibeService } from '@/services/VibeService';
+import { VibeService } from '@/services/vibes';
 import { Button } from '@/components/ui/button';
 import { ThumbsUp } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
