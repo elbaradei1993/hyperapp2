@@ -12,10 +12,11 @@ export const VibeInteractionsService = {
    */
   async upvoteVibe(id: number): Promise<void> {
     try {
-      // Call the RPC function with the correct parameter name
-      const { error } = await supabase.rpc('increment_vibe_count', { 
-        report_id: id 
-      } as any);
+      // Use a properly typed parameters object
+      const params = { report_id: id };
+      
+      // Call the RPC function with the parameters
+      const { error } = await supabase.rpc('increment_vibe_count', params);
       
       if (error) {
         throw error;
