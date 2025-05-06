@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { VibeService, VibeType, Vibe } from "@/services/VibeService";
 import { useToast } from "@/hooks/use-toast";
-import { ThumbsUp, Loader2, Heart } from "lucide-react";
+import { ThumbsUp, Loader2, Heart, Star, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 
@@ -79,6 +79,11 @@ const TrendingVibesSection = () => {
       });
     }
   };
+
+  // Helper function to check if vibe is LGBTQIA+ friendly
+  const isLGBTQIAFriendly = (vibeName: string | undefined): boolean => {
+    return vibeName?.toLowerCase().includes('lgbtq') || false;
+  };
   
   if (loading) {
     return (
@@ -95,7 +100,7 @@ const TrendingVibesSection = () => {
     <Card className="border border-border/40 shadow-sm">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-lg">
-          <Heart className="h-5 w-5 text-rose-500" />
+          <Sparkles className="h-5 w-5 text-amber-500" />
           <span>Trending Vibes</span>
         </CardTitle>
       </CardHeader>
@@ -103,59 +108,83 @@ const TrendingVibesSection = () => {
       <CardContent className="space-y-3 pt-0">
         {trendingVibes.length > 0 ? (
           <div className="space-y-3">
-            {trendingVibes.map((vibe, index) => (
-              <motion.div 
-                key={vibe.id} 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1, duration: 0.3 }}
-                className="relative overflow-hidden"
-              >
-                <div 
-                  className="p-3 rounded-lg border border-transparent hover:border-border/60 transition-all duration-300 bg-gradient-to-br from-card/80 to-card"
-                  style={{ 
-                    boxShadow: `0 4px 12px ${vibe.vibe_type.color}15`
-                  }}
+            {trendingVibes.map((vibe, index) => {
+              const isLGBTQ = isLGBTQIAFriendly(vibe.vibe_type?.name);
+              
+              return (
+                <motion.div 
+                  key={vibe.id} 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1, duration: 0.3 }}
                 >
-                  <div className="absolute top-0 left-0 w-1 h-full" style={{ backgroundColor: vibe.vibe_type.color }}/>
-                  
-                  <div className="flex justify-between items-start mb-1 pl-2">
-                    <h3 className="font-medium text-sm">{vibe.title || "Untitled Vibe"}</h3>
+                  <motion.div 
+                    className="relative overflow-hidden rounded-lg"
+                    whileHover={{ scale: 1.02 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                  >
+                    {/* Colorful background with interactive UI */}
                     <div 
-                      className="text-xs px-2 py-0.5 rounded-full"
+                      className="p-3 border border-transparent transition-all duration-300 bg-gradient-to-br from-background to-background/80"
                       style={{ 
-                        backgroundColor: `${vibe.vibe_type.color}15`,
-                        color: vibe.vibe_type.color
+                        boxShadow: `0 4px 12px ${vibe.vibe_type?.color || '#888'}15`
                       }}
                     >
-                      {vibe.vibe_type.name}
+                      {/* Decorative colorful edge */}
+                      {isLGBTQ ? (
+                        <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-red-500 via-yellow-500 via-green-500 via-blue-500 to-purple-500" />
+                      ) : (
+                        <div className="absolute top-0 left-0 w-1 h-full" style={{ backgroundColor: vibe.vibe_type?.color || '#888' }}/>
+                      )}
+                      
+                      <div className="flex justify-between items-start mb-1 pl-2">
+                        <div className="flex items-center">
+                          <h3 className="font-medium text-sm">{vibe.title || "Untitled Vibe"}</h3>
+                          {index === 0 && (
+                            <div className="ml-2 flex items-center">
+                              <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {vibe.description && (
+                        <p className="text-xs text-muted-foreground mb-2 line-clamp-2 pl-2">
+                          {vibe.description}
+                        </p>
+                      )}
+                      
+                      <div className="flex justify-between items-center mt-2 pl-2">
+                        <div className="text-xs text-muted-foreground flex items-center">
+                          {/* Circular vibe type indicator */}
+                          {isLGBTQ ? (
+                            <div className="w-2 h-2 rounded-full mr-2 bg-gradient-to-r from-red-500 via-yellow-300 via-green-500 via-blue-500 to-purple-500" />
+                          ) : (
+                            <div 
+                              className="w-2 h-2 rounded-full mr-2"
+                              style={{ backgroundColor: vibe.vibe_type?.color || '#888' }}
+                            />
+                          )}
+                          <span className="text-xs opacity-70">
+                            {formatTimestamp(vibe.created_at)}
+                          </span>
+                        </div>
+                        
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          className="h-7 px-2 flex items-center gap-1 text-xs hover:bg-background"
+                          onClick={() => handleConfirmVibe(vibe.id)}
+                        >
+                          <ThumbsUp className="h-3 w-3" />
+                          <span>{vibe.confirmed_count}</span>
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                  
-                  {vibe.description && (
-                    <p className="text-xs text-muted-foreground mb-2 line-clamp-2 pl-2">
-                      {vibe.description}
-                    </p>
-                  )}
-                  
-                  <div className="flex justify-between items-center mt-2 text-xs text-muted-foreground pl-2">
-                    <div>
-                      {formatTimestamp(vibe.created_at)}
-                    </div>
-                    
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      className="h-7 px-2 flex items-center gap-1 text-xs hover:bg-background/80"
-                      onClick={() => handleConfirmVibe(vibe.id)}
-                    >
-                      <ThumbsUp className="h-3 w-3" />
-                      <span>{vibe.confirmed_count}</span>
-                    </Button>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+                  </motion.div>
+                </motion.div>
+              );
+            })}
           </div>
         ) : (
           <div className="text-center py-6 text-muted-foreground">

@@ -6,7 +6,7 @@ const Banner = () => {
   return (
     <div className="w-full overflow-hidden relative">
       <motion.div 
-        className="bg-gradient-to-r from-purple-600 via-primary to-blue-600 p-4 rounded-b-xl"
+        className="bg-gradient-to-r from-purple-600 via-primary to-blue-600 p-4"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}

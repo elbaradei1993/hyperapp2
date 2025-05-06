@@ -197,7 +197,7 @@ export const VibeService: VibeServiceInterface = {
       // Fix: Properly type the parameters to match the RPC function's expected shape
       const { error } = await supabase.rpc(
         'increment_vibe_confirmed_count',
-        { vibe_id: id } as any
+        { vibe_id: id } as IncrementVibeCountParams
       );
       
       if (error) {

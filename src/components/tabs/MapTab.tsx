@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -63,7 +62,7 @@ const PulsingMarker = ({ position, color, vibe }: { position: [number, number], 
     }
   }, [vibe]);
 
-  // Create multiple circles for pulse effect
+  // Create multiple circles for pulse effect with increasing radius around the vibe report
   return (
     <>
       {/* Rainbow gradient definition for SVG elements */}
