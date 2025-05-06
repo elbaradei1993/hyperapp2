@@ -8,7 +8,6 @@ import { FadeIn } from "@/components/ui/design-system";
 import MapTab from "@/components/tabs/MapTab";
 import Banner from "@/components/Banner";
 import { useIsMobile } from "@/hooks/use-mobile";
-import TrendingVibesSection from "@/components/TrendingVibesSection";
 
 const Index = () => {
   const { user } = useAuth();
@@ -25,25 +24,16 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      {/* Banner at the top with no gap */}
+      {/* Banner with no gap */}
       <Banner />
       
-      {/* Main Content with adjusted height for better visibility */}
-      <div className="flex flex-col flex-1 container max-w-7xl mx-auto px-2 py-1 md:h-[calc(100vh-130px)] overflow-hidden">
-        <div className="flex flex-col md:flex-row gap-2 h-full">
-          {/* Map - increased size on mobile */}
-          <div className="flex-grow h-[65vh] md:h-full md:w-3/4">
-            <FadeIn delay="200ms" className="h-full">
-              <MapTab />
-            </FadeIn>
-          </div>
-          
-          {/* Trending Vibes Sidebar */}
-          <div className="md:w-1/4 md:min-w-72 overflow-y-auto max-h-[35vh] md:max-h-full">
-            <FadeIn delay="300ms">
-              <TrendingVibesSection />
-            </FadeIn>
-          </div>
+      {/* Main Content with full height to avoid scrolling */}
+      <div className="flex flex-col flex-1 container max-w-7xl mx-auto px-2 py-0 h-[calc(100vh-130px)] overflow-hidden">
+        <div className="h-full w-full">
+          {/* Map - taking full available space */}
+          <FadeIn delay="200ms" className="h-full">
+            <MapTab />
+          </FadeIn>
         </div>
       </div>
       

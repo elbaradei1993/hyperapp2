@@ -46,6 +46,12 @@ const ActionButton = ({ isMobile }: ActionButtonProps) => {
               <span>Create Event</span>
             </NavLink>
           </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <NavLink to="/events" className="cursor-pointer">
+              <Calendar className="mr-2 h-4 w-4" />
+              <span>View Events</span>
+            </NavLink>
+          </DropdownMenuItem>
           <DropdownMenuItem 
             className="text-red-500 hover:text-red-600 cursor-pointer"
             onClick={() => setIsSosDialogOpen(true)}
@@ -73,6 +79,12 @@ const ActionButton = ({ isMobile }: ActionButtonProps) => {
         <NavLink to="/events/create">
           <Calendar className="h-4 w-4" />
           Create Event
+        </NavLink>
+      </Button>
+      <Button size="sm" variant="outline" className="flex items-center gap-1" asChild>
+        <NavLink to="/events">
+          <Calendar className="h-4 w-4" />
+          View Events
         </NavLink>
       </Button>
       <Button 

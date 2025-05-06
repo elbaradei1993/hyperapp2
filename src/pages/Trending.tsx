@@ -1,6 +1,4 @@
 
-"use client";
-
 import React, { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import { TrendingUp, MapPin, Clock, ThumbsUp, ChevronUp, Tag, Loader2 } from "lucide-react";
@@ -10,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { safeParseInt, safeToString } from "@/utils/typeConverters";
-import { VibeService, Vibe, VibeType } from '@/services/VibeService';
+import { VibeService, VibeType } from '@/services/VibeService';
 import { H1, PageHeader, FadeIn } from "@/components/ui/design-system";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -35,7 +33,7 @@ const Trending = () => {
   const [trendingVibes, setTrendingVibes] = useState<TrendingVibe[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTab, setSelectedTab] = useState<string>("all");
-  const [vibeTypes, setVibeTypes] = useState<{id: number, name: string, color: string}[]>([]);
+  const [vibeTypes, setVibeTypes] = useState<VibeType[]>([]);
 
   useEffect(() => {
     const fetchVibeTypes = async () => {
