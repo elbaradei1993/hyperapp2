@@ -195,9 +195,11 @@ export const VibeService: VibeServiceInterface = {
   async upvoteVibe(id: number): Promise<void> {
     try {
       // Fix: The parameter name must be a valid object with the correct property name
+      // Fixed by using typed parameters as expected by the RPC function
+      const params: IncrementVibeCountParams = { vibe_id: id };
       const { error } = await supabase.rpc(
         'increment_vibe_confirmed_count',
-        { vibe_id: id } // This must match exactly what the RPC function expects
+        params
       );
       
       if (error) {

@@ -76,7 +76,8 @@ const VibeMarker: React.FC<VibeMarkerProps> = ({ vibe, position }) => {
           fillOpacity: 0.4,
           weight: 1
         }}
-        radius={100}
+        // Fix: Use TypeScript type assertion for the radius property
+        {...{ radius: 100 } as any}
       />
       
       {/* Pulse circles with animation - 5km max radius (5000m) with reduced opacity */}
@@ -92,7 +93,8 @@ const VibeMarker: React.FC<VibeMarkerProps> = ({ vibe, position }) => {
             dashArray: '5, 10',
             className: `animate-pulse-slow`
           }}
-          radius={radius}
+          // Fix: Use TypeScript type assertion for the radius property
+          {...{ radius: radius } as any}
         />
       ))}
       

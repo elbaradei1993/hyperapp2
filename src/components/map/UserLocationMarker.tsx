@@ -19,7 +19,8 @@ const UserLocationMarker: React.FC<UserLocationMarkerProps> = ({ position }) => 
           fillOpacity: 0.1,
           weight: 1
         }}
-        radius={200}
+        // Fix: Use TypeScript type assertion for the radius property
+        {...{ radius: 200 } as any}
       />
       
       {/* User location marker */}
