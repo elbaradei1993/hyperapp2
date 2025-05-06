@@ -17,10 +17,10 @@ export const VibeInteractionsService = {
         report_id: number;
       }
       
-      // Call the RPC function with properly typed parameters
-      const { error } = await supabase.rpc<any>('increment_vibe_count', {
+      // Call the RPC function with properly typed parameters - provide both return type and params type
+      const { error } = await supabase.rpc<void, IncrementParams>('increment_vibe_count', {
         report_id: id
-      } as IncrementParams);
+      });
       
       if (error) {
         throw error;
