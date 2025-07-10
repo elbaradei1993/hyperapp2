@@ -16,7 +16,7 @@ export const VibeInteractionsService = {
       const params = { report_id: id };
       
       // Call the RPC function with explicit type casting to avoid TypeScript errors
-      const { error } = await supabase.rpc('increment_vibe_count', params as any);
+      const { error } = await (supabase.rpc as any)('increment_vibe_count', params);
       
       if (error) {
         throw error;
