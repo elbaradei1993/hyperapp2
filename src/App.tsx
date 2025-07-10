@@ -14,6 +14,10 @@ import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import Trending from "./pages/Trending";
 import EventCreate from "./pages/EventCreate";
+import Services from "./pages/Services";
+import Activity from "./pages/Activity";
+import Account from "./pages/Account";
+import Terms from "./pages/Terms";
 import NotFound from "./pages/NotFound";
 import { useTheme } from "./hooks/use-theme";
 
@@ -61,7 +65,15 @@ const App = () => (
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/trending" element={<Trending />} />
                   <Route path="/events/create" element={<EventCreate />} />
-                  {/* Redirect for backwards compatibility */}
+                  <Route path="/services" element={<Services />} />
+                  <Route path="/activity" element={<Activity />} />
+                  <Route path="/account" element={<Account />} />
+                  <Route path="/terms" element={<Terms />} />
+                  {/* Feature page redirects */}
+                  <Route path="/events" element={<Navigate to="/services" replace />} />
+                  <Route path="/explore" element={<Navigate to="/" replace />} />
+                  <Route path="/pulse" element={<Navigate to="/trending" replace />} />
+                  {/* Legacy redirects */}
                   <Route path="/alerts" element={<Navigate to="/trending" replace />} />
                   <Route path="/notifications" element={<Navigate to="/trending" replace />} />
                   {/* Catch-all route */}
