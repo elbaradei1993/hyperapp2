@@ -18,6 +18,9 @@ import Services from "./pages/Services";
 import Activity from "./pages/Activity";
 import Account from "./pages/Account";
 import Terms from "./pages/Terms";
+import Pulse from "./pages/Pulse";
+import Events from "./pages/Events";
+import Explore from "./pages/Explore";
 import NotFound from "./pages/NotFound";
 import { useTheme } from "./hooks/use-theme";
 
@@ -69,10 +72,9 @@ const App = () => (
                   <Route path="/activity" element={<Activity />} />
                   <Route path="/account" element={<Account />} />
                   <Route path="/terms" element={<Terms />} />
-                  {/* Feature page redirects */}
-                  <Route path="/events" element={<Navigate to="/services" replace />} />
-                  <Route path="/explore" element={<Navigate to="/" replace />} />
-                  <Route path="/pulse" element={<Navigate to="/trending" replace />} />
+                  <Route path="/pulse" element={<Pulse />} />
+                  <Route path="/events" element={<Events />} />
+                  <Route path="/explore" element={<Explore />} />
                   {/* Legacy redirects */}
                   <Route path="/alerts" element={<Navigate to="/trending" replace />} />
                   <Route path="/notifications" element={<Navigate to="/trending" replace />} />

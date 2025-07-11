@@ -26,7 +26,7 @@ interface SosData {
 }
 
 const SosModal = ({ onReport }: { onReport: (data: SosData) => void }) => {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const [alertType, setAlertType] = useState<string>("violence");
   const [anonymous, setAnonymous] = useState(false);
   const { toast } = useToast();
@@ -41,13 +41,14 @@ const SosModal = ({ onReport }: { onReport: (data: SosData) => void }) => {
     });
   };
 
+  const handleClose = () => {
+    setOpen(false);
+    // Call onReport with null to signal modal close
+    onReport({ type: '', anonymous: false });
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="destructive" className="fixed bottom-24 right-6 z-30 rounded-full w-16 h-16 shadow-lg flex items-center justify-center text-white">
-          SOS
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Report SOS Alert</DialogTitle>

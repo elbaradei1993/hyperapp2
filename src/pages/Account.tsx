@@ -24,6 +24,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useTheme } from "@/hooks/use-theme";
 import { format } from "date-fns";
 
 interface UserProfile {
@@ -42,6 +43,7 @@ export const Account = () => {
   const isMobile = useIsMobile();
   const { user, signOut } = useAuth();
   const { toast } = useToast();
+  const { theme, setTheme } = useTheme();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -292,13 +294,16 @@ export const Account = () => {
                     </div>
                   </div>
                   <Switch
-                    checked={profile?.settings?.darkTheme || false}
-                    onCheckedChange={(checked) => 
+                    checked={theme === 'dark'}
+                    onCheckedChange={(checked) => {
+                      const newTheme = checked ? 'dark' : 'light';
+                      setTheme(newTheme);
+                      // Also update the profile
                       setProfile(prev => prev ? {
                         ...prev, 
                         settings: {...prev.settings, darkTheme: checked}
-                      } : null)
-                    }
+                      } : null);
+                    }}
                   />
                 </div>
 

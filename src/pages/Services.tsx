@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AddVibeModal } from "@/components/modals/AddVibeModal";
+import { CreateEventModal } from "@/components/modals/CreateEventModal";
 import SosModal from "@/components/SosModal";
 
 const services = [
@@ -145,11 +146,18 @@ export const Services = () => {
         onClose={() => setActiveModal(null)}
       />
       
-      <SosModal 
-        onReport={(data) => {
-          console.log('SOS reported:', data);
-          setActiveModal(null);
-        }}
+      {activeModal === "send-sos" && (
+        <SosModal 
+          onReport={(data) => {
+            console.log('SOS reported:', data);
+            setActiveModal(null);
+          }}
+        />
+      )}
+
+      <CreateEventModal 
+        isOpen={activeModal === "create-event"}
+        onClose={() => setActiveModal(null)}
       />
 
       {/* Mobile spacing */}
