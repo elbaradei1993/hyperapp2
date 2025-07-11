@@ -26,16 +26,21 @@ export const Pulse = () => {
   const isMobile = useIsMobile();
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
   const [communityStats, setCommunityStats] = useState({
-    totalReports: 1247,
-    activeUsers: 89,
-    safetyScore: 8.2,
+    totalReports: 0,
+    activeUsers: 0,
+    safetyScore: 0,
     moodDistribution: {
-      great: 45,
-      good: 32,
-      okay: 18,
-      poor: 5
+      great: 0,
+      good: 0,
+      okay: 0,
+      poor: 0
     }
   });
+
+  useEffect(() => {
+    // Fetch real community stats from database
+    // For now setting to 0 to remove mock data
+  }, []);
 
   const handleMoodSubmit = (moodId: string) => {
     setSelectedMood(moodId);

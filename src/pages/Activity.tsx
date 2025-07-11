@@ -147,9 +147,8 @@ export const Activity = () => {
   };
 
   const viewOnMap = (activity: ActivityItem) => {
-    // Navigate to map with location
-    const mapUrl = `/?lat=${activity.latitude}&lng=${activity.longitude}&zoom=16`;
-    window.open(mapUrl, '_blank');
+    // Navigate to home page with location params to show on map
+    window.location.href = `/?lat=${activity.latitude}&lng=${activity.longitude}&zoom=16`;
   };
 
   if (!user) {

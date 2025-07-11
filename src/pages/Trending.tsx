@@ -272,15 +272,15 @@ const Trending = () => {
                 onValueChange={setSelectedTab}
                 className="w-full"
               >
-                <TabsList className="flex w-full gap-1 overflow-x-auto overflow-y-hidden">
-                  <TabsTrigger value="all" className="flex-shrink-0">
+                <TabsList className="flex w-full gap-1 overflow-x-auto overflow-y-hidden px-0 md:px-2 snap-x snap-mandatory">
+                  <TabsTrigger value="all" className="flex-shrink-0 snap-start ml-4 md:ml-0">
                     All Vibes
                   </TabsTrigger>
                   {vibeTypes.map((type) => (
                     <TabsTrigger 
                       key={type.id} 
                       value={type.id.toString()}
-                      className="flex-shrink-0 flex items-center"
+                      className="flex-shrink-0 flex items-center snap-start"
                     >
                       <div 
                         className="w-3 h-3 rounded-full mr-1.5"
@@ -289,6 +289,7 @@ const Trending = () => {
                       {type.name}
                     </TabsTrigger>
                   ))}
+                  <div className="flex-shrink-0 w-4" />
                 </TabsList>
               </Tabs>
             </CardContent>

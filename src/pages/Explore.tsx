@@ -25,52 +25,16 @@ interface NearbyActivity {
   priority?: 'low' | 'medium' | 'high';
 }
 
-const mockActivities: NearbyActivity[] = [
-  {
-    id: '1',
-    type: 'vibe',
-    title: 'Great street art festival',
-    description: 'Amazing murals being painted on 5th street',
-    distance: 0.2,
-    timestamp: '2 minutes ago',
-    location: '5th Street & Main Ave',
-    priority: 'low'
-  },
-  {
-    id: '2',
-    type: 'sos',
-    title: 'Medical emergency reported',
-    distance: 0.8,
-    timestamp: '8 minutes ago', 
-    location: 'Central Park area',
-    priority: 'high'
-  },
-  {
-    id: '3',
-    type: 'event',
-    title: 'Community cleanup',
-    description: 'Neighborhood volunteers cleaning up the riverbank',
-    distance: 1.2,
-    timestamp: '15 minutes ago',
-    location: 'Riverbank Trail',
-    priority: 'medium'
-  },
-  {
-    id: '4',
-    type: 'user',
-    title: '3 users nearby',
-    description: 'Active community members in your area',
-    distance: 0.5,
-    timestamp: 'now',
-    location: 'Within 500m radius',
-    priority: 'low'
-  }
-];
 
 export const Explore = () => {
   const isMobile = useIsMobile();
-  const [activities, setActivities] = useState<NearbyActivity[]>(mockActivities);
+  const [activities, setActivities] = useState<NearbyActivity[]>([]);
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
+
+  useEffect(() => {
+    // Fetch real activities from database
+    // For now setting to empty array to remove mock data
+  }, []);
 
   const getActivityIcon = (type: string) => {
     switch (type) {
