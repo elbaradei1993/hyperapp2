@@ -272,8 +272,8 @@ const Trending = () => {
                 onValueChange={setSelectedTab}
                 className="w-full"
               >
-                <TabsList className="flex w-full gap-1 overflow-x-auto overflow-y-hidden px-0 md:px-2 snap-x snap-mandatory">
-                  <TabsTrigger value="all" className="flex-shrink-0 snap-start ml-4 md:ml-0">
+                <TabsList className="flex w-max gap-1 overflow-x-auto overflow-y-hidden px-4 md:px-2 snap-x snap-mandatory scrollbar-none">
+                  <TabsTrigger value="all" className="flex-shrink-0 snap-start">
                     All Vibes
                   </TabsTrigger>
                   {vibeTypes.map((type) => (

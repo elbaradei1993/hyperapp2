@@ -147,8 +147,15 @@ export const Activity = () => {
   };
 
   const viewOnMap = (activity: ActivityItem) => {
-    // Navigate to home page with location params to show on map
-    window.location.href = `/?lat=${activity.latitude}&lng=${activity.longitude}&zoom=16`;
+    if (activity.type === 'sos') {
+      // For SOS alerts, navigate to explore page with this specific alert highlighted
+      window.history.pushState({}, '', `/explore?highlight=${activity.id}&type=sos`);
+      window.location.reload();
+    } else {
+      // For other activities, show on map
+      window.history.pushState({}, '', `/?lat=${activity.latitude}&lng=${activity.longitude}&zoom=16`);
+      window.location.reload();
+    }
   };
 
   if (!user) {

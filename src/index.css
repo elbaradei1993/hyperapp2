@@ -138,9 +138,28 @@
   transform: translateY(-1px);
 }
 
-/* Additional bottom padding for mobile to prevent overlaps */
+/* Mobile scroll improvements and orientation fixes */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* Force portrait orientation and vertical layout on mobile */
 @media (max-width: 768px) {
   .pb-mobile-safe {
     padding-bottom: 6rem;
+  }
+  
+  html, body {
+    orientation: portrait;
+  }
+  
+  .container {
+    flex-direction: column !important;
+    display: flex !important;
   }
 }
