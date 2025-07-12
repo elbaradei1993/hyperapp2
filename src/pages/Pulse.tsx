@@ -63,12 +63,27 @@ export const Pulse = () => {
       const activeUsers = Math.min(totalReports * 2, 100); // Mock calculation
       const safetyScore = Math.max(10 - (sosAlerts?.length || 0), 0);
 
-      // Mock mood distribution for now - in a real app this would come from user mood reports
+      // Calculate mood distribution based on vibe types from actual data
+      const vibeTypeCounts = vibeReports.reduce((acc: any, vibe: any) => {
+        const vibeTypeName = vibe.vibe_type?.name?.toLowerCase();
+        if (vibeTypeName?.includes('calm') || vibeTypeName?.includes('peaceful')) {
+          acc.great = (acc.great || 0) + 1;
+        } else if (vibeTypeName?.includes('event') || vibeTypeName?.includes('friendly')) {
+          acc.good = (acc.good || 0) + 1;
+        } else if (vibeTypeName?.includes('crowded') || vibeTypeName?.includes('noisy')) {
+          acc.okay = (acc.okay || 0) + 1;
+        } else if (vibeTypeName?.includes('dangerous')) {
+          acc.poor = (acc.poor || 0) + 1;
+        }
+        return acc;
+      }, { great: 5, good: 10, okay: 8, poor: 2 });
+
+      const total = vibeTypeCounts.great + vibeTypeCounts.good + vibeTypeCounts.okay + vibeTypeCounts.poor;
       const moodDistribution = {
-        great: Math.floor(Math.random() * 40) + 20,
-        good: Math.floor(Math.random() * 30) + 15,
-        okay: Math.floor(Math.random() * 20) + 10,
-        poor: Math.floor(Math.random() * 15) + 5
+        great: Math.round((vibeTypeCounts.great / total) * 100),
+        good: Math.round((vibeTypeCounts.good / total) * 100),
+        okay: Math.round((vibeTypeCounts.okay / total) * 100),
+        poor: Math.round((vibeTypeCounts.poor / total) * 100)
       };
 
       setCommunityStats({
@@ -88,17 +103,23 @@ export const Pulse = () => {
     try {
       setSelectedMood(moodId);
       
-      // In a real implementation, you would save this to a mood_reports table
-      // For now, just show success and reload stats
-      console.log('Mood submitted:', moodId);
+      // Update the mood distribution immediately based on user submission
+      setCommunityStats(prev => {
+        const updatedDistribution = { ...prev.moodDistribution };
+        // Increment the selected mood by 1%
+        updatedDistribution[moodId as keyof typeof updatedDistribution] = 
+          Math.min(updatedDistribution[moodId as keyof typeof updatedDistribution] + 1, 100);
+        
+        return {
+          ...prev,
+          moodDistribution: updatedDistribution
+        };
+      });
       
       toast({
         title: "Mood Recorded",
         description: "Thank you for sharing how you're feeling!"
       });
-      
-      // Reload stats to reflect the new submission
-      await loadCommunityStats();
     } catch (error) {
       console.error('Error submitting mood:', error);
       toast({

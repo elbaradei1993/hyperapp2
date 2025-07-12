@@ -12,6 +12,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { MapPin, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { VibeReportsService } from '@/services/vibes/vibeReportsService';
+import { useAuth } from '@/components/auth/AuthProvider';
 
 interface AddVibeModalProps {
   isOpen: boolean;
@@ -22,11 +24,12 @@ export const AddVibeModal = ({ isOpen, onClose }: AddVibeModalProps) => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    type: 'positive'
+    vibe_type_id: 1
   });
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     if (isOpen) {
@@ -69,16 +72,32 @@ export const AddVibeModal = ({ isOpen, onClose }: AddVibeModalProps) => {
     setLoading(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const vibeData = {
+        title: formData.title,
+        description: formData.description,
+        latitude: userLocation.lat.toString(),
+        longitude: userLocation.lng.toString(),
+        vibe_type_id: formData.vibe_type_id,
+        user_id: user?.id ? parseInt(user.id) : null,
+        is_anonymous: false
+      };
       
-      toast({
-        title: "Vibe Reported",
-        description: "Your vibe report has been submitted successfully"
-      });
+      const result = await VibeReportsService.createVibeReport(vibeData);
       
-      onClose();
-      setFormData({ title: '', description: '', type: 'positive' });
+      if (result) {
+        toast({
+          title: "Vibe Reported",
+          description: "Your vibe report has been submitted successfully"
+        });
+        
+        onClose();
+        setFormData({ title: '', description: '', vibe_type_id: 1 });
+        
+        // Trigger a page refresh to show new data
+        window.location.reload();
+      } else {
+        throw new Error('Failed to create vibe report');
+      }
     } catch (error) {
       toast({
         title: "Error",
@@ -125,16 +144,19 @@ export const AddVibeModal = ({ isOpen, onClose }: AddVibeModalProps) => {
           </div>
 
           <div>
-            <Label htmlFor="type">Vibe Type</Label>
+            <Label htmlFor="vibe_type_id">Vibe Type</Label>
             <select
-              id="type"
+              id="vibe_type_id"
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              value={formData.type}
-              onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value }))}
+              value={formData.vibe_type_id}
+              onChange={(e) => setFormData(prev => ({ ...prev, vibe_type_id: parseInt(e.target.value) }))}
             >
-              <option value="positive">Positive</option>
-              <option value="neutral">Neutral</option>
-              <option value="alert">Alert</option>
+              <option value={1}>Dangerous</option>
+              <option value={2}>Crowded</option>
+              <option value={3}>Event</option>
+              <option value={4}>Calm</option>
+              <option value={5}>Noisy</option>
+              <option value={6}>LGBTQIA+ Friendly</option>
             </select>
           </div>
 

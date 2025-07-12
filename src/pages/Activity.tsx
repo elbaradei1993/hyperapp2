@@ -45,17 +45,24 @@ export const Activity = () => {
     try {
       setLoading(true);
       
-      // Get profile first to get the numeric user ID
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', user?.id)
-        .single();
-
-      if (!profile) return;
-
-      // For now, skip vibes since they use a different user_id type
-      const vibes: any[] = [];
+      // Fetch user's vibe reports - vibe_reports table uses user_id as integer
+      const { data: vibeReports } = await supabase
+        .from('vibe_reports')
+        .select(`
+          id,
+          title,
+          description,
+          created_at,
+          latitude,
+          longitude,
+          confirmed_count,
+          vibe_type:vibe_type_id (
+            name,
+            color
+          )
+        `)
+        .eq('user_id', user?.id ? parseInt(user.id) : null)
+        .order('created_at', { ascending: false });
 
       // Fetch user's SOS alerts
       const { data: sosAlerts } = await supabase
@@ -66,10 +73,10 @@ export const Activity = () => {
 
       // Combine and format activities
       const allActivities: ActivityItem[] = [
-        ...(vibes || []).map(vibe => ({
+        ...(vibeReports || []).map(vibe => ({
           id: vibe.id.toString(),
           type: 'vibe' as const,
-          title: vibe.title || 'Vibe Report',
+          title: vibe.title || `${vibe.vibe_type?.name || 'Unknown'} Report`,
           description: vibe.description,
           created_at: vibe.created_at,
           latitude: vibe.latitude,
