@@ -71,8 +71,22 @@ export const CreateEventModal = ({ isOpen, onClose }: CreateEventModalProps) => 
     setLoading(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const { EventService } = await import('@/services/EventService');
+      
+      // Create event data
+      const eventData = {
+        title: formData.title,
+        description: formData.description,
+        location: formData.location,
+        latitude: userLocation.lat.toString(),
+        longitude: userLocation.lng.toString(),
+        start_date_time: `${formData.date} ${formData.time}:00`,
+        end_date_time: `${formData.date} ${formData.time}:00`, // Same time for now
+        organization_id: '1', // Default organizer ID
+        is_public: true
+      };
+      
+      await EventService.createEvent(eventData);
       
       toast({
         title: "Event Created",
@@ -82,6 +96,7 @@ export const CreateEventModal = ({ isOpen, onClose }: CreateEventModalProps) => 
       onClose();
       setFormData({ title: '', description: '', date: '', time: '', location: '' });
     } catch (error) {
+      console.error('Error creating event:', error);
       toast({
         title: "Error",
         description: "Failed to create event",

@@ -80,8 +80,13 @@ const Trending = () => {
         if (error) throw error;
         
         if (vibeReports) {
+          // Filter out vibes without proper vibe type data first
+          const validVibeReports = vibeReports.filter(vibe => 
+            vibe.vibe_type && vibe.vibe_type.name && vibe.vibe_type.color
+          );
+          
           // Transform the data for UI display
-          const formattedVibes: TrendingVibe[] = vibeReports.map(vibe => {
+          const formattedVibes: TrendingVibe[] = validVibeReports.map(vibe => {
             // Create a location string from lat/long
             const location = `${vibe.latitude.substring(0, 6)}, ${vibe.longitude.substring(0, 6)}`;
             

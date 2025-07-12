@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Input } from "@/components/ui/input";
+import { EventService } from "@/services/EventService";
+import { CreateEventModal } from "@/components/modals/CreateEventModal";
 
 interface Event {
   id: string;
@@ -26,47 +28,47 @@ interface Event {
   type: 'community' | 'safety' | 'social';
 }
 
-const mockEvents: Event[] = [
-  {
-    id: '1',
-    title: 'Community Safety Meeting',
-    description: 'Monthly neighborhood safety discussion and planning session',
-    date: '2024-01-20',
-    time: '7:00 PM',
-    location: 'Community Center, Main St',
-    attendees: 23,
-    maxAttendees: 50,
-    type: 'safety'
-  },
-  {
-    id: '2',
-    title: 'Block Party',
-    description: 'Annual summer block party with food, music, and activities',
-    date: '2024-01-22',
-    time: '2:00 PM',
-    location: 'Maple Avenue Block',
-    attendees: 47,
-    maxAttendees: 100,
-    type: 'social'
-  },
-  {
-    id: '3',
-    title: 'Emergency Preparedness Workshop',
-    description: 'Learn essential emergency response techniques and planning',
-    date: '2024-01-25',
-    time: '6:00 PM',
-    location: 'Fire Station 12',
-    attendees: 12,
-    maxAttendees: 30,
-    type: 'safety'
-  }
-];
-
 export const Events = () => {
   const isMobile = useIsMobile();
-  const [events, setEvents] = useState<Event[]>(mockEvents);
+  const [events, setEvents] = useState<Event[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadEvents();
+  }, []);
+
+  const loadEvents = async () => {
+    try {
+      setLoading(true);
+      const eventsData = await EventService.getEvents();
+      
+      // Convert EventResponse to our Event interface
+      const convertedEvents: Event[] = eventsData.map(event => ({
+        id: event.id,
+        title: event.title,
+        description: event.description || '',
+        date: event.start_date_time.split(' ')[0] || new Date(event.start_date_time).toISOString().split('T')[0],
+        time: new Date(event.start_date_time).toLocaleTimeString('en-US', { 
+          hour: 'numeric', 
+          minute: '2-digit', 
+          hour12: true 
+        }),
+        location: event.location || event.address || '',
+        attendees: event.current_attendees,
+        maxAttendees: event.max_attendees || undefined,
+        type: 'community' // Default type since we don't have this in DB
+      }));
+      
+      setEvents(convertedEvents);
+    } catch (error) {
+      console.error('Error loading events:', error);
+      setEvents([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredEvents = events.filter(event => 
     event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -109,7 +111,7 @@ export const Events = () => {
             />
           </div>
           <Button 
-            onClick={() => setShowCreateForm(true)}
+            onClick={() => setShowCreateModal(true)}
             className="bg-primary text-primary-foreground hover:bg-primary/90"
           >
             <Plus className="mr-2" size={16} />
@@ -167,23 +169,39 @@ export const Events = () => {
           ))}
         </div>
 
-        {filteredEvents.length === 0 && (
+        {!loading && filteredEvents.length === 0 && (
           <div className="text-center py-12">
             <Calendar className="mx-auto mb-4 text-muted-foreground" size={48} />
             <h3 className="text-lg font-medium mb-2">No events found</h3>
             <p className="text-muted-foreground mb-4">
               {searchTerm ? 'Try adjusting your search terms' : 'Be the first to create an event!'}
             </p>
-            <Button onClick={() => setShowCreateForm(true)}>
+            <Button onClick={() => setShowCreateModal(true)}>
               <Plus className="mr-2" size={16} />
               Create Event
             </Button>
+          </div>
+        )}
+
+        {loading && (
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4" />
+            <p className="text-muted-foreground">Loading events...</p>
           </div>
         )}
       </div>
 
       {/* Mobile spacing */}
       {isMobile && <div className="h-16" />}
+
+      {/* Create Event Modal */}
+      <CreateEventModal 
+        isOpen={showCreateModal} 
+        onClose={() => {
+          setShowCreateModal(false);
+          loadEvents(); // Reload events after creation
+        }} 
+      />
     </div>
   );
 };

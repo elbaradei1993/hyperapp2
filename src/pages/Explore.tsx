@@ -13,6 +13,9 @@ import {
   Navigation
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { VibeReportsService } from "@/services/vibes/vibeReportsService";
+import { EventService } from "@/services/EventService";
+import { supabase } from "@/integrations/supabase/client";
 
 interface NearbyActivity {
   id: string;
@@ -23,18 +26,90 @@ interface NearbyActivity {
   timestamp: string;
   location: string;
   priority?: 'low' | 'medium' | 'high';
+  vibe_type?: {
+    name: string;
+    color: string;
+  };
 }
-
 
 export const Explore = () => {
   const isMobile = useIsMobile();
   const [activities, setActivities] = useState<NearbyActivity[]>([]);
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch real activities from database
-    // For now setting to empty array to remove mock data
+    loadActivities();
   }, []);
+
+  const loadActivities = async () => {
+    try {
+      setLoading(true);
+      const [vibeReports, events, sosAlerts] = await Promise.all([
+        VibeReportsService.getVibeReports(0, 50),
+        EventService.getEvents(50),
+        loadSOSAlerts()
+      ]);
+
+      const allActivities: NearbyActivity[] = [
+        ...vibeReports.map(vibe => ({
+          id: vibe.id.toString(),
+          type: 'vibe' as const,
+          title: vibe.title || `${vibe.vibe_type?.name || 'Unknown'} Report`,
+          description: vibe.description || undefined,
+          distance: Math.random() * 5, // Mock distance for now
+          timestamp: new Date(vibe.created_at).toLocaleString(),
+          location: `${parseFloat(vibe.latitude).toFixed(4)}, ${parseFloat(vibe.longitude).toFixed(4)}`,
+          vibe_type: vibe.vibe_type
+        })),
+        ...events.map(event => ({
+          id: event.id,
+          type: 'event' as const,
+          title: event.title,
+          description: event.description || undefined,
+          distance: Math.random() * 5, // Mock distance for now
+          timestamp: new Date(event.start_date_time).toLocaleString(),
+          location: event.location || event.address || 'Unknown location'
+        })),
+        ...sosAlerts.map(sos => ({
+          id: sos.id,
+          type: 'sos' as const,
+          title: `SOS Alert - ${sos.type}`,
+          description: undefined,
+          distance: Math.random() * 5, // Mock distance for now
+          timestamp: new Date(sos.created_at).toLocaleString(),
+          location: `${parseFloat(sos.latitude).toFixed(4)}, ${parseFloat(sos.longitude).toFixed(4)}`,
+          priority: 'high' as const
+        }))
+      ];
+
+      setActivities(allActivities.sort((a, b) => 
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      ));
+    } catch (error) {
+      console.error('Error loading activities:', error);
+      setActivities([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadSOSAlerts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('sos_alerts')
+        .select('*')
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error loading SOS alerts:', error);
+      return [];
+    }
+  };
 
   const getActivityIcon = (type: string) => {
     switch (type) {
@@ -171,13 +246,20 @@ export const Explore = () => {
           })}
         </div>
 
-        {filteredActivities.length === 0 && (
+        {!loading && filteredActivities.length === 0 && (
           <div className="text-center py-12">
             <MapPin className="mx-auto mb-4 text-muted-foreground" size={48} />
             <h3 className="text-lg font-medium mb-2">No activities found</h3>
             <p className="text-muted-foreground">
               Try adjusting your filters or check back later
             </p>
+          </div>
+        )}
+
+        {loading && (
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4" />
+            <p className="text-muted-foreground">Loading activities...</p>
           </div>
         )}
 
