@@ -331,7 +331,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      increment_vibe_count: {
+        Args: { report_id: number }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

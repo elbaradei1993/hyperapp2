@@ -76,9 +76,9 @@ export const Pulse = () => {
           acc.poor = (acc.poor || 0) + 1;
         }
         return acc;
-      }, { great: 5, good: 10, okay: 8, poor: 2 });
+      }, { great: 0, good: 0, okay: 0, poor: 0 });
 
-      const total = vibeTypeCounts.great + vibeTypeCounts.good + vibeTypeCounts.okay + vibeTypeCounts.poor;
+      const total = Math.max(vibeTypeCounts.great + vibeTypeCounts.good + vibeTypeCounts.okay + vibeTypeCounts.poor, 1);
       const moodDistribution = {
         great: Math.round((vibeTypeCounts.great / total) * 100),
         good: Math.round((vibeTypeCounts.good / total) * 100),
