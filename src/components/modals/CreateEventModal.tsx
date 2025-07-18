@@ -78,12 +78,14 @@ export const CreateEventModal = ({ isOpen, onClose }: CreateEventModalProps) => 
         title: formData.title,
         description: formData.description,
         location: formData.location,
+        address: formData.location,
         latitude: userLocation.lat.toString(),
         longitude: userLocation.lng.toString(),
-        start_date_time: `${formData.date} ${formData.time}:00`,
-        end_date_time: `${formData.date} ${formData.time}:00`, // Same time for now
-        organization_id: '1', // Default organizer ID
-        is_public: true
+        start_date_time: `${formData.date}T${formData.time}:00`,
+        end_date_time: `${formData.date}T${formData.time}:00`,
+        organizer_id: 1,
+        is_paid: false,
+        is_featured: false
       };
       
       await EventService.createEvent(eventData);

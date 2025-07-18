@@ -69,6 +69,15 @@ export const AddVibeModal = ({ isOpen, onClose }: AddVibeModalProps) => {
       return;
     }
 
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to report a vibe",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setLoading(true);
     
     try {
@@ -78,7 +87,7 @@ export const AddVibeModal = ({ isOpen, onClose }: AddVibeModalProps) => {
         latitude: userLocation.lat.toString(),
         longitude: userLocation.lng.toString(),
         vibe_type_id: formData.vibe_type_id,
-        user_id: user?.id ? parseInt(user.id) : null,
+        user_id: parseInt(user.id) || null,
         is_anonymous: false
       };
       

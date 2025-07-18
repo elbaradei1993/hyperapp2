@@ -26,6 +26,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/hooks/use-theme";
 import { format } from "date-fns";
+import { PasswordChangeModal } from "@/components/PasswordChangeModal";
 
 interface UserProfile {
   name: string | null;
@@ -48,6 +49,7 @@ export const Account = () => {
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -381,8 +383,8 @@ export const Account = () => {
                   events — all on a live map interface.
                 </p>
                 <p>
-                  Just like how Uber moves people, HyperAPP keeps communities 
-                  informed, safe, and connected — block by block, vibe by vibe.
+                  HyperAPP keeps communities informed, safe, and connected — 
+                  block by block, vibe by vibe.
                 </p>
               </CardContent>
             </Card>
@@ -395,8 +397,17 @@ export const Account = () => {
                 </Button>
                 
                 <Button 
-                  variant="destructive" 
+                  variant="outline" 
                   className="w-full"
+                  onClick={() => setShowPasswordModal(true)}
+                >
+                  <Edit3 className="mr-2" size={16} />
+                  Change Password
+                </Button>
+                
+                <Button 
+                  variant="destructive" 
+                  className="w-full animate-fade-out hover:animate-scale-out transition-all duration-300"
                   onClick={handleLogout}
                 >
                   <LogOut className="mr-2" size={16} />
@@ -410,6 +421,12 @@ export const Account = () => {
 
       {/* Mobile spacing */}
       {isMobile && <div className="h-16" />}
+      
+      {/* Password Change Modal */}
+      <PasswordChangeModal 
+        isOpen={showPasswordModal} 
+        onClose={() => setShowPasswordModal(false)} 
+      />
     </div>
   );
 };

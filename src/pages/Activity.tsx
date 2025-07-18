@@ -45,7 +45,7 @@ export const Activity = () => {
     try {
       setLoading(true);
       
-      // Fetch user's vibe reports - vibe_reports table uses user_id as integer
+      // Fetch user's vibe reports - using UUID directly 
       const { data: vibeReports } = await supabase
         .from('vibe_reports')
         .select(`
@@ -61,7 +61,7 @@ export const Activity = () => {
             color
           )
         `)
-        .eq('user_id', user?.id ? parseInt(user.id) : null)
+        .eq('user_id', parseInt(user?.id || '') || null)
         .order('created_at', { ascending: false });
 
       // Fetch user's SOS alerts
@@ -69,6 +69,13 @@ export const Activity = () => {
         .from('sos_alerts')
         .select('id, type, created_at, latitude, longitude, status')
         .eq('user_id', user?.id)
+        .order('created_at', { ascending: false });
+
+      // Fetch user's events
+      const { data: events } = await supabase
+        .from('events')
+        .select('id, title, description, created_at, latitude, longitude, address')
+        .eq('organizer_id', parseInt(user?.id || '') || null)
         .order('created_at', { ascending: false });
 
       // Combine and format activities
@@ -92,6 +99,15 @@ export const Activity = () => {
           status: sos.status,
           latitude: sos.latitude,
           longitude: sos.longitude
+        })),
+        ...(events || []).map(event => ({
+          id: event.id.toString(),
+          type: 'event' as const,
+          title: event.title,
+          description: event.description,
+          created_at: event.created_at,
+          latitude: event.latitude,
+          longitude: event.longitude
         }))
       ];
 

@@ -122,7 +122,7 @@ const MapTab = () => {
   }
 
   return (
-    <div className="h-full w-full rounded-lg overflow-hidden border border-border/40">
+    <div className="h-full w-full rounded-lg overflow-hidden border border-border/40 relative">
       <MapContainer 
         className="h-full w-full z-0"
         // Fix the typescript errors by adding these props as part of the any object
@@ -154,14 +154,43 @@ const MapTab = () => {
           if (isNaN(lat) || isNaN(lng)) return null;
           
           return (
-            <VibeMarker 
-              key={vibe.id}
-              vibe={vibe}
-              position={[lat, lng]}
-            />
+            <div key={vibe.id}>
+              <Circle
+                center={[lat, lng]}
+                radius={vibe.vibe_type?.name === 'Party' ? 200 : 
+                       vibe.vibe_type?.name === 'Danger' ? 300 : 
+                       vibe.vibe_type?.name === 'Safe Zone' ? 150 : 100}
+                pathOptions={{
+                  color: vibe.vibe_type?.color || '#6366f1',
+                  fillColor: vibe.vibe_type?.color || '#6366f1',
+                  fillOpacity: 0.3,
+                  weight: 2,
+                  className: 'animate-pulse'
+                }}
+              />
+              <VibeMarker 
+                vibe={vibe}
+                position={[lat, lng]}
+              />
+            </div>
           );
         })}
       </MapContainer>
+      
+      {/* Current Location Button */}
+      <button
+        onClick={() => {
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition((position) => {
+              setUserLocation([position.coords.latitude, position.coords.longitude]);
+            });
+          }
+        }}
+        className="absolute bottom-4 right-4 z-10 bg-primary text-white p-3 rounded-full shadow-lg hover:bg-primary/90 transition-colors animate-fade-in"
+        title="Go to my location"
+      >
+        <MapPin size={20} />
+      </button>
     </div>
   );
 };
