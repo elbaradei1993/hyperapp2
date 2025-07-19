@@ -11,6 +11,7 @@ export interface EventData {
   end_date_time: string;
   image_url?: string;
   organization_id?: string;
+  organizer_id?: string; // Add organizer_id field
   vibe_type_id?: number;
   max_attendees?: number;
   is_public?: boolean;
@@ -51,7 +52,7 @@ export const EventService = {
       longitude: eventData.longitude,
       start_date_time: eventData.start_date_time,
       end_date_time: eventData.end_date_time,
-      organizer_id: parseInt(eventData.organization_id || '0', 10), // Convert string to number
+      organizer_id: parseInt(eventData.organization_id || eventData.organizer_id || '0', 10) || null, // Convert to integer
       poster_url: eventData.image_url, // Map image_url to poster_url
       vibe_type_id: eventData.vibe_type_id,
       max_attendees: eventData.max_attendees,

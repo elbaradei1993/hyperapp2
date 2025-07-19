@@ -235,9 +235,29 @@ export const Explore = () => {
                       </div>
                     </div>
                     
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        // Navigate to map with location
+                        const lat = activity.type === 'vibe' || activity.type === 'sos' 
+                          ? parseFloat(activity.location.split(',')[0]) 
+                          : null;
+                        const lng = activity.type === 'vibe' || activity.type === 'sos'
+                          ? parseFloat(activity.location.split(',')[1])
+                          : null;
+                        
+                        if (lat && lng) {
+                          // Store location in sessionStorage for map to use
+                          sessionStorage.setItem('mapLocation', JSON.stringify({ lat, lng, zoom: 16 }));
+                          window.location.href = '/pulse?tab=map';
+                        } else {
+                          window.location.href = '/pulse?tab=map';
+                        }
+                      }}
+                    >
                       <MapPin className="mr-1" size={14} />
-                      View
+                      View on Map
                     </Button>
                   </div>
                 </CardContent>

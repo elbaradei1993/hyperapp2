@@ -61,7 +61,7 @@ export const Activity = () => {
             color
           )
         `)
-        .eq('user_id', parseInt(user?.id || '') || null)
+        .eq('user_id', parseInt(user?.id || '0', 10))
         .order('created_at', { ascending: false });
 
       // Fetch user's SOS alerts
@@ -75,7 +75,7 @@ export const Activity = () => {
       const { data: events } = await supabase
         .from('events')
         .select('id, title, description, created_at, latitude, longitude, address')
-        .eq('organizer_id', parseInt(user?.id || '') || null)
+        .eq('organizer_id', parseInt(user?.id || '0', 10))
         .order('created_at', { ascending: false });
 
       // Combine and format activities

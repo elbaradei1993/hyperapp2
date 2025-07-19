@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Calendar, MapPin, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface CreateEventModalProps {
   isOpen: boolean;
@@ -73,6 +74,12 @@ export const CreateEventModal = ({ isOpen, onClose }: CreateEventModalProps) => 
     try {
       const { EventService } = await import('@/services/EventService');
       
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
       // Create event data
       const eventData = {
         title: formData.title,
@@ -83,7 +90,7 @@ export const CreateEventModal = ({ isOpen, onClose }: CreateEventModalProps) => 
         longitude: userLocation.lng.toString(),
         start_date_time: `${formData.date}T${formData.time}:00`,
         end_date_time: `${formData.date}T${formData.time}:00`,
-        organizer_id: 1,
+        organizer_id: user.id,
         is_paid: false,
         is_featured: false
       };
