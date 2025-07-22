@@ -45,7 +45,7 @@ export const Activity = () => {
     try {
       setLoading(true);
       
-      // Fetch user's vibe reports - using UUID directly 
+      // Fetch user's vibe reports - use UUID directly since we fixed the table
       const { data: vibeReports } = await supabase
         .from('vibe_reports')
         .select(`
@@ -61,7 +61,7 @@ export const Activity = () => {
             color
           )
         `)
-        .eq('user_id', parseInt(user?.id || '0', 10))
+        .eq('user_id', user?.id)
         .order('created_at', { ascending: false });
 
       // Fetch user's SOS alerts
@@ -71,11 +71,14 @@ export const Activity = () => {
         .eq('user_id', user?.id)
         .order('created_at', { ascending: false });
 
-      // Fetch user's events
+      // Fetch user's events using the hash conversion
+      const userIdHash = user?.id.split('-').join('').substring(0, 8);
+      const organizer_id = parseInt(userIdHash, 16) % 2147483647;
+      
       const { data: events } = await supabase
         .from('events')
         .select('id, title, description, created_at, latitude, longitude, address')
-        .eq('organizer_id', parseInt(user?.id || '0', 10))
+        .eq('organizer_id', organizer_id)
         .order('created_at', { ascending: false });
 
       // Combine and format activities
@@ -170,15 +173,15 @@ export const Activity = () => {
   };
 
   const viewOnMap = (activity: ActivityItem) => {
-    if (activity.type === 'sos') {
-      // For SOS alerts, navigate to explore page with this specific alert highlighted
-      window.history.pushState({}, '', `/explore?highlight=${activity.id}&type=sos`);
-      window.location.reload();
-    } else {
-      // For other activities, show on map
-      window.history.pushState({}, '', `/?lat=${activity.latitude}&lng=${activity.longitude}&zoom=16`);
-      window.location.reload();
-    }
+    // Store location in sessionStorage for map to use
+    sessionStorage.setItem('mapLocation', JSON.stringify({ 
+      lat: parseFloat(activity.latitude), 
+      lng: parseFloat(activity.longitude), 
+      zoom: 16 
+    }));
+    
+    // Navigate to Pulse page with map tab
+    window.location.href = '/pulse?tab=map';
   };
 
   if (!user) {

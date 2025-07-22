@@ -44,6 +44,16 @@ export const EventService = {
    * Create a new event
    */
   createEvent: async (eventData: EventData) => {
+    // Get current user to map UUID to integer organizer_id
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error('User must be authenticated to create events');
+    }
+
+    // Create or get user ID mapping (we'll use a hash of the UUID for now)
+    const userIdHash = user.id.split('-').join('').substring(0, 8);
+    const organizer_id = parseInt(userIdHash, 16) % 2147483647; // Convert to valid integer
+
     // Ensure the data structure matches the database schema
     const eventRecord = {
       title: eventData.title,
@@ -52,7 +62,7 @@ export const EventService = {
       longitude: eventData.longitude,
       start_date_time: eventData.start_date_time,
       end_date_time: eventData.end_date_time,
-      organizer_id: parseInt(eventData.organization_id || eventData.organizer_id || '0', 10) || null, // Convert to integer
+      organizer_id: organizer_id, // Use the hashed integer ID
       poster_url: eventData.image_url, // Map image_url to poster_url
       vibe_type_id: eventData.vibe_type_id,
       max_attendees: eventData.max_attendees,
@@ -147,10 +157,14 @@ export const EventService = {
    * Get events created by an organization
    */
   getOrganizationEvents: async (organizationId: string): Promise<EventResponse[]> => {
+    // Convert UUID to the same hash format we use for creation
+    const userIdHash = organizationId.split('-').join('').substring(0, 8);
+    const organizer_id = parseInt(userIdHash, 16) % 2147483647;
+    
     const { data, error } = await supabase
       .from('events')
       .select('*')
-      .eq('organizer_id', parseInt(organizationId, 10))
+      .eq('organizer_id', organizer_id)
       .order('created_at', { ascending: false });
       
     if (error) throw error;

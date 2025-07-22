@@ -131,30 +131,42 @@ const HeatMapTab = () => {
   }, [toast]);
 
   useEffect(() => {
-    // Get user location
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        position => {
-          setUserLocation([position.coords.latitude, position.coords.longitude]);
-          setLocationError(null);
-        },
-        error => {
-          console.error("Error getting location:", error);
-          setLocationError(`Could not get your location: ${error.message}`);
-          // Default to a location if we can't get the user's
-          setUserLocation([37.7749, -122.4194]); // San Francisco
-          toast({
-            title: "Location access denied",
-            description: "Using default location. Please enable location services for better experience.",
-            variant: "destructive"
-          });
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-      );
+    // Check for stored location from other pages first
+    const storedLocation = sessionStorage.getItem('mapLocation');
+    if (storedLocation) {
+      try {
+        const location = JSON.parse(storedLocation);
+        setUserLocation([location.lat, location.lng]);
+        sessionStorage.removeItem('mapLocation'); // Clear after using
+      } catch (error) {
+        console.error('Error parsing stored location:', error);
+      }
     } else {
-      setLocationError("Your browser doesn't support geolocation");
-      // Default location
-      setUserLocation([37.7749, -122.4194]); // San Francisco
+      // Get user location
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          position => {
+            setUserLocation([position.coords.latitude, position.coords.longitude]);
+            setLocationError(null);
+          },
+          error => {
+            console.error("Error getting location:", error);
+            setLocationError(`Could not get your location: ${error.message}`);
+            // Default to a location if we can't get the user's
+            setUserLocation([37.7749, -122.4194]); // San Francisco
+            toast({
+              title: "Location access denied",
+              description: "Using default location. Please enable location services for better experience.",
+              variant: "destructive"
+            });
+          },
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+      } else {
+        setLocationError("Your browser doesn't support geolocation");
+        // Default location
+        setUserLocation([37.7749, -122.4194]); // San Francisco
+      }
     }
     
     // Load vibes
