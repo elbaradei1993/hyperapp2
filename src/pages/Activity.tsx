@@ -45,7 +45,11 @@ export const Activity = () => {
     try {
       setLoading(true);
       
-      // Fetch user's vibe reports - use UUID directly since we fixed the table
+      // Convert UUID to hash for integer IDs (same approach for both vibe reports and events)
+      const userIdHash = user?.id.split('-').join('').substring(0, 8);
+      const userIntId = parseInt(userIdHash, 16) % 2147483647;
+      
+      // Fetch user's vibe reports using integer ID
       const { data: vibeReports } = await supabase
         .from('vibe_reports')
         .select(`
@@ -61,7 +65,7 @@ export const Activity = () => {
             color
           )
         `)
-        .eq('user_id', user?.id)
+        .eq('user_id', userIntId)
         .order('created_at', { ascending: false });
 
       // Fetch user's SOS alerts
@@ -71,14 +75,11 @@ export const Activity = () => {
         .eq('user_id', user?.id)
         .order('created_at', { ascending: false });
 
-      // Fetch user's events using the hash conversion
-      const userIdHash = user?.id.split('-').join('').substring(0, 8);
-      const organizer_id = parseInt(userIdHash, 16) % 2147483647;
-      
+      // Fetch user's events using the same hash conversion
       const { data: events } = await supabase
         .from('events')
         .select('id, title, description, created_at, latitude, longitude, address')
-        .eq('organizer_id', organizer_id)
+        .eq('organizer_id', userIntId)
         .order('created_at', { ascending: false });
 
       // Combine and format activities
