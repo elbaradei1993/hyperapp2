@@ -45,10 +45,13 @@ export const Activity = () => {
     try {
       setLoading(true);
       
-      // Convert UUID to hash for integer IDs (same approach for both vibe reports and events)
-      const userIdHash = user?.id.split('-').join('').substring(0, 8);
-      const userIntId = parseInt(userIdHash, 16) % 2147483647;
-      
+      // Get user mapping for integer IDs
+      const { data: userMapping } = await supabase
+        .from('user_mapping')
+        .select('integer_id')
+        .eq('uuid_id', user?.id)
+        .single();
+
       // Fetch user's vibe reports using integer ID
       const { data: vibeReports } = await supabase
         .from('vibe_reports')
@@ -65,7 +68,7 @@ export const Activity = () => {
             color
           )
         `)
-        .eq('user_id', userIntId)
+        .eq('user_id', userMapping?.integer_id || 0)
         .order('created_at', { ascending: false });
 
       // Fetch user's SOS alerts
@@ -75,11 +78,11 @@ export const Activity = () => {
         .eq('user_id', user?.id)
         .order('created_at', { ascending: false });
 
-      // Fetch user's events using the same hash conversion
+      // Fetch user's events using the same integer ID
       const { data: events } = await supabase
         .from('events')
         .select('id, title, description, created_at, latitude, longitude, address')
-        .eq('organizer_id', userIntId)
+        .eq('organizer_id', userMapping?.integer_id || 0)
         .order('created_at', { ascending: false });
 
       // Combine and format activities

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -41,6 +40,8 @@ const MapTab = () => {
   const [vibes, setVibes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+  const [mapCenter, setMapCenter] = useState<[number, number] | null>(null);
+  const [mapZoom, setMapZoom] = useState(14);
   const { toast } = useToast();
   const [locationError, setLocationError] = useState<string | null>(null);
   const isMobile = useIsMobile();
@@ -61,48 +62,61 @@ const MapTab = () => {
     }
   }, [toast]);
 
+  const loadUserLocation = useCallback(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        position => {
+          const location: [number, number] = [position.coords.latitude, position.coords.longitude];
+          setUserLocation(location);
+          if (!mapCenter) {
+            setMapCenter(location);
+          }
+          setLocationError(null);
+        },
+        error => {
+          console.error("Error getting location:", error);
+          setLocationError(`Could not get your location: ${error.message}`);
+          // Default to a location if we can't get the user's
+          const defaultLocation: [number, number] = [37.7749, -122.4194]; // San Francisco
+          setUserLocation(defaultLocation);
+          if (!mapCenter) {
+            setMapCenter(defaultLocation);
+          }
+          toast({
+            title: "Location access denied",
+            description: "Using default location. Please enable location services for better experience.",
+            variant: "destructive"
+          });
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    } else {
+      setLocationError("Your browser doesn't support geolocation");
+      // Default location
+      const defaultLocation: [number, number] = [37.7749, -122.4194]; // San Francisco
+      setUserLocation(defaultLocation);
+      if (!mapCenter) {
+        setMapCenter(defaultLocation);
+      }
+    }
+  }, [mapCenter, toast]);
+
   useEffect(() => {
-    // Check for stored location from navigation
+    // Check for stored location from other pages
     const storedLocation = sessionStorage.getItem('mapLocation');
     if (storedLocation) {
       try {
-        const { lat, lng, zoom } = JSON.parse(storedLocation);
-        setUserLocation([lat, lng]);
-        sessionStorage.removeItem('mapLocation'); // Clear after use
-        setLocationError(null);
+        const location = JSON.parse(storedLocation);
+        setMapCenter([location.lat, location.lng]);
+        setMapZoom(location.zoom || 16);
+        sessionStorage.removeItem('mapLocation'); // Clear after using
       } catch (error) {
         console.error('Error parsing stored location:', error);
       }
-    } else {
-      // Get user location
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          position => {
-            setUserLocation([position.coords.latitude, position.coords.longitude]);
-            setLocationError(null);
-          },
-          error => {
-            console.error("Error getting location:", error);
-            setLocationError(`Could not get your location: ${error.message}`);
-            // Default to a location if we can't get the user's
-            setUserLocation([37.7749, -122.4194]); // San Francisco
-            toast({
-              title: "Location access denied",
-              description: "Using default location. Please enable location services for better experience.",
-              variant: "destructive"
-            });
-          },
-          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-        );
-      } else {
-        setLocationError("Your browser doesn't support geolocation");
-        // Default location
-        setUserLocation([37.7749, -122.4194]); // San Francisco
-      }
     }
-    
-    // Load vibes
+
     loadVibes();
+    loadUserLocation();
 
     // Set up subscription for real-time updates
     const channel = supabase
@@ -121,9 +135,9 @@ const MapTab = () => {
       supabase.removeChannel(channel);
     };
     
-  }, [loadVibes, toast]);
+  }, [loadVibes, loadUserLocation]);
 
-  if (loading || !userLocation) {
+  if (loading || !mapCenter) {
     return (
       <div className="flex flex-col items-center justify-center h-full">
         <Loader2 className="h-10 w-10 animate-spin text-primary" />
@@ -140,8 +154,8 @@ const MapTab = () => {
         className="h-full w-full z-0"
         // Fix the typescript errors by adding these props as part of the any object
         {...{
-          center: userLocation,
-          zoom: 14,
+          center: mapCenter,
+          zoom: mapZoom,
           minZoom: 3,
           maxZoom: 19,
           scrollWheelZoom: true
@@ -195,7 +209,9 @@ const MapTab = () => {
         onClick={() => {
           if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition((position) => {
-              setUserLocation([position.coords.latitude, position.coords.longitude]);
+              const newLocation: [number, number] = [position.coords.latitude, position.coords.longitude];
+              setUserLocation(newLocation);
+              setMapCenter(newLocation);
             });
           }
         }}

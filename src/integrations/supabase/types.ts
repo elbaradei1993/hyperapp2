@@ -197,6 +197,21 @@ export type Database = {
         }
         Relationships: []
       }
+      user_mapping: {
+        Row: {
+          integer_id: number
+          uuid_id: string
+        }
+        Insert: {
+          integer_id: number
+          uuid_id: string
+        }
+        Update: {
+          integer_id?: number
+          uuid_id?: string
+        }
+        Relationships: []
+      }
       users: {
         Row: {
           badges: Json | null
@@ -331,6 +346,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_user_integer_id: {
+        Args: { user_uuid: string }
+        Returns: number
+      }
       increment_vibe_count: {
         Args: { report_id: number }
         Returns: undefined

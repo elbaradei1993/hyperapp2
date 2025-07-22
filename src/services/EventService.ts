@@ -50,9 +50,16 @@ export const EventService = {
       throw new Error('User must be authenticated to create events');
     }
 
-    // Create or get user ID mapping (we'll use a hash of the UUID for now)
-    const userIdHash = user.id.split('-').join('').substring(0, 8);
-    const organizer_id = parseInt(userIdHash, 16) % 2147483647; // Convert to valid integer
+    // Get or create user mapping
+    const { data: userMapping } = await supabase
+      .from('user_mapping')
+      .select('integer_id')
+      .eq('uuid_id', user.id)
+      .single();
+
+    if (!userMapping) {
+      throw new Error('Failed to get user mapping');
+    }
 
     // Ensure the data structure matches the database schema
     const eventRecord = {
@@ -62,12 +69,12 @@ export const EventService = {
       longitude: eventData.longitude,
       start_date_time: eventData.start_date_time,
       end_date_time: eventData.end_date_time,
-      organizer_id: organizer_id, // Use the hashed integer ID
-      poster_url: eventData.image_url, // Map image_url to poster_url
+      organizer_id: userMapping.integer_id,
+      poster_url: eventData.image_url,
       vibe_type_id: eventData.vibe_type_id,
       max_attendees: eventData.max_attendees,
-      is_paid: eventData.is_public === false, // Invert is_public to is_paid
-      address: eventData.address || eventData.location // Use address or location
+      is_paid: eventData.is_public === false,
+      address: eventData.address || eventData.location
     };
     
     const { data, error } = await supabase
@@ -157,14 +164,21 @@ export const EventService = {
    * Get events created by an organization
    */
   getOrganizationEvents: async (organizationId: string): Promise<EventResponse[]> => {
-    // Convert UUID to the same hash format we use for creation
-    const userIdHash = organizationId.split('-').join('').substring(0, 8);
-    const organizer_id = parseInt(userIdHash, 16) % 2147483647;
+    // Get user mapping for the UUID
+    const { data: userMapping } = await supabase
+      .from('user_mapping')
+      .select('integer_id')
+      .eq('uuid_id', organizationId)
+      .single();
+
+    if (!userMapping) {
+      return [];
+    }
     
     const { data, error } = await supabase
       .from('events')
       .select('*')
-      .eq('organizer_id', organizer_id)
+      .eq('organizer_id', userMapping.integer_id)
       .order('created_at', { ascending: false });
       
     if (error) throw error;

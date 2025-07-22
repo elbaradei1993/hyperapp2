@@ -14,6 +14,7 @@ import { MapPin, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { VibeReportsService } from '@/services/vibes/vibeReportsService';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AddVibeModalProps {
   isOpen: boolean;
@@ -81,13 +82,20 @@ export const AddVibeModal = ({ isOpen, onClose }: AddVibeModalProps) => {
     setLoading(true);
     
     try {
+      // Get user mapping for integer ID
+      const { data: userMapping } = await supabase
+        .from('user_mapping')
+        .select('integer_id')
+        .eq('uuid_id', user.id)
+        .single();
+
       const vibeData = {
         title: formData.title,
         description: formData.description,
         latitude: userLocation.lat.toString(),
         longitude: userLocation.lng.toString(),
         vibe_type_id: formData.vibe_type_id,
-        user_id: parseInt(user.id) || null,
+        user_id: userMapping?.integer_id || null,
         is_anonymous: false
       };
       
