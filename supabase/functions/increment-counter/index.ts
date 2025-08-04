@@ -25,6 +25,32 @@ serve(async (req) => {
       );
     }
     
+    // Security: Whitelist allowed tables and columns to prevent SQL injection
+    const allowedTables = ['vibe_reports', 'events', 'sos_alerts'];
+    const allowedColumns = ['confirmed_count', 'points', 'view_count'];
+    
+    if (!allowedTables.includes(table_name)) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized table access" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 403 }
+      );
+    }
+    
+    if (!allowedColumns.includes(column_name)) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized column access" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 403 }
+      );
+    }
+    
+    // Validate increment amount
+    if (typeof increment_amount !== 'number' || increment_amount < 1 || increment_amount > 10) {
+      return new Response(
+        JSON.stringify({ error: "Invalid increment amount" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
+    }
+    
     // Create Supabase client
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
