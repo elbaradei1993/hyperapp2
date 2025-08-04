@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { MapPin } from 'lucide-react';
-import { VibeService, Vibe } from '@/services/vibes';
+import { VibeService } from '@/services/vibes';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import L from 'leaflet';
@@ -25,6 +25,22 @@ function LocationMarker() {
   const map = useMap();
 
   useEffect(() => {
+    // Check for stored location first
+    const storedLocation = sessionStorage.getItem('mapLocation');
+    if (storedLocation) {
+      try {
+        const location = JSON.parse(storedLocation);
+        const latLng = L.latLng(location.lat, location.lng);
+        setPosition(latLng);
+        map.setView([location.lat, location.lng], location.zoom || 16);
+        sessionStorage.removeItem('mapLocation'); // Clear after using
+        return;
+      } catch (error) {
+        console.error('Error parsing stored location:', error);
+      }
+    }
+
+    // Otherwise get current location
     map.locate().on("locationfound", function (e) {
       setPosition(e.latlng);
       map.flyTo(e.latlng, map.getZoom());
@@ -49,6 +65,7 @@ const MapTab = () => {
   const loadVibes = useCallback(async () => {
     try {
       const data = await VibeService.getVibeReports();
+      console.log('Loaded vibes:', data);
       setVibes(data);
     } catch (error) {
       console.error("Error loading vibes:", error);
@@ -109,7 +126,6 @@ const MapTab = () => {
         const location = JSON.parse(storedLocation);
         setMapCenter([location.lat, location.lng]);
         setMapZoom(location.zoom || 16);
-        sessionStorage.removeItem('mapLocation'); // Clear after using
       } catch (error) {
         console.error('Error parsing stored location:', error);
       }
@@ -126,7 +142,6 @@ const MapTab = () => {
         schema: 'public', 
         table: 'vibe_reports' 
       }, () => {
-        // Add new vibe to the list
         loadVibes(); // Reload all vibes
       })
       .subscribe();
@@ -151,23 +166,15 @@ const MapTab = () => {
   return (
     <div className="h-full w-full rounded-lg overflow-hidden border border-border/40 relative">
       <MapContainer 
+        center={mapCenter}
+        zoom={mapZoom}
+        scrollWheelZoom={true}
         className="h-full w-full z-0"
-        // Fix the typescript errors by adding these props as part of the any object
-        {...{
-          center: mapCenter,
-          zoom: mapZoom,
-          minZoom: 3,
-          maxZoom: 19,
-          scrollWheelZoom: true
-        } as any}
         style={{ height: isMobile ? '70vh' : '100%' }}
       >
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          // Fix the attribution typescript error by using as any
-          {...{
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          } as any}
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
         
         <LocationMarker />
@@ -181,25 +188,11 @@ const MapTab = () => {
           if (isNaN(lat) || isNaN(lng)) return null;
           
           return (
-            <div key={vibe.id}>
-              <Circle
-                center={[lat, lng]}
-                radius={vibe.vibe_type?.name === 'Party' ? 200 : 
-                       vibe.vibe_type?.name === 'Danger' ? 300 : 
-                       vibe.vibe_type?.name === 'Safe Zone' ? 150 : 100}
-                pathOptions={{
-                  color: vibe.vibe_type?.color || '#6366f1',
-                  fillColor: vibe.vibe_type?.color || '#6366f1',
-                  fillOpacity: 0.4,
-                  weight: 3,
-                  className: 'animate-pulse'
-                }}
-              />
-              <VibeMarker 
-                vibe={vibe}
-                position={[lat, lng]}
-              />
-            </div>
+            <VibeMarker 
+              key={vibe.id}
+              vibe={vibe}
+              position={[lat, lng]}
+            />
           );
         })}
       </MapContainer>

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -12,7 +13,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { MapPin, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { VibeReportsService } from '@/services/vibes/vibeReportsService';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -82,43 +82,64 @@ export const AddVibeModal = ({ isOpen, onClose }: AddVibeModalProps) => {
     setLoading(true);
     
     try {
-      // Get user mapping for integer ID
-      const { data: userMapping } = await supabase
+      // Get or create user mapping first
+      let userMapping;
+      const { data: existingMapping } = await supabase
         .from('user_mapping')
         .select('integer_id')
         .eq('uuid_id', user.id)
-        .single();
+        .maybeSingle();
 
+      if (existingMapping) {
+        userMapping = existingMapping;
+      } else {
+        // Create new mapping
+        const integerId = Math.floor(Math.random() * 2147483647);
+        const { data: newMapping, error: mappingError } = await supabase
+          .from('user_mapping')
+          .insert({ uuid_id: user.id, integer_id: integerId })
+          .select('integer_id')
+          .single();
+        
+        if (mappingError) throw mappingError;
+        userMapping = newMapping;
+      }
+
+      // Create the vibe report with proper timezone handling
       const vibeData = {
         title: formData.title,
         description: formData.description,
         latitude: userLocation.lat.toString(),
         longitude: userLocation.lng.toString(),
         vibe_type_id: formData.vibe_type_id,
-        user_id: userMapping?.integer_id || null,
-        is_anonymous: false
+        user_id: userMapping.integer_id,
+        is_anonymous: false,
+        created_at: new Date().toISOString()
       };
       
-      const result = await VibeReportsService.createVibeReport(vibeData);
+      const { data, error } = await supabase
+        .from('vibe_reports')
+        .insert(vibeData)
+        .select()
+        .single();
       
-      if (result) {
-        toast({
-          title: "Vibe Reported",
-          description: "Your vibe report has been submitted successfully"
-        });
-        
-        onClose();
-        setFormData({ title: '', description: '', vibe_type_id: 1 });
-        
-        // Trigger a page refresh to show new data
-        window.location.reload();
-      } else {
-        throw new Error('Failed to create vibe report');
-      }
+      if (error) throw error;
+      
+      toast({
+        title: "Vibe Reported",
+        description: "Your vibe report has been submitted successfully"
+      });
+      
+      onClose();
+      setFormData({ title: '', description: '', vibe_type_id: 1 });
+      
+      // Refresh the page to show new data
+      window.location.reload();
     } catch (error) {
+      console.error('Error creating vibe report:', error);
       toast({
         title: "Error",
-        description: "Failed to submit vibe report",
+        description: "Failed to submit vibe report. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -168,10 +189,10 @@ export const AddVibeModal = ({ isOpen, onClose }: AddVibeModalProps) => {
               value={formData.vibe_type_id}
               onChange={(e) => setFormData(prev => ({ ...prev, vibe_type_id: parseInt(e.target.value) }))}
             >
-              <option value={1}>Dangerous</option>
+              <option value={1}>Calm</option>
               <option value={2}>Crowded</option>
               <option value={3}>Event</option>
-              <option value={4}>Calm</option>
+              <option value={4}>Suspicious</option>
               <option value={5}>Noisy</option>
               <option value={6}>LGBTQIA+ Friendly</option>
             </select>

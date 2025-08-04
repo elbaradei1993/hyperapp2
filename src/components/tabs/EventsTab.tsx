@@ -25,6 +25,7 @@ const EventsTab = () => {
       try {
         setLoading(true);
         const data = await EventService.getEvents();
+        console.log('Fetched events:', data);
         setEvents(data);
       } catch (error) {
         console.error("Error fetching events:", error);
@@ -52,6 +53,20 @@ const EventsTab = () => {
     }
     
     navigate("/events/create");
+  };
+
+  const viewEventOnMap = (event: EventResponse) => {
+    if (event.latitude && event.longitude) {
+      // Store location in sessionStorage for map to use
+      sessionStorage.setItem('mapLocation', JSON.stringify({ 
+        lat: parseFloat(event.latitude), 
+        lng: parseFloat(event.longitude), 
+        zoom: 16 
+      }));
+      
+      // Navigate to Pulse page with map tab
+      navigate('/pulse');
+    }
   };
 
   return (
@@ -96,7 +111,11 @@ const EventsTab = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-auto pb-4">
           {events.map((event) => (
-            <EventCard key={event.id} event={event} />
+            <EventCard 
+              key={event.id} 
+              event={event} 
+              onViewOnMap={() => viewEventOnMap(event)}
+            />
           ))}
         </div>
       )}
@@ -104,9 +123,8 @@ const EventsTab = () => {
   );
 };
 
-const EventCard = ({ event }: { event: EventResponse }) => {
+const EventCard = ({ event, onViewOnMap }: { event: EventResponse; onViewOnMap: () => void }) => {
   const { t } = useLanguage();
-  const navigate = useNavigate();
   
   const formatDate = (dateStr: string) => {
     try {
@@ -152,9 +170,13 @@ const EventCard = ({ event }: { event: EventResponse }) => {
           <span className="line-clamp-1">{event.location}</span>
         </div>
       </CardContent>
-      <CardFooter className="p-4 pt-0 flex justify-between">
-        <Button variant="outline" size="sm" className="w-full">
+      <CardFooter className="p-4 pt-0 flex justify-between gap-2">
+        <Button variant="outline" size="sm" className="flex-1">
           View Details
+        </Button>
+        <Button variant="outline" size="sm" onClick={onViewOnMap}>
+          <MapPin className="h-4 w-4 mr-1" />
+          Map
         </Button>
       </CardFooter>
     </Card>

@@ -1,17 +1,16 @@
 import { supabase } from '@/integrations/supabase/client';
-import { Json } from '@/integrations/supabase/types';
 
 export interface EventData {
   title: string;
   description?: string;
   location: string;
-  latitude: string; // Changed to required
-  longitude: string; // Changed to required
+  latitude: string;
+  longitude: string;
   start_date_time: string;
   end_date_time: string;
   image_url?: string;
   organization_id?: string;
-  organizer_id?: string; // Add organizer_id field
+  organizer_id?: string;
   vibe_type_id?: number;
   max_attendees?: number;
   is_public?: boolean;
@@ -44,21 +43,38 @@ export const EventService = {
    * Create a new event
    */
   createEvent: async (eventData: EventData) => {
-    // Get current user to map UUID to integer organizer_id
+    // Get current user
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       throw new Error('User must be authenticated to create events');
     }
 
     // Get or create user mapping
-    const { data: userMapping } = await supabase
+    let userMapping;
+    const { data: existingMapping } = await supabase
       .from('user_mapping')
       .select('integer_id')
       .eq('uuid_id', user.id)
-      .single();
+      .maybeSingle();
 
-    if (!userMapping) {
-      throw new Error('Failed to get user mapping');
+    if (existingMapping) {
+      userMapping = existingMapping;
+    } else {
+      // Create new mapping
+      const integerId = Math.floor(Math.random() * 2147483647);
+      const { data: newMapping, error: mappingError } = await supabase
+        .from('user_mapping')
+        .insert({ uuid_id: user.id, integer_id: integerId })
+        .select('integer_id')
+        .single();
+      
+      if (mappingError) throw mappingError;
+      userMapping = newMapping;
+    }
+
+    // Validate required fields
+    if (!eventData.latitude || !eventData.longitude) {
+      throw new Error('Location coordinates are required');
     }
 
     // Ensure the data structure matches the database schema
@@ -74,7 +90,8 @@ export const EventService = {
       vibe_type_id: eventData.vibe_type_id,
       max_attendees: eventData.max_attendees,
       is_paid: eventData.is_public === false,
-      address: eventData.address || eventData.location
+      address: eventData.address || eventData.location,
+      created_at: new Date().toISOString()
     };
     
     const { data, error } = await supabase
@@ -83,7 +100,10 @@ export const EventService = {
       .select()
       .single();
       
-    if (error) throw error;
+    if (error) {
+      console.error('Event creation error:', error);
+      throw error;
+    }
     return data;
   },
 
@@ -94,32 +114,31 @@ export const EventService = {
     const { data, error } = await supabase
       .from('events')
       .select('*')
-      .eq('is_featured', false) // Assuming we only want non-featured events
+      .eq('is_featured', false)
       .order('start_date_time')
       .limit(limit);
       
     if (error) throw error;
     
-    // Convert database response to EventResponse type
     return (data || []).map(item => ({
-      id: item.id.toString(), // Convert to string
+      id: item.id.toString(),
       title: item.title,
       description: item.description,
-      location: item.address || '', // Use address as location
+      location: item.address || '',
       address: item.address,
       latitude: item.latitude,
       longitude: item.longitude,
       start_date_time: item.start_date_time,
       end_date_time: item.end_date_time,
-      image_url: item.poster_url, // Map poster_url to image_url
-      organization_id: item.organizer_id ? item.organizer_id.toString() : null, // Map organizer_id to organization_id
+      image_url: item.poster_url,
+      organization_id: item.organizer_id ? item.organizer_id.toString() : null,
       created_at: item.created_at,
-      updated_at: null, // Our DB doesn't have updated_at
-      is_public: !item.is_paid, // Assuming paid events are not public
+      updated_at: null,
+      is_public: !item.is_paid,
       vibe_type_id: item.vibe_type_id,
       max_attendees: item.max_attendees,
-      current_attendees: 0, // Default value
-      status: 'active' // Default value
+      current_attendees: 0,
+      status: 'active'
     }));
   },
   
@@ -148,15 +167,15 @@ export const EventService = {
       longitude: data.longitude,
       start_date_time: data.start_date_time,
       end_date_time: data.end_date_time,
-      image_url: data.poster_url, // Map poster_url to image_url
+      image_url: data.poster_url,
       organization_id: data.organizer_id ? data.organizer_id.toString() : null,
       created_at: data.created_at,
-      updated_at: null, // Our DB doesn't have updated_at
+      updated_at: null,
       is_public: !data.is_paid,
       vibe_type_id: data.vibe_type_id,
       max_attendees: data.max_attendees,
-      current_attendees: 0, // Default value
-      status: 'active' // Default value
+      current_attendees: 0,
+      status: 'active'
     };
   },
   
@@ -194,15 +213,15 @@ export const EventService = {
       longitude: item.longitude,
       start_date_time: item.start_date_time,
       end_date_time: item.end_date_time,
-      image_url: item.poster_url, // Map poster_url to image_url
+      image_url: item.poster_url,
       organization_id: item.organizer_id ? item.organizer_id.toString() : null,
       created_at: item.created_at,
-      updated_at: null, // Our DB doesn't have updated_at
+      updated_at: null,
       is_public: !item.is_paid,
       vibe_type_id: item.vibe_type_id,
       max_attendees: item.max_attendees,
-      current_attendees: 0, // Default value
-      status: 'active' // Default value
+      current_attendees: 0,
+      status: 'active'
     }));
   },
   

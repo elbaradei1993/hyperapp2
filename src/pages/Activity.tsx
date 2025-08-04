@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { UberNavbar } from "@/components/layout/UberNavbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,6 +17,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
+import { useNavigate } from "react-router-dom";
 
 interface ActivityItem {
   id: string;
@@ -32,6 +34,7 @@ interface ActivityItem {
 export const Activity = () => {
   const isMobile = useIsMobile();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -50,7 +53,13 @@ export const Activity = () => {
         .from('user_mapping')
         .select('integer_id')
         .eq('uuid_id', user?.id)
-        .single();
+        .maybeSingle();
+
+      if (!userMapping) {
+        console.log('No user mapping found');
+        setActivities([]);
+        return;
+      }
 
       // Fetch user's vibe reports using integer ID
       const { data: vibeReports } = await supabase
@@ -68,7 +77,7 @@ export const Activity = () => {
             color
           )
         `)
-        .eq('user_id', userMapping?.integer_id || 0)
+        .eq('user_id', userMapping.integer_id)
         .order('created_at', { ascending: false });
 
       // Fetch user's SOS alerts
@@ -78,11 +87,11 @@ export const Activity = () => {
         .eq('user_id', user?.id)
         .order('created_at', { ascending: false });
 
-      // Fetch user's events using the same integer ID
+      // Fetch user's events using the integer ID
       const { data: events } = await supabase
         .from('events')
         .select('id, title, description, created_at, latitude, longitude, address')
-        .eq('organizer_id', userMapping?.integer_id || 0)
+        .eq('organizer_id', userMapping.integer_id)
         .order('created_at', { ascending: false });
 
       // Combine and format activities
@@ -177,15 +186,14 @@ export const Activity = () => {
   };
 
   const viewOnMap = (activity: ActivityItem) => {
-    // Store location in sessionStorage for map to use
+    // Navigate to Pulse page with map tab and set location
     sessionStorage.setItem('mapLocation', JSON.stringify({ 
       lat: parseFloat(activity.latitude), 
       lng: parseFloat(activity.longitude), 
       zoom: 16 
     }));
     
-    // Navigate to Pulse page with map tab
-    window.location.href = '/pulse?tab=map';
+    navigate('/pulse');
   };
 
   if (!user) {
@@ -194,7 +202,7 @@ export const Activity = () => {
         <UberNavbar />
         <div className="container mx-auto px-4 py-16 text-center">
           <h1 className="text-2xl font-bold mb-4">Please log in to view your activity</h1>
-          <Button onClick={() => window.location.href = '/auth'}>
+          <Button onClick={() => navigate('/auth')}>
             Log In
           </Button>
         </div>
