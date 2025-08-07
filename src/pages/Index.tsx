@@ -4,6 +4,7 @@ import { HeroSection } from "@/components/hero/HeroSection";
 import { FeatureGrid } from "@/components/features/FeatureGrid";
 import { UberNavbar } from "@/components/layout/UberNavbar";
 import MapTab from "@/components/tabs/MapTab";
+import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const Index = () => {
@@ -48,9 +49,17 @@ const Index = () => {
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
               Live Community Map
             </h2>
-            <p className="text-muted-foreground text-lg">
+            <p className="text-muted-foreground text-lg mb-4">
               See what's happening around you in real-time
             </p>
+            <div className="flex justify-center space-x-4">
+              <Button asChild variant="outline" size="sm">
+                <a href="/pulse?tab=map">View Full Map</a>
+              </Button>
+              <Button asChild variant="outline" size="sm">
+                <a href="/pulse?tab=heatmap">View Heatmap</a>
+              </Button>
+            </div>
           </div>
           
           <div className="bg-card rounded-lg uber-shadow-lg overflow-hidden" style={{ height: isMobile ? "400px" : "500px" }}>

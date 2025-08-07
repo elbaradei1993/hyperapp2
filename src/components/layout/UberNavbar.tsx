@@ -11,14 +11,14 @@ const navItems = [
     path: "/" 
   },
   { 
-    icon: Wrench, 
-    label: "Services", 
-    path: "/services" 
+    icon: Activity, 
+    label: "Pulse", 
+    path: "/pulse" 
   },
   { 
-    icon: Activity, 
-    label: "Activity", 
-    path: "/activity" 
+    icon: Wrench, 
+    label: "Explore", 
+    path: "/explore" 
   },
   { 
     icon: User, 

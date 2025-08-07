@@ -3,6 +3,7 @@ import { UberNavbar } from "@/components/layout/UberNavbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   BarChart3, 
   TrendingUp, 
@@ -11,12 +12,18 @@ import {
   AlertTriangle,
   Smile,
   Meh,
-  Frown
+  Frown,
+  Map,
+  Activity,
+  Flame
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { VibeReportsService } from "@/services/vibes/vibeReportsService";
 import { useToast } from "@/hooks/use-toast";
+import MapTab from "@/components/tabs/MapTab";
+import HeatMapTab from "@/components/tabs/HeatMapTab";
+import { useSearchParams } from "react-router-dom";
 
 const moodOptions = [
   { id: 'great', label: '😊 Great', icon: Smile, color: 'text-green-500' },
@@ -27,6 +34,9 @@ const moodOptions = [
 
 export const Pulse = () => {
   const isMobile = useIsMobile();
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get('tab') || 'pulse';
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
   const [communityStats, setCommunityStats] = useState({
     totalReports: 0,
@@ -145,115 +155,176 @@ export const Pulse = () => {
           </p>
         </div>
 
-        {/* Mood Check-in */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Heart className="text-red-500" size={24} />
-              <span>How are you feeling today?</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {selectedMood ? (
-              <div className="text-center py-6">
-                <div className="text-green-500 mb-4">
-                  <Heart size={48} className="mx-auto mb-2" />
-                  <p className="text-lg font-medium">Thank you for sharing!</p>
-                  <p className="text-muted-foreground">Your mood has been recorded.</p>
-                </div>
-                <Button 
-                  variant="outline" 
-                  onClick={() => setSelectedMood(null)}
-                >
-                  Submit Another Response
-                </Button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {moodOptions.map((mood) => {
-                  const Icon = mood.icon;
-                  return (
-                    <Button
-                      key={mood.id}
-                      variant="outline"
-                      className="h-20 flex flex-col space-y-2 hover:scale-105 transition-transform"
-                      onClick={() => handleMoodSubmit(mood.id)}
+        {/* Tabs Navigation */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3 mb-6">
+            <TabsTrigger value="pulse" className="flex items-center space-x-2">
+              <Activity size={16} />
+              <span>Pulse</span>
+            </TabsTrigger>
+            <TabsTrigger value="map" className="flex items-center space-x-2">
+              <Map size={16} />
+              <span>Map</span>
+            </TabsTrigger>
+            <TabsTrigger value="heatmap" className="flex items-center space-x-2">
+              <Flame size={16} />
+              <span>Heat Map</span>
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Pulse Tab */}
+          <TabsContent value="pulse" className="space-y-8">
+            {/* Mood Check-in */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Heart className="text-red-500" size={24} />
+                  <span>How are you feeling today?</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {selectedMood ? (
+                  <div className="text-center py-6">
+                    <div className="text-green-500 mb-4">
+                      <Heart size={48} className="mx-auto mb-2" />
+                      <p className="text-lg font-medium">Thank you for sharing!</p>
+                      <p className="text-muted-foreground">Your mood has been recorded.</p>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setSelectedMood(null)}
                     >
-                      <span className="text-2xl">{mood.label.split(' ')[0]}</span>
-                      <span className="text-sm">{mood.label.split(' ')[1]}</span>
+                      Submit Another Response
                     </Button>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Community Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card>
-            <CardContent className="p-6 text-center">
-              <div className="text-3xl font-bold text-green-500 mb-2">
-                {communityStats.safetyScore}/10
-              </div>
-              <p className="text-muted-foreground">Safety Score</p>
-              <Badge variant="secondary" className="mt-2">Safe</Badge>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6 text-center">
-              <div className="text-3xl font-bold text-blue-500 mb-2">
-                {communityStats.activeUsers}
-              </div>
-              <p className="text-muted-foreground">Active Users</p>
-              <Badge variant="secondary" className="mt-2">Online Now</Badge>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6 text-center">
-              <div className="text-3xl font-bold text-primary mb-2">
-                {communityStats.totalReports}
-              </div>
-              <p className="text-muted-foreground">Total Reports</p>
-              <Badge variant="secondary" className="mt-2">This Week</Badge>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Mood Distribution */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <BarChart3 className="text-primary" size={24} />
-              <span>Community Mood Distribution</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {moodOptions.map((mood) => {
-                const percentage = communityStats.moodDistribution[mood.id as keyof typeof communityStats.moodDistribution];
-                return (
-                  <div key={mood.id} className="flex items-center space-x-4">
-                    <div className="w-20 text-sm">
-                      {mood.label}
-                    </div>
-                    <div className="flex-1 bg-muted rounded-full h-3 overflow-hidden">
-                      <div 
-                        className={`h-full ${mood.color.replace('text-', 'bg-')}`}
-                        style={{ width: `${percentage}%` }}
-                      />
-                    </div>
-                    <div className="w-12 text-sm text-muted-foreground">
-                      {percentage}%
-                    </div>
                   </div>
-                );
-              })}
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {moodOptions.map((mood) => {
+                      const Icon = mood.icon;
+                      return (
+                        <Button
+                          key={mood.id}
+                          variant="outline"
+                          className="h-20 flex flex-col space-y-2 hover:scale-105 transition-transform"
+                          onClick={() => handleMoodSubmit(mood.id)}
+                        >
+                          <span className="text-2xl">{mood.label.split(' ')[0]}</span>
+                          <span className="text-sm">{mood.label.split(' ')[1]}</span>
+                        </Button>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Community Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <div className="text-3xl font-bold text-green-500 mb-2">
+                    {communityStats.safetyScore}/10
+                  </div>
+                  <p className="text-muted-foreground">Safety Score</p>
+                  <Badge variant="secondary" className="mt-2">Safe</Badge>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <div className="text-3xl font-bold text-blue-500 mb-2">
+                    {communityStats.activeUsers}
+                  </div>
+                  <p className="text-muted-foreground">Active Users</p>
+                  <Badge variant="secondary" className="mt-2">Online Now</Badge>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <div className="text-3xl font-bold text-primary mb-2">
+                    {communityStats.totalReports}
+                  </div>
+                  <p className="text-muted-foreground">Total Reports</p>
+                  <Badge variant="secondary" className="mt-2">This Week</Badge>
+                </CardContent>
+              </Card>
             </div>
-          </CardContent>
-        </Card>
+
+            {/* Mood Distribution */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <BarChart3 className="text-primary" size={24} />
+                  <span>Community Mood Distribution</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {moodOptions.map((mood) => {
+                    const percentage = communityStats.moodDistribution[mood.id as keyof typeof communityStats.moodDistribution];
+                    return (
+                      <div key={mood.id} className="flex items-center space-x-4">
+                        <div className="w-20 text-sm">
+                          {mood.label}
+                        </div>
+                        <div className="flex-1 bg-muted rounded-full h-3 overflow-hidden">
+                          <div 
+                            className={`h-full ${mood.color.replace('text-', 'bg-')}`}
+                            style={{ width: `${percentage}%` }}
+                          />
+                        </div>
+                        <div className="w-12 text-sm text-muted-foreground">
+                          {percentage}%
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Map Tab */}
+          <TabsContent value="map" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Map className="text-primary" size={24} />
+                  <span>Live Community Map</span>
+                </CardTitle>
+                <p className="text-muted-foreground">
+                  View individual vibe reports and locations in real-time
+                </p>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div style={{ height: isMobile ? "400px" : "600px" }} className="rounded-lg overflow-hidden">
+                  <MapTab />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Heatmap Tab */}
+          <TabsContent value="heatmap" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Flame className="text-primary" size={24} />
+                  <span>Community Activity Heatmap</span>
+                </CardTitle>
+                <p className="text-muted-foreground">
+                  Visualize vibe density and hotspots across your neighborhood
+                </p>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div style={{ height: isMobile ? "400px" : "600px" }} className="rounded-lg overflow-hidden">
+                  <HeatMapTab />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Mobile spacing */}

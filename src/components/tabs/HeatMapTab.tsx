@@ -1,9 +1,8 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { MapPin } from 'lucide-react';
+import { MapPin, Activity, Loader2 } from 'lucide-react';
 import { VibeService, Vibe } from '@/services/vibes';
-import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import L from 'leaflet';
 import 'leaflet.heat';
@@ -39,42 +38,57 @@ function HeatMapLayer({ vibes }: { vibes: any[] }) {
       map.removeLayer(heatLayerRef.current);
     }
 
-    // Group vibes by type and create heat data
-    const vibeTypeColors = {
-      'Party': '#8b5cf6', // Purple
-      'Danger': '#ef4444', // Red  
-      'Safe Zone': '#22c55e', // Green
-      'Social': '#3b82f6', // Blue
-      'Food': '#f59e0b', // Orange
-      'Music': '#ec4899', // Pink
+    // Improved vibe type mapping for better heat visualization
+    const vibeTypeIntensities = {
+      'dangerous': 1.0,
+      'suspicious': 0.9,
+      'crowded': 0.7,
+      'party': 0.6,
+      'social': 0.5,
+      'calm': 0.3,
+      'safe': 0.2,
+      'peaceful': 0.1
     };
 
-    // Create separate heat layers for each vibe type
+    // Enhanced heat data calculation with vibe type consideration
     const heatData: [number, number, number][] = vibes
       .filter(vibe => vibe.latitude && vibe.longitude)
       .map(vibe => {
         const lat = parseFloat(vibe.latitude);
         const lng = parseFloat(vibe.longitude);
-        const intensity = Math.min(vibe.confirmed_count + 1, 10) / 10; // Normalize intensity
         
         if (isNaN(lat) || isNaN(lng)) return null;
-        return [lat, lng, intensity];
+        
+        // Get base intensity from confirmed count
+        const baseIntensity = Math.min((vibe.confirmed_count || 0) + 1, 10) / 10;
+        
+        // Get vibe type intensity modifier
+        const vibeTypeName = vibe.vibe_type?.name?.toLowerCase() || 'calm';
+        const typeIntensity = vibeTypeIntensities[vibeTypeName as keyof typeof vibeTypeIntensities] || 0.5;
+        
+        // Combine base intensity with type intensity
+        const finalIntensity = Math.min(baseIntensity * typeIntensity * 2, 1.0);
+        
+        return [lat, lng, finalIntensity];
       })
       .filter(Boolean) as [number, number, number][];
 
+    console.log(`Loaded ${heatData.length} vibes for heatmap:`, heatData.slice(0, 5));
+
     if (heatData.length > 0) {
-      // Create heat layer with custom gradient
+      // Create enhanced heat layer with better gradient
       heatLayerRef.current = (L as any).heatLayer(heatData, {
-        radius: 25,
-        blur: 15,
-        maxZoom: 17,
+        radius: 30,
+        blur: 20,
+        maxZoom: 18,
+        minOpacity: 0.3,
         gradient: {
-          0.0: '#3b82f6',
-          0.2: '#22c55e', 
-          0.4: '#f59e0b',
-          0.6: '#ec4899',
-          0.8: '#8b5cf6',
-          1.0: '#ef4444'
+          0.0: 'rgba(59, 130, 246, 0.6)',   // Blue - Safe/Low
+          0.2: 'rgba(34, 197, 94, 0.6)',    // Green - Calm
+          0.4: 'rgba(245, 158, 11, 0.7)',   // Orange - Social
+          0.6: 'rgba(236, 72, 153, 0.8)',   // Pink - Party
+          0.8: 'rgba(139, 92, 246, 0.8)',   // Purple - Crowded
+          1.0: 'rgba(239, 68, 68, 0.9)'     // Red - Dangerous
         }
       }).addTo(map);
     }
@@ -110,6 +124,7 @@ const HeatMapTab = () => {
   const [vibes, setVibes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+  const [showLegend, setShowLegend] = useState(true);
   const { toast } = useToast();
   const [locationError, setLocationError] = useState<string | null>(null);
   const isMobile = useIsMobile();
@@ -228,33 +243,72 @@ const HeatMapTab = () => {
         <HeatMapLayer vibes={vibes} />
       </MapContainer>
       
-      {/* Current Location Button */}
-      <button
-        onClick={() => {
-          if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition((position) => {
-              setUserLocation([position.coords.latitude, position.coords.longitude]);
-            });
-          }
-        }}
-        className="absolute bottom-4 right-4 z-10 bg-primary text-white p-3 rounded-full shadow-lg hover:bg-primary/90 transition-colors animate-fade-in"
-        title="Go to my location"
-      >
-        <MapPin size={20} />
-      </button>
-
-      {/* Heat Map Legend */}
-      <div className="absolute top-4 left-4 z-10 bg-background/90 backdrop-blur-sm rounded-lg p-3 border border-border/40">
-        <h4 className="text-sm font-medium mb-2">Heat Map Intensity</h4>
-        <div className="flex items-center space-x-2 text-xs">
-          <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-          <span>Low</span>
-          <div className="w-3 h-3 rounded-full bg-green-500"></div>
-          <span>Medium</span>
-          <div className="w-3 h-3 rounded-full bg-red-500"></div>
-          <span>High</span>
-        </div>
+      {/* Control Buttons */}
+      <div className="absolute bottom-4 right-4 z-10 flex flex-col space-y-2">
+        <button
+          onClick={() => setShowLegend(!showLegend)}
+          className="bg-background/90 border border-border/40 text-foreground p-3 rounded-full shadow-lg hover:bg-muted/90 transition-colors"
+          title="Toggle legend"
+        >
+          <Activity size={16} />
+        </button>
+        <button
+          onClick={() => {
+            if (navigator.geolocation) {
+              navigator.geolocation.getCurrentPosition((position) => {
+                setUserLocation([position.coords.latitude, position.coords.longitude]);
+              });
+            }
+          }}
+          className="bg-primary text-white p-3 rounded-full shadow-lg hover:bg-primary/90 transition-colors"
+          title="Go to my location"
+        >
+          <MapPin size={20} />
+        </button>
       </div>
+
+      {/* Enhanced Heat Map Legend */}
+      {showLegend && (
+        <div className="absolute top-4 left-4 z-10 bg-background/95 backdrop-blur-sm rounded-lg p-4 border border-border/40 shadow-lg animate-fade-in">
+          <h4 className="text-sm font-semibold mb-3">Activity Heatmap</h4>
+          
+          {/* Gradient Legend */}
+          <div className="space-y-2 mb-3">
+            <div className="flex items-center space-x-2 text-xs">
+              <div className="w-3 h-3 rounded-full bg-blue-500/60"></div>
+              <span>Safe/Calm</span>
+            </div>
+            <div className="flex items-center space-x-2 text-xs">
+              <div className="w-3 h-3 rounded-full bg-green-500/60"></div>
+              <span>Peaceful</span>
+            </div>
+            <div className="flex items-center space-x-2 text-xs">
+              <div className="w-3 h-3 rounded-full bg-orange-500/70"></div>
+              <span>Social/Active</span>
+            </div>
+            <div className="flex items-center space-x-2 text-xs">
+              <div className="w-3 h-3 rounded-full bg-pink-500/80"></div>
+              <span>Party/Event</span>
+            </div>
+            <div className="flex items-center space-x-2 text-xs">
+              <div className="w-3 h-3 rounded-full bg-purple-500/80"></div>
+              <span>Crowded</span>
+            </div>
+            <div className="flex items-center space-x-2 text-xs">
+              <div className="w-3 h-3 rounded-full bg-red-500/90"></div>
+              <span>Alert/Danger</span>
+            </div>
+          </div>
+          
+          {/* Stats */}
+          <div className="border-t border-border/40 pt-2">
+            <div className="text-xs text-muted-foreground">
+              <div>Total Points: {vibes.length}</div>
+              <div>Active Areas: {Math.max(1, Math.floor(vibes.length / 5))}</div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
