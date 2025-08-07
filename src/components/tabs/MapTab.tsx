@@ -1,15 +1,14 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { MapPin } from 'lucide-react';
-import { VibeService } from '@/services/vibes';
 import { Loader2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 import L from 'leaflet';
-import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from '@/hooks/use-mobile';
 import VibeMarker from '@/components/map/VibeMarker';
 import UserLocationMarker from '@/components/map/UserLocationMarker';
+import { useVibeData } from '@/hooks/useVibeData';
+import { useAccurateLocation } from '@/hooks/useAccurateLocation';
 
 // Fix Leaflet icon issues
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -53,70 +52,26 @@ function LocationMarker() {
 }
 
 const MapTab = () => {
-  const [vibes, setVibes] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [mapCenter, setMapCenter] = useState<[number, number] | null>(null);
   const [mapZoom, setMapZoom] = useState(14);
-  const { toast } = useToast();
-  const [locationError, setLocationError] = useState<string | null>(null);
   const isMobile = useIsMobile();
 
-  const loadVibes = useCallback(async () => {
-    try {
-      const data = await VibeService.getVibeReports();
-      console.log('Loaded vibes:', data);
-      setVibes(data);
-    } catch (error) {
-      console.error("Error loading vibes:", error);
-      toast({
-        title: "Failed to load vibes",
-        description: "Could not load vibe data from the server",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [toast]);
+  // Use optimized hooks for data and location
+  const { vibes, loading: vibesLoading } = useVibeData({ limit: 100, enableRealtime: true });
+  const { position: userLocation, loading: locationLoading, error: locationError } = useAccurateLocation({
+    enableHighAccuracy: true,
+    timeout: 15000,
+    maximumAge: 300000
+  });
 
-  const loadUserLocation = useCallback(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        position => {
-          const location: [number, number] = [position.coords.latitude, position.coords.longitude];
-          setUserLocation(location);
-          if (!mapCenter) {
-            setMapCenter(location);
-          }
-          setLocationError(null);
-        },
-        error => {
-          console.error("Error getting location:", error);
-          setLocationError(`Could not get your location: ${error.message}`);
-          // Default to a location if we can't get the user's
-          const defaultLocation: [number, number] = [37.7749, -122.4194]; // San Francisco
-          setUserLocation(defaultLocation);
-          if (!mapCenter) {
-            setMapCenter(defaultLocation);
-          }
-          toast({
-            title: "Location access denied",
-            description: "Using default location. Please enable location services for better experience.",
-            variant: "destructive"
-          });
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-      );
-    } else {
-      setLocationError("Your browser doesn't support geolocation");
-      // Default location
-      const defaultLocation: [number, number] = [37.7749, -122.4194]; // San Francisco
-      setUserLocation(defaultLocation);
-      if (!mapCenter) {
-        setMapCenter(defaultLocation);
-      }
-    }
-  }, [mapCenter, toast]);
+  // Memoize filtered vibes for better performance
+  const validVibes = useMemo(() => {
+    return vibes.filter(vibe => {
+      const lat = parseFloat(vibe.latitude);
+      const lng = parseFloat(vibe.longitude);
+      return !isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0;
+    });
+  }, [vibes]);
 
   useEffect(() => {
     // Check for stored location from other pages
@@ -126,33 +81,20 @@ const MapTab = () => {
         const location = JSON.parse(storedLocation);
         setMapCenter([location.lat, location.lng]);
         setMapZoom(location.zoom || 16);
+        sessionStorage.removeItem('mapLocation'); // Clear after using
+        return;
       } catch (error) {
         console.error('Error parsing stored location:', error);
       }
     }
 
-    loadVibes();
-    loadUserLocation();
+    // Set map center to user location when available
+    if (userLocation && !mapCenter) {
+      setMapCenter(userLocation);
+    }
+  }, [userLocation, mapCenter]);
 
-    // Set up subscription for real-time updates
-    const channel = supabase
-      .channel('public:vibe_reports')
-      .on('postgres_changes', { 
-        event: 'INSERT', 
-        schema: 'public', 
-        table: 'vibe_reports' 
-      }, () => {
-        loadVibes(); // Reload all vibes
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-    
-  }, [loadVibes, loadUserLocation]);
-
-  if (loading || !mapCenter) {
+  if (vibesLoading || locationLoading || !mapCenter) {
     return (
       <div className="flex flex-col items-center justify-center h-full">
         <Loader2 className="h-10 w-10 animate-spin text-primary" />
@@ -179,13 +121,9 @@ const MapTab = () => {
         
         <LocationMarker />
         
-        {vibes.map((vibe) => {
-          if (!vibe.latitude || !vibe.longitude) return null;
-          
+        {validVibes.map((vibe) => {
           const lat = parseFloat(vibe.latitude);
           const lng = parseFloat(vibe.longitude);
-          
-          if (isNaN(lat) || isNaN(lng)) return null;
           
           return (
             <VibeMarker 
@@ -200,12 +138,8 @@ const MapTab = () => {
       {/* Current Location Button */}
       <button
         onClick={() => {
-          if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition((position) => {
-              const newLocation: [number, number] = [position.coords.latitude, position.coords.longitude];
-              setUserLocation(newLocation);
-              setMapCenter(newLocation);
-            });
+          if (userLocation) {
+            setMapCenter(userLocation);
           }
         }}
         className="absolute bottom-4 right-4 z-10 bg-primary text-white p-3 rounded-full shadow-lg hover:bg-primary/90 transition-colors animate-fade-in"

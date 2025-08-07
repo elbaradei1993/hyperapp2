@@ -1,14 +1,14 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { MapPin, Activity, Loader2 } from 'lucide-react';
-import { VibeService, Vibe } from '@/services/vibes';
-import { useToast } from '@/hooks/use-toast';
+import { VibeReport } from '@/services/vibes';
 import L from 'leaflet';
 import 'leaflet.heat';
-import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from '@/hooks/use-mobile';
 import UserLocationMarker from '@/components/map/UserLocationMarker';
+import { useVibeData } from '@/hooks/useVibeData';
+import { useAccurateLocation } from '@/hooks/useAccurateLocation';
 
 // Fix Leaflet icon issues
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -25,18 +25,14 @@ declare global {
   }
 }
 
-// Heat map component
-function HeatMapLayer({ vibes }: { vibes: any[] }) {
+// Heat map component with performance optimizations
+function HeatMapLayer({ vibes }: { vibes: VibeReport[] }) {
   const map = useMap();
   const heatLayerRef = useRef<any>(null);
 
-  useEffect(() => {
-    if (!vibes.length) return;
-
-    // Remove existing heat layer
-    if (heatLayerRef.current) {
-      map.removeLayer(heatLayerRef.current);
-    }
+  // Memoize heat data calculation to avoid recalculating on every render
+  const heatData = useMemo(() => {
+    if (!vibes.length) return [];
 
     // Improved vibe type mapping for better heat visualization
     const vibeTypeIntensities = {
@@ -51,13 +47,15 @@ function HeatMapLayer({ vibes }: { vibes: any[] }) {
     };
 
     // Enhanced heat data calculation with vibe type consideration
-    const heatData: [number, number, number][] = vibes
-      .filter(vibe => vibe.latitude && vibe.longitude)
+    const data: [number, number, number][] = vibes
+      .filter(vibe => {
+        const lat = parseFloat(vibe.latitude);
+        const lng = parseFloat(vibe.longitude);
+        return !isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0;
+      })
       .map(vibe => {
         const lat = parseFloat(vibe.latitude);
         const lng = parseFloat(vibe.longitude);
-        
-        if (isNaN(lat) || isNaN(lng)) return null;
         
         // Get base intensity from confirmed count
         const baseIntensity = Math.min((vibe.confirmed_count || 0) + 1, 10) / 10;
@@ -69,19 +67,27 @@ function HeatMapLayer({ vibes }: { vibes: any[] }) {
         // Combine base intensity with type intensity
         const finalIntensity = Math.min(baseIntensity * typeIntensity * 2, 1.0);
         
-        return [lat, lng, finalIntensity];
-      })
-      .filter(Boolean) as [number, number, number][];
+        return [lat, lng, finalIntensity] as [number, number, number];
+      });
 
-    console.log(`Loaded ${heatData.length} vibes for heatmap:`, heatData.slice(0, 5));
+    return data;
+  }, [vibes]);
+
+  useEffect(() => {
+    // Remove existing heat layer
+    if (heatLayerRef.current) {
+      map.removeLayer(heatLayerRef.current);
+      heatLayerRef.current = null;
+    }
 
     if (heatData.length > 0) {
-      // Create enhanced heat layer with better gradient
+      // Create enhanced heat layer with better gradient and performance settings
       heatLayerRef.current = (L as any).heatLayer(heatData, {
-        radius: 30,
-        blur: 20,
+        radius: 25,
+        blur: 15,
         maxZoom: 18,
-        minOpacity: 0.3,
+        minOpacity: 0.4,
+        max: 1.0,
         gradient: {
           0.0: 'rgba(59, 130, 246, 0.6)',   // Blue - Safe/Low
           0.2: 'rgba(34, 197, 94, 0.6)',    // Green - Calm
@@ -98,7 +104,7 @@ function HeatMapLayer({ vibes }: { vibes: any[] }) {
         map.removeLayer(heatLayerRef.current);
       }
     };
-  }, [vibes, map]);
+  }, [heatData, map]);
 
   return null;
 }
@@ -121,92 +127,33 @@ function LocationMarker() {
 }
 
 const HeatMapTab = () => {
-  const [vibes, setVibes] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [showLegend, setShowLegend] = useState(true);
-  const { toast } = useToast();
-  const [locationError, setLocationError] = useState<string | null>(null);
   const isMobile = useIsMobile();
 
-  const loadVibes = useCallback(async () => {
-    try {
-      const data = await VibeService.getVibeReports();
-      setVibes(data);
-    } catch (error) {
-      console.error("Error loading vibes:", error);
-      toast({
-        title: "Failed to load vibes",
-        description: "Could not load vibe data from the server",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [toast]);
+  // Use optimized hooks for data and location
+  const { vibes, loading: vibesLoading } = useVibeData({ limit: 200, enableRealtime: true });
+  const { position: userLocation, loading: locationLoading, error: locationError } = useAccurateLocation({
+    enableHighAccuracy: true,
+    timeout: 15000,
+    maximumAge: 300000
+  });
 
-  useEffect(() => {
-    // Check for stored location from other pages first
+  // Set default location from stored data
+  const mapCenter = useMemo(() => {
     const storedLocation = sessionStorage.getItem('mapLocation');
     if (storedLocation) {
       try {
         const location = JSON.parse(storedLocation);
-        setUserLocation([location.lat, location.lng]);
         sessionStorage.removeItem('mapLocation'); // Clear after using
+        return [location.lat, location.lng] as [number, number];
       } catch (error) {
         console.error('Error parsing stored location:', error);
       }
-    } else {
-      // Get user location
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          position => {
-            setUserLocation([position.coords.latitude, position.coords.longitude]);
-            setLocationError(null);
-          },
-          error => {
-            console.error("Error getting location:", error);
-            setLocationError(`Could not get your location: ${error.message}`);
-            // Default to a location if we can't get the user's
-            setUserLocation([37.7749, -122.4194]); // San Francisco
-            toast({
-              title: "Location access denied",
-              description: "Using default location. Please enable location services for better experience.",
-              variant: "destructive"
-            });
-          },
-          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-        );
-      } else {
-        setLocationError("Your browser doesn't support geolocation");
-        // Default location
-        setUserLocation([37.7749, -122.4194]); // San Francisco
-      }
     }
-    
-    // Load vibes
-    loadVibes();
+    return userLocation || [30.0444, 31.2357]; // Default to Cairo, Egypt
+  }, [userLocation]);
 
-    // Set up subscription for real-time updates
-    const channel = supabase
-      .channel('public:vibe_reports')
-      .on('postgres_changes', { 
-        event: 'INSERT', 
-        schema: 'public', 
-        table: 'vibe_reports' 
-      }, () => {
-        // Add new vibe to the list
-        loadVibes(); // Reload all vibes
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-    
-  }, [loadVibes, toast]);
-
-  if (loading || !userLocation) {
+  if (vibesLoading || locationLoading || !mapCenter) {
     return (
       <div className="flex flex-col items-center justify-center h-full">
         <Loader2 className="h-10 w-10 animate-spin text-primary" />
@@ -223,11 +170,13 @@ const HeatMapTab = () => {
         className="h-full w-full z-0"
         // Fix the typescript errors by adding these props as part of the any object
         {...{
-          center: userLocation,
+          center: mapCenter,
           zoom: 12,
           minZoom: 3,
           maxZoom: 19,
-          scrollWheelZoom: true
+          scrollWheelZoom: true,
+          preferCanvas: true, // Better performance for heat maps
+          zoomSnap: 0.5
         } as any}
         style={{ height: isMobile ? '70vh' : '100%' }}
       >
@@ -254,10 +203,10 @@ const HeatMapTab = () => {
         </button>
         <button
           onClick={() => {
-            if (navigator.geolocation) {
-              navigator.geolocation.getCurrentPosition((position) => {
-                setUserLocation([position.coords.latitude, position.coords.longitude]);
-              });
+            // Center map on user location if available
+            if (userLocation) {
+              // Force map to center on user location
+              window.location.reload();
             }
           }}
           className="bg-primary text-white p-3 rounded-full shadow-lg hover:bg-primary/90 transition-colors"
