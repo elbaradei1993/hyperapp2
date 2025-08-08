@@ -13,7 +13,6 @@ import {
   Smile,
   Meh,
   Frown,
-  Map,
   Activity,
   Flame
 } from "lucide-react";
@@ -21,7 +20,6 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { VibeReportsService } from "@/services/vibes/vibeReportsService";
 import { useToast } from "@/hooks/use-toast";
-import MapTab from "@/components/tabs/MapTab";
 import HeatMapTab from "@/components/tabs/HeatMapTab";
 import { useSearchParams } from "react-router-dom";
 
@@ -157,14 +155,10 @@ export const Pulse = () => {
 
         {/* Tabs Navigation */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-6">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
             <TabsTrigger value="pulse" className="flex items-center space-x-2">
               <Activity size={16} />
               <span>Pulse</span>
-            </TabsTrigger>
-            <TabsTrigger value="map" className="flex items-center space-x-2">
-              <Map size={16} />
-              <span>Map</span>
             </TabsTrigger>
             <TabsTrigger value="heatmap" className="flex items-center space-x-2">
               <Flame size={16} />
@@ -285,25 +279,6 @@ export const Pulse = () => {
             </Card>
           </TabsContent>
 
-          {/* Map Tab */}
-          <TabsContent value="map" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Map className="text-primary" size={24} />
-                  <span>Live Community Map</span>
-                </CardTitle>
-                <p className="text-muted-foreground">
-                  View individual vibe reports and locations in real-time
-                </p>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div style={{ height: isMobile ? "400px" : "600px" }} className="rounded-lg overflow-hidden">
-                  <MapTab />
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
 
           {/* Heatmap Tab */}
           <TabsContent value="heatmap" className="space-y-4">

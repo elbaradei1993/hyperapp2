@@ -109,6 +109,33 @@ function HeatMapLayer({ vibes }: { vibes: VibeReport[] }) {
   return null;
 }
 
+// Map controls component
+function MapControls({ userLocation, onToggleLegend }: { userLocation: [number, number] | null, onToggleLegend: () => void }) {
+  const map = useMap();
+  return (
+    <div className="absolute bottom-4 right-4 z-10 flex flex-col space-y-2">
+      <button
+        onClick={onToggleLegend}
+        className="bg-background/90 border border-border/40 text-foreground p-3 rounded-full shadow-lg hover:bg-muted/90 transition-colors"
+        title="Toggle legend"
+      >
+        <Activity size={16} />
+      </button>
+      <button
+        onClick={() => {
+          if (userLocation) {
+            map.setView(userLocation as any, map.getZoom(), { animate: true });
+          }
+        }}
+        className="bg-primary text-white p-3 rounded-full shadow-lg hover:bg-primary/90 transition-colors"
+        title="Go to my location"
+      >
+        <MapPin size={20} />
+      </button>
+    </div>
+  );
+}
+
 // Location finder component
 function LocationMarker() {
   const [position, setPosition] = useState<L.LatLng | null>(null);
@@ -190,31 +217,9 @@ const HeatMapTab = () => {
         
         <LocationMarker />
         <HeatMapLayer vibes={vibes} />
+        <MapControls userLocation={userLocation} onToggleLegend={() => setShowLegend(!showLegend)} />
       </MapContainer>
       
-      {/* Control Buttons */}
-      <div className="absolute bottom-4 right-4 z-10 flex flex-col space-y-2">
-        <button
-          onClick={() => setShowLegend(!showLegend)}
-          className="bg-background/90 border border-border/40 text-foreground p-3 rounded-full shadow-lg hover:bg-muted/90 transition-colors"
-          title="Toggle legend"
-        >
-          <Activity size={16} />
-        </button>
-        <button
-          onClick={() => {
-            // Center map on user location if available
-            if (userLocation) {
-              // Force map to center on user location
-              window.location.reload();
-            }
-          }}
-          className="bg-primary text-white p-3 rounded-full shadow-lg hover:bg-primary/90 transition-colors"
-          title="Go to my location"
-        >
-          <MapPin size={20} />
-        </button>
-      </div>
 
       {/* Enhanced Heat Map Legend */}
       {showLegend && (

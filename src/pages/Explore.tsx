@@ -250,14 +250,14 @@ export const Explore = () => {
                         if (lat && lng) {
                           // Store location in sessionStorage for map to use
                           sessionStorage.setItem('mapLocation', JSON.stringify({ lat, lng, zoom: 16 }));
-                          window.location.href = '/pulse?tab=map';
+                          window.location.href = '/pulse?tab=heatmap';
                         } else {
-                          window.location.href = '/pulse?tab=map';
+                          window.location.href = '/pulse?tab=heatmap';
                         }
                       }}
                     >
                       <MapPin className="mr-1" size={14} />
-                      View on Map
+                      View Heatmap
                     </Button>
                   </div>
                 </CardContent>

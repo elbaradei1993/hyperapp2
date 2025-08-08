@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { HeroSection } from "@/components/hero/HeroSection";
 import { FeatureGrid } from "@/components/features/FeatureGrid";
 import { UberNavbar } from "@/components/layout/UberNavbar";
-import MapTab from "@/components/tabs/MapTab";
+import HeatMapTab from "@/components/tabs/HeatMapTab";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -47,23 +47,20 @@ const Index = () => {
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-8">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Live Community Map
+              Live Community Heatmap
             </h2>
             <p className="text-muted-foreground text-lg mb-4">
-              See what's happening around you in real-time
+              Visualize activity hotspots around you in real-time
             </p>
             <div className="flex justify-center space-x-4">
               <Button asChild variant="outline" size="sm">
-                <a href="/pulse?tab=map">View Full Map</a>
-              </Button>
-              <Button asChild variant="outline" size="sm">
-                <a href="/pulse?tab=heatmap">View Heatmap</a>
+                <a href="/pulse?tab=heatmap">Open Pulse Heatmap</a>
               </Button>
             </div>
           </div>
           
           <div className="bg-card rounded-lg uber-shadow-lg overflow-hidden" style={{ height: isMobile ? "400px" : "500px" }}>
-            <MapTab />
+            <HeatMapTab />
           </div>
         </div>
       </section>

@@ -40,6 +40,9 @@
     --animation-fade: fade-in 0.5s ease-out;
     --animation-slide: slide-in-right 0.3s ease-out;
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    /* Gradients */
+    --gradient-app: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--muted)) 100%);
   }
 
   .dark {
@@ -62,6 +65,9 @@
     --border: 0 0% 15%;
     --input: 0 0% 15%;
     --ring: 0 0% 98%;
+    
+    /* Gradients */
+    --gradient-app: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--secondary)) 100%);
   }
 }
 
@@ -221,6 +227,11 @@
 /* Hero section */
 .hero-gradient {
   background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--muted)) 100%);
+}
+
+/* App background */
+.app-gradient-bg {
+  background: var(--gradient-app);
 }
 
 /* Navigation animations */

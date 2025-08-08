@@ -79,7 +79,7 @@ const App = () => {
               <Toaster />
               <Sonner />
               <BrowserRouter>
-                <div className="min-h-screen">
+                <div className="min-h-screen app-gradient-bg">
                   <Routes>
                     <Route path="/welcome" element={<Welcome />} />
                     <Route path="/" element={<Index />} />
