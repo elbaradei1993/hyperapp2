@@ -14,6 +14,101 @@ export type Database = {
   }
   public: {
     Tables: {
+      communities: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_public: boolean
+          name: string
+          owner_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          name: string
+          owner_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          name?: string
+          owner_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      community_members: {
+        Row: {
+          community_id: string
+          id: string
+          joined_at: string
+          role: Database["public"]["Enums"]["community_role"]
+          user_id: string
+        }
+        Insert: {
+          community_id: string
+          id?: string
+          joined_at?: string
+          role?: Database["public"]["Enums"]["community_role"]
+          user_id: string
+        }
+        Update: {
+          community_id?: string
+          id?: string
+          joined_at?: string
+          role?: Database["public"]["Enums"]["community_role"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_members_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_communities: {
+        Row: {
+          community_id: string
+          event_id: number
+          id: string
+        }
+        Insert: {
+          community_id: string
+          event_id: number
+          id?: string
+        }
+        Update: {
+          community_id?: string
+          event_id?: number
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_communities_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_communities_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           address: string | null
@@ -266,6 +361,39 @@ export type Database = {
         }
         Relationships: []
       }
+      vibe_report_communities: {
+        Row: {
+          community_id: string
+          id: string
+          vibe_report_id: number
+        }
+        Insert: {
+          community_id: string
+          id?: string
+          vibe_report_id: number
+        }
+        Update: {
+          community_id?: string
+          id?: string
+          vibe_report_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vibe_report_communities_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vibe_report_communities_vibe_report_id_fkey"
+            columns: ["vibe_report_id"]
+            isOneToOne: false
+            referencedRelation: "vibe_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vibe_reports: {
         Row: {
           confirmed_count: number
@@ -354,9 +482,13 @@ export type Database = {
         Args: { report_id: number }
         Returns: undefined
       }
+      is_community_member: {
+        Args: { _user_id: string; _community_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      community_role: "owner" | "admin" | "member"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -483,6 +615,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      community_role: ["owner", "admin", "member"],
+    },
   },
 } as const
