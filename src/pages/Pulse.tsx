@@ -22,6 +22,7 @@ import { VibeReportsService } from "@/services/vibes/vibeReportsService";
 import { useToast } from "@/hooks/use-toast";
 import HeatMapTab from "@/components/tabs/HeatMapTab";
 import { useSearchParams } from "react-router-dom";
+import { computeCommunityMetrics } from "@/utils/pulseMetrics";
 
 const moodOptions = [
   { id: 'great', label: '😊 Great', icon: Smile, color: 'text-green-500' },
@@ -58,48 +59,15 @@ export const Pulse = () => {
     try {
       setLoading(true);
       
-      // Load vibe reports count
       const vibeReports = await VibeReportsService.getVibeReports(0, 1000);
-      
-      // Load SOS alerts count
       const { data: sosAlerts } = await supabase
         .from('sos_alerts')
-        .select('*', { count: 'exact' });
+        .select('created_at')
+        .order('created_at', { ascending: false })
+        .limit(1000);
 
-      // Calculate basic stats
-      const totalReports = vibeReports.length + (sosAlerts?.length || 0);
-      const activeUsers = Math.min(totalReports * 2, 100); // Mock calculation
-      const safetyScore = Math.max(10 - (sosAlerts?.length || 0), 0);
-
-      // Calculate mood distribution based on vibe types from actual data
-      const vibeTypeCounts = vibeReports.reduce((acc: any, vibe: any) => {
-        const vibeTypeName = vibe.vibe_type?.name?.toLowerCase();
-        if (vibeTypeName?.includes('calm') || vibeTypeName?.includes('peaceful')) {
-          acc.great = (acc.great || 0) + 1;
-        } else if (vibeTypeName?.includes('event') || vibeTypeName?.includes('friendly')) {
-          acc.good = (acc.good || 0) + 1;
-        } else if (vibeTypeName?.includes('crowded') || vibeTypeName?.includes('noisy')) {
-          acc.okay = (acc.okay || 0) + 1;
-        } else if (vibeTypeName?.includes('dangerous')) {
-          acc.poor = (acc.poor || 0) + 1;
-        }
-        return acc;
-      }, { great: 0, good: 0, okay: 0, poor: 0 });
-
-      const total = Math.max(vibeTypeCounts.great + vibeTypeCounts.good + vibeTypeCounts.okay + vibeTypeCounts.poor, 1);
-      const moodDistribution = {
-        great: Math.round((vibeTypeCounts.great / total) * 100),
-        good: Math.round((vibeTypeCounts.good / total) * 100),
-        okay: Math.round((vibeTypeCounts.okay / total) * 100),
-        poor: Math.round((vibeTypeCounts.poor / total) * 100)
-      };
-
-      setCommunityStats({
-        totalReports,
-        activeUsers,
-        safetyScore,
-        moodDistribution
-      });
+      const metrics = computeCommunityMetrics(vibeReports as any, (sosAlerts || []) as any);
+      setCommunityStats(metrics as any);
     } catch (error) {
       console.error('Error loading community stats:', error);
     } finally {

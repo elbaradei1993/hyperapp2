@@ -24,6 +24,7 @@ import Events from "./pages/Events";
 import Explore from "./pages/Explore";
 import NotFound from "./pages/NotFound";
 import { useTheme } from "./hooks/use-theme";
+import Communities from "./pages/Communities";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -95,6 +96,7 @@ const App = () => {
                     <Route path="/pulse" element={<Pulse />} />
                     <Route path="/events" element={<Events />} />
                     <Route path="/explore" element={<Explore />} />
+                    <Route path="/communities" element={<Communities />} />
                     {/* Legacy redirects */}
                     <Route path="/alerts" element={<Navigate to="/trending" replace />} />
                     <Route path="/notifications" element={<Navigate to="/trending" replace />} />

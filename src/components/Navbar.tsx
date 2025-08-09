@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { NavLink } from 'react-router-dom';
-import { Home, User, Settings, Bell, Map, TrendingUp } from 'lucide-react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { Home, User, Settings, Bell, Map, TrendingUp, Users } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -18,7 +18,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import ActionMenu from './ActionMenu';
-
+import { supabase } from '@/integrations/supabase/client';
 interface NavItemProps {
   to: string;
   icon: React.ReactNode;
@@ -83,19 +83,77 @@ const Navbar = () => {
 
 const NotificationDropdown = () => {
   const { toast } = useToast();
-  const [notificationCount, setNotificationCount] = React.useState(2);
+  const navigate = useNavigate();
+  const [notificationCount, setNotificationCount] = React.useState(0);
+  const [notifications, setNotifications] = React.useState<Array<{
+    id: string;
+    type: 'vibe' | 'sos' | 'event';
+    title: string;
+    message: string;
+    time: string;
+    lat: number;
+    lng: number;
+  }>>([]);
 
-  const notifications = [
-    { id: 1, title: "New vibe reported", message: "A new vibe was reported near you", time: "10 minutes ago" },
-    { id: 2, title: "Safety Alert", message: "Safety concern reported in your area", time: "1 hour ago" }
-  ];
+  React.useEffect(() => {
+    const load = async () => {
+      try {
+        const [vibesRes, sosRes] = await Promise.all([
+          supabase.from('vibe_reports').select('id,title,description,latitude,longitude,created_at').order('created_at', { ascending: false }).limit(5),
+          supabase.from('sos_alerts').select('id,type,latitude,longitude,created_at').order('created_at', { ascending: false }).limit(5)
+        ]);
+        const toRel = (d?: string | null) => {
+          if (!d) return 'now';
+          const diff = Date.now() - new Date(d).getTime();
+          const m = Math.max(1, Math.floor(diff / 60000));
+          if (m < 60) return `${m}m ago`;
+          const h = Math.floor(m / 60);
+          if (h < 24) return `${h}h ago`;
+          const days = Math.floor(h / 24);
+          return `${days}d ago`;
+        };
+        const vibes = (vibesRes.data || []).map(v => ({
+          id: v.id.toString(),
+          type: 'vibe' as const,
+          title: v.title || 'New Vibe',
+          message: v.description || 'A vibe was reported near you',
+          time: toRel(v.created_at as any),
+          lat: parseFloat(v.latitude || '0'),
+          lng: parseFloat(v.longitude || '0')
+        }));
+        const soses = (sosRes.data || []).map(s => ({
+          id: s.id as string,
+          type: 'sos' as const,
+          title: 'Safety Alert',
+          message: `SOS: ${s.type}`,
+          time: toRel(s.created_at as any),
+          lat: parseFloat(s.latitude || '0'),
+          lng: parseFloat(s.longitude || '0')
+        }));
+        const combined = [...vibes, ...soses]
+          .filter(i => !isNaN(i.lat) && !isNaN(i.lng) && (i.lat !== 0 || i.lng !== 0))
+          .sort((a,b) => (a.time > b.time ? -1 : 1))
+          .slice(0, 8);
+        setNotifications(combined);
+        setNotificationCount(combined.length);
+      } catch (e) {
+        console.error('Load notifications failed', e);
+      }
+    };
+    load();
+  }, []);
 
   const handleReadAll = () => {
     setNotificationCount(0);
     toast({
-      title: "Notifications cleared",
-      description: "All notifications have been marked as read",
+      title: 'Notifications cleared',
+      description: 'All notifications have been marked as read',
     });
+  };
+
+  const handleOpen = (n: typeof notifications[number]) => {
+    sessionStorage.setItem('mapLocation', JSON.stringify({ lat: n.lat, lng: n.lng, zoom: 16 }));
+    navigate('/pulse?tab=heatmap');
   };
 
   return (
@@ -123,17 +181,21 @@ const NotificationDropdown = () => {
           </Button>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {notifications.map((notification) => (
-          <DropdownMenuItem key={notification.id} className="flex flex-col items-start p-3 cursor-pointer">
-            <div className="font-medium">{notification.title}</div>
-            <div className="text-sm text-muted-foreground">{notification.message}</div>
-            <div className="text-xs text-muted-foreground mt-1">{notification.time}</div>
-          </DropdownMenuItem>
-        ))}
+        {notifications.length === 0 ? (
+          <DropdownMenuItem className="text-muted-foreground text-sm">No notifications</DropdownMenuItem>
+        ) : (
+          notifications.map((n) => (
+            <DropdownMenuItem key={`${n.type}-${n.id}`} className="flex flex-col items-start p-3 cursor-pointer" onClick={() => handleOpen(n)}>
+              <div className="font-medium">{n.title}</div>
+              <div className="text-sm text-muted-foreground">{n.message}</div>
+              <div className="text-xs text-muted-foreground mt-1">{n.time}</div>
+            </DropdownMenuItem>
+          ))
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem className="flex justify-center">
           <Button variant="ghost" size="sm" className="w-full text-primary" asChild>
-            <NavLink to="/notifications">View all notifications</NavLink>
+            <NavLink to="/pulse?tab=heatmap">Open Pulse</NavLink>
           </Button>
         </DropdownMenuItem>
       </DropdownMenuContent>
@@ -168,6 +230,15 @@ const DesktopNavbar = ({ user }: { user: any }) => {
                 <span className="flex items-center gap-1">
                   <TrendingUp className="h-4 w-4" />
                   Trending
+                </span>
+              </NavLink>
+              <NavLink to="/communities" className={({isActive}) => cn(
+                "text-sm font-medium transition-colors",
+                isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
+              )}>
+                <span className="flex items-center gap-1">
+                  <Users className="h-4 w-4" />
+                  Communities
                 </span>
               </NavLink>
             </div>

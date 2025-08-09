@@ -49,28 +49,38 @@ export const EventService = {
       throw new Error('User must be authenticated to create events');
     }
 
-    // Get or create user mapping
-    let userMapping;
-    const { data: existingMapping } = await supabase
-      .from('user_mapping')
-      .select('integer_id')
-      .eq('uuid_id', user.id)
-      .maybeSingle();
+    // Resolve integer organizer_id via RPC or mapping table
+    let organizerIntegerId: number | null = null;
 
-    if (existingMapping) {
-      userMapping = existingMapping;
-    } else {
-      // Create new mapping
-      const integerId = Math.floor(Math.random() * 2147483647);
-      const { data: newMapping, error: mappingError } = await supabase
-        .from('user_mapping')
-        .insert({ uuid_id: user.id, integer_id: integerId })
-        .select('integer_id')
-        .single();
-      
-      if (mappingError) throw mappingError;
-      userMapping = newMapping;
+    // Try server-side mapping function first
+    const { data: rpcIntegerId, error: rpcErr } = await supabase.rpc('get_user_integer_id', { user_uuid: user.id });
+    if (!rpcErr && typeof rpcIntegerId === 'number') {
+      organizerIntegerId = rpcIntegerId;
     }
+
+    // Fallback to mapping table
+    if (!organizerIntegerId) {
+      const { data: existingMapping } = await supabase
+        .from('user_mapping')
+        .select('integer_id')
+        .eq('uuid_id', user.id)
+        .maybeSingle();
+
+      if (existingMapping?.integer_id) {
+        organizerIntegerId = existingMapping.integer_id;
+      } else {
+        // Create new mapping (RLS requires uuid match)
+        const integerId = Math.floor(Math.random() * 2147483647);
+        const { data: newMapping, error: mappingError } = await supabase
+          .from('user_mapping')
+          .insert({ uuid_id: user.id, integer_id: integerId })
+          .select('integer_id')
+          .single();
+        if (mappingError) throw mappingError;
+        organizerIntegerId = newMapping.integer_id;
+      }
+    }
+
 
     // Validate required fields
     if (!eventData.latitude || !eventData.longitude) {
@@ -78,14 +88,17 @@ export const EventService = {
     }
 
     // Ensure the data structure matches the database schema
+    const startStr = new Date(eventData.start_date_time).toISOString().replace('T',' ').replace('Z','').split('.')[0];
+    const endStr = new Date(eventData.end_date_time).toISOString().replace('T',' ').replace('Z','').split('.')[0];
+
     const eventRecord = {
       title: eventData.title,
       description: eventData.description,
       latitude: eventData.latitude,
       longitude: eventData.longitude,
-      start_date_time: eventData.start_date_time,
-      end_date_time: eventData.end_date_time,
-      organizer_id: userMapping.integer_id,
+      start_date_time: startStr,
+      end_date_time: endStr,
+      organizer_id: organizerIntegerId,
       poster_url: eventData.image_url,
       vibe_type_id: eventData.vibe_type_id,
       max_attendees: eventData.max_attendees,
