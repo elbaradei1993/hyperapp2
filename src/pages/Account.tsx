@@ -27,6 +27,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/hooks/use-theme";
 import { format } from "date-fns";
 import { PasswordChangeModal } from "@/components/PasswordChangeModal";
+import { CommunitiesService, Community } from "@/services/communities";
 
 interface UserProfile {
   name: string | null;

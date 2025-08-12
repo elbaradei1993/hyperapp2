@@ -169,6 +169,7 @@ export const Pulse = () => {
                 <CardTitle className="flex items-center space-x-2">
                   <BarChart3 className="text-primary" size={24} />
                   <span>Community Mood Distribution</span>
+                  <Badge variant="secondary" className="ml-2">{areaLabel}</Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -195,8 +196,10 @@ export const Pulse = () => {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
 
+            {/* Communities */}
+            <CommunitiesInline />
+          </TabsContent>
 
           {/* Heatmap Tab */}
           <TabsContent value="heatmap" className="space-y-4">

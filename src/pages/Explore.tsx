@@ -16,6 +16,19 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { VibeReportsService } from "@/services/vibes/vibeReportsService";
 import { EventService } from "@/services/EventService";
 import { supabase } from "@/integrations/supabase/client";
+import { useAccurateLocation } from "@/hooks/useAccurateLocation";
+
+
+function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371; // km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
+            Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
 
 interface NearbyActivity {
   id: string;
@@ -37,10 +50,11 @@ export const Explore = () => {
   const [activities, setActivities] = useState<NearbyActivity[]>([]);
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
+  const { position } = useAccurateLocation({ maximumAge: 300000 });
 
   useEffect(() => {
     loadActivities();
-  }, []);
+  }, [position]);
 
   const loadActivities = async () => {
     try {
@@ -57,7 +71,11 @@ export const Explore = () => {
           type: 'vibe' as const,
           title: vibe.title || `${vibe.vibe_type?.name || 'Unknown'} Report`,
           description: vibe.description || undefined,
-          distance: Math.random() * 5, // Mock distance for now
+          distance: (() => {
+            const lat = parseFloat(vibe.latitude);
+            const lng = parseFloat(vibe.longitude);
+            return position && !isNaN(lat) && !isNaN(lng) ? haversineKm(position[0], position[1], lat, lng) : 0;
+          })(),
           timestamp: new Date(vibe.created_at).toLocaleString(),
           location: `${parseFloat(vibe.latitude).toFixed(4)}, ${parseFloat(vibe.longitude).toFixed(4)}`,
           vibe_type: vibe.vibe_type
@@ -67,7 +85,11 @@ export const Explore = () => {
           type: 'event' as const,
           title: event.title,
           description: event.description || undefined,
-          distance: Math.random() * 5, // Mock distance for now
+          distance: (() => {
+            const lat = event.latitude ? parseFloat(event.latitude) : NaN;
+            const lng = event.longitude ? parseFloat(event.longitude) : NaN;
+            return position && !isNaN(lat) && !isNaN(lng) ? haversineKm(position[0], position[1], lat, lng) : 0;
+          })(),
           timestamp: new Date(event.start_date_time).toLocaleString(),
           location: event.location || event.address || 'Unknown location'
         })),
@@ -76,7 +98,11 @@ export const Explore = () => {
           type: 'sos' as const,
           title: `SOS Alert - ${sos.type}`,
           description: undefined,
-          distance: Math.random() * 5, // Mock distance for now
+          distance: (() => {
+            const lat = parseFloat(sos.latitude);
+            const lng = parseFloat(sos.longitude);
+            return position && !isNaN(lat) && !isNaN(lng) ? haversineKm(position[0], position[1], lat, lng) : 0;
+          })(),
           timestamp: new Date(sos.created_at).toLocaleString(),
           location: `${parseFloat(sos.latitude).toFixed(4)}, ${parseFloat(sos.longitude).toFixed(4)}`,
           priority: 'high' as const
@@ -220,7 +246,7 @@ export const Explore = () => {
                       <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                         <div className="flex items-center space-x-1">
                           <MapPin size={12} />
-                          <span>{activity.distance}km away</span>
+                          <span>{activity.distance.toFixed(1)} km away</span>
                         </div>
                         
                         <div className="flex items-center space-x-1">
