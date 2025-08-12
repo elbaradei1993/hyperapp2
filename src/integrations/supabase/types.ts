@@ -474,6 +474,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      ensure_user_mapping_for_user: {
+        Args: { user_uuid: string }
+        Returns: number
+      }
       get_user_integer_id: {
         Args: { user_uuid: string }
         Returns: number

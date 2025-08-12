@@ -41,9 +41,10 @@ export function computeCommunityMetrics(vibes: VibeReport[], sosAlerts: Array<{ 
   // SOS alerts carry strong weight
   for (const s of sosAlerts || []) risk += 1.2 * decay(s.created_at);
 
-  // Normalize to 0-10 scale
+  // Normalize to 0-10 scale (rounded to integer for clarity)
   const norm = totalReports > 0 ? risk / Math.max(totalReports * 0.6, 1) : 0;
-  const safetyScore = Math.max(0, Math.min(10, 10 - norm * 5));
+  const safetyScore = Math.round(Math.max(0, Math.min(10, 10 - norm * 5)));
+
 
   // Active users (heuristic): reports * participation factor
   const activeUsers = Math.round(totalReports * 1.8);

@@ -17,12 +17,11 @@ import {
   Flame
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { supabase } from "@/integrations/supabase/client";
-import { VibeReportsService } from "@/services/vibes/vibeReportsService";
 import { useToast } from "@/hooks/use-toast";
 import HeatMapTab from "@/components/tabs/HeatMapTab";
 import { useSearchParams } from "react-router-dom";
-import { computeCommunityMetrics } from "@/utils/pulseMetrics";
+import { usePulseMetrics } from "@/hooks/usePulseMetrics";
+import CommunitiesInline from "@/components/pulse/CommunitiesInline";
 
 const moodOptions = [
   { id: 'great', label: '😊 Great', icon: Smile, color: 'text-green-500' },
@@ -37,61 +36,12 @@ export const Pulse = () => {
   const initialTab = searchParams.get('tab') || 'pulse';
   const [activeTab, setActiveTab] = useState(initialTab);
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
-  const [communityStats, setCommunityStats] = useState({
-    totalReports: 0,
-    activeUsers: 0,
-    safetyScore: 0,
-    moodDistribution: {
-      great: 0,
-      good: 0,
-      okay: 0,
-      poor: 0
-    }
-  });
-  const [loading, setLoading] = useState(true);
+  const { metrics: communityStats, loading: statsLoading, areaLabel } = usePulseMetrics({ radiusKm: 10 });
   const { toast } = useToast();
-
-  useEffect(() => {
-    loadCommunityStats();
-  }, []);
-
-  const loadCommunityStats = async () => {
-    try {
-      setLoading(true);
-      
-      const vibeReports = await VibeReportsService.getVibeReports(0, 1000);
-      const { data: sosAlerts } = await supabase
-        .from('sos_alerts')
-        .select('created_at')
-        .order('created_at', { ascending: false })
-        .limit(1000);
-
-      const metrics = computeCommunityMetrics(vibeReports as any, (sosAlerts || []) as any);
-      setCommunityStats(metrics as any);
-    } catch (error) {
-      console.error('Error loading community stats:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleMoodSubmit = async (moodId: string) => {
     try {
       setSelectedMood(moodId);
-      
-      // Update the mood distribution immediately based on user submission
-      setCommunityStats(prev => {
-        const updatedDistribution = { ...prev.moodDistribution };
-        // Increment the selected mood by 1%
-        updatedDistribution[moodId as keyof typeof updatedDistribution] = 
-          Math.min(updatedDistribution[moodId as keyof typeof updatedDistribution] + 1, 100);
-        
-        return {
-          ...prev,
-          moodDistribution: updatedDistribution
-        };
-      });
-      
       toast({
         title: "Mood Recorded",
         description: "Thank you for sharing how you're feeling!"

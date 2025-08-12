@@ -52,32 +52,25 @@ export const EventService = {
     // Resolve integer organizer_id via RPC or mapping table
     let organizerIntegerId: number | null = null;
 
-    // Try server-side mapping function first
+    // Try server-side mapping; if missing, ensure mapping and corresponding users row, then retry
     const { data: rpcIntegerId, error: rpcErr } = await supabase.rpc('get_user_integer_id', { user_uuid: user.id });
     if (!rpcErr && typeof rpcIntegerId === 'number') {
       organizerIntegerId = rpcIntegerId;
     }
 
-    // Fallback to mapping table
     if (!organizerIntegerId) {
-      const { data: existingMapping } = await supabase
-        .from('user_mapping')
-        .select('integer_id')
-        .eq('uuid_id', user.id)
-        .maybeSingle();
-
-      if (existingMapping?.integer_id) {
-        organizerIntegerId = existingMapping.integer_id;
+      // Ensure mapping + users row exists (SECURITY DEFINER function)
+      const { data: ensuredId, error: ensureErr } = await supabase.rpc('ensure_user_mapping_for_user', { user_uuid: user.id });
+      if (ensureErr) throw ensureErr;
+      if (typeof ensuredId === 'number') {
+        organizerIntegerId = ensuredId;
       } else {
-        // Create new mapping (RLS requires uuid match)
-        const integerId = Math.floor(Math.random() * 2147483647);
-        const { data: newMapping, error: mappingError } = await supabase
-          .from('user_mapping')
-          .insert({ uuid_id: user.id, integer_id: integerId })
-          .select('integer_id')
-          .single();
-        if (mappingError) throw mappingError;
-        organizerIntegerId = newMapping.integer_id;
+        // Fetch again to be safe
+        const { data: retriedId, error: retryErr } = await supabase.rpc('get_user_integer_id', { user_uuid: user.id });
+        if (retryErr || typeof retriedId !== 'number') {
+          throw retryErr || new Error('Failed to resolve organizer mapping');
+        }
+        organizerIntegerId = retriedId;
       }
     }
 

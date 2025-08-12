@@ -205,7 +205,7 @@ const HeatMapTab = () => {
           preferCanvas: true, // Better performance for heat maps
           zoomSnap: 0.5
         } as any}
-        style={{ height: isMobile ? '70vh' : '100%' }}
+        style={{ height: '100%' }}
       >
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
