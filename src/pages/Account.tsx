@@ -51,10 +51,12 @@ export const Account = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [memberships, setMemberships] = useState<Array<{ role: string; community: Community }>>([]);
 
   useEffect(() => {
     if (user) {
       fetchProfile();
+      fetchMemberships();
     }
   }, [user]);
 
@@ -78,6 +80,15 @@ export const Account = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchMemberships = async () => {
+    try {
+      const data = await CommunitiesService.getMyMemberships();
+      setMemberships(data);
+    } catch (error) {
+      console.error('Error fetching memberships:', error);
     }
   };
 
@@ -363,7 +374,45 @@ export const Account = () => {
                 </div>
                 
                 <div className="text-center">
-                  <Badge variant="secondary">Community Member</Badge>
+                  {memberships.length > 0 ? (
+                    <Badge variant="secondary">{memberships.length} Communities</Badge>
+                  ) : (
+                    <Badge variant="outline">No Communities</Badge>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* My Communities */}
+            <Card>
+              <CardHeader>
+                <CardTitle>My Communities</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {memberships.length === 0 ? (
+                  <div className="text-sm text-muted-foreground">
+                    You're not in any communities yet. Discover and join on the Pulse tab.
+                  </div>
+                ) : (
+                  memberships.slice(0,5).map((m) => (
+                    <div key={m.community.id} className="flex items-center justify-between">
+                      <div>
+                        <div className="font-medium">{m.community.name}</div>
+                        {m.community.description && (
+                          <div className="text-xs text-muted-foreground">{m.community.description}</div>
+                        )}
+                      </div>
+                      <Badge variant="secondary" className="capitalize">{m.role}</Badge>
+                    </div>
+                  ))
+                )}
+                {memberships.length > 5 && (
+                  <div className="text-xs text-muted-foreground">{memberships.length - 5} more…</div>
+                )}
+                <div className="pt-2">
+                  <Button variant="outline" className="w-full" asChild>
+                    <a href="/pulse?tab=pulse">Manage in Community Pulse</a>
+                  </Button>
                 </div>
               </CardContent>
             </Card>

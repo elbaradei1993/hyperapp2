@@ -77,5 +77,18 @@ export const CommunitiesService = {
       .eq('user_id', user.id);
 
     if (error) throw error;
+  },
+
+  getMyMemberships: async (): Promise<Array<{ role: string; community: Community }>> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return [];
+
+    const { data, error } = await supabase
+      .from('community_members')
+      .select('role, community_id, communities:community_id ( id, name, description, is_public, owner_id, created_at )')
+      .eq('user_id', user.id);
+
+    if (error) throw error;
+    return (data || []).map((r: any) => ({ role: r.role as string, community: r.communities as Community }));
   }
 };
