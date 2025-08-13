@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { safeParseInt, safeToString } from "@/utils/typeConverters";
 import { VibeService, VibeType } from '@/services/vibes';
+import { TrendingVibesService } from '@/services/vibes/trendingVibesService';
 import { H1, PageHeader, FadeIn } from "@/components/ui/design-system";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
