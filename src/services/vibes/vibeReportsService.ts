@@ -15,30 +15,55 @@ export const VibeReportsService = {
       const from = page * limit;
       const to = from + limit - 1;
       
-      const { data, error } = await supabase
-        .from('vibe_reports')
-        .select(`
-          id,
-          title,
-          description,
-          latitude,
-          longitude,
-          created_at,
-          confirmed_count,
-          vibe_type_id,
-          vibe_type:vibe_type_id (
-            name,
-            color
-          )
-        `)
-        .order('created_at', { ascending: false })
-        .range(from, to);
-      
-      if (error) {
-        throw error;
+      // Decide between precise vs anonymized public data based on auth state
+      const { data: authData } = await supabase.auth.getUser();
+      const user = authData?.user;
+
+      if (user) {
+        const { data, error } = await supabase
+          .from('vibe_reports')
+          .select(`
+            id,
+            title,
+            description,
+            latitude,
+            longitude,
+            created_at,
+            confirmed_count,
+            vibe_type_id,
+            vibe_type:vibe_type_id (
+              name,
+              color
+            )
+          `)
+          .order('created_at', { ascending: false })
+          .range(from, to);
+        
+        if (error) {
+          throw error;
+        }
+        
+        return data || [];
+      } else {
+        const { data, error } = await supabase.rpc('get_public_vibe_reports', { _limit: limit });
+        if (error) {
+          throw error as any;
+        }
+        return (data || []).map((r: any) => ({
+          id: r.id,
+          title: r.title,
+          description: r.description,
+          latitude: r.latitude,
+          longitude: r.longitude,
+          created_at: r.created_at,
+          confirmed_count: r.confirmed_count,
+          vibe_type_id: r.vibe_type_id,
+          vibe_type: {
+            name: r.vibe_type_name,
+            color: r.vibe_type_color,
+          },
+        })) as VibeReport[];
       }
-      
-      return data || [];
     } catch (error) {
       console.error('Error fetching vibes:', error);
       toast.error('Failed to load vibes');

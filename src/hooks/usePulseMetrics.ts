@@ -73,18 +73,24 @@ export function usePulseMetrics({ radiusKm = 10 }: UsePulseMetricsOptions = {}) 
 
   useEffect(() => {
     fetchData();
-    // Realtime updates
-    const channel = supabase
-      .channel('pulse-realtime')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'vibe_reports' }, fetchData)
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'vibe_reports' }, fetchData)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'sos_alerts' }, fetchData)
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'sos_alerts' }, fetchData)
-      .subscribe();
+    // Realtime updates only for authenticated users
+    (async () => {
+      const { data: authData } = await supabase.auth.getUser();
+      const user = authData?.user;
+      if (!user) return;
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+      const channel = supabase
+        .channel('pulse-realtime')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'vibe_reports' }, fetchData)
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'vibe_reports' }, fetchData)
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'sos_alerts' }, fetchData)
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'sos_alerts' }, fetchData)
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [position?.[0], position?.[1], radiusKm]);
 

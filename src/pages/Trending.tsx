@@ -53,63 +53,27 @@ const Trending = () => {
       try {
         setLoading(true);
         
-        let vibeReportsQuery = supabase
-          .from('vibe_reports')
-          .select(`
-            id,
-            title,
-            description,
-            latitude,
-            longitude,
-            created_at,
-            confirmed_count,
-            vibe_type_id,
-            vibe_type: vibe_type_id (
-              name,
-              color
-            )
-          `)
-          .order('confirmed_count', { ascending: false });
-        
-        if (selectedTab !== "all") {
-          vibeReportsQuery = vibeReportsQuery.eq('vibe_type_id', parseInt(selectedTab));
-        }
-        
-        const { data: vibeReports, error } = await vibeReportsQuery.limit(10);
-        
-        if (error) throw error;
-        
-        if (vibeReports) {
-          // Filter out vibes without proper vibe type data first
-          const validVibeReports = vibeReports.filter(vibe => 
-            vibe.vibe_type && vibe.vibe_type.name && vibe.vibe_type.color
-          );
-          
-          // Transform the data for UI display
-          const formattedVibes: TrendingVibe[] = validVibeReports.map(vibe => {
-            // Create a location string from lat/long
-            const location = `${vibe.latitude.substring(0, 6)}, ${vibe.longitude.substring(0, 6)}`;
-            
-            // Format relative time
+        const all = await TrendingVibesService.getTrendingVibes(20);
+        const filtered = selectedTab !== "all" 
+          ? all.filter(v => v.vibe_type_id?.toString() === selectedTab)
+          : all;
+        if (filtered) {
+          const formattedVibes: TrendingVibe[] = filtered.map(vibe => {
+            const location = `${(vibe.latitude || '').substring(0, 6)}, ${(vibe.longitude || '').substring(0, 6)}`;
             const timeAgo = getTimeAgo(new Date(vibe.created_at));
-            
             return {
               id: vibe.id.toString(),
               title: vibe.title || "Untitled Vibe",
               description: vibe.description || "No description provided",
-              location: location,
+              location,
               created_at: timeAgo,
               vibe_type: {
                 name: vibe.vibe_type?.name || "Unknown",
                 color: vibe.vibe_type?.color || "#888888"
               },
-              votes: {
-                up: vibe.confirmed_count || 0,
-                down: 0 
-              }
+              votes: { up: vibe.confirmed_count || 0, down: 0 }
             };
           });
-          
           setTrendingVibes(formattedVibes);
         }
       } catch (error) {
@@ -126,21 +90,24 @@ const Trending = () => {
     
     fetchTrendingVibes();
     
-    // Set up realtime subscription
-    const subscription = supabase
-      .channel('public:vibe_reports')
-      .on('postgres_changes', { 
-        event: 'INSERT', 
-        schema: 'public', 
-        table: 'vibe_reports' 
-      }, (payload) => {
-        fetchNewVibe(payload.new.id.toString());
-      })
-      .subscribe();
-    
-    return () => {
-      supabase.removeChannel(subscription);
-    };
+    // Set up realtime subscription (authenticated only)
+    (async () => {
+      const { data: authData } = await supabase.auth.getUser();
+      if (!authData?.user) return;
+      const subscription = supabase
+        .channel('public:vibe_reports')
+        .on('postgres_changes', { 
+          event: 'INSERT', 
+          schema: 'public', 
+          table: 'vibe_reports' 
+        }, (payload) => {
+          fetchNewVibe(payload.new.id.toString());
+        })
+        .subscribe();
+      return () => {
+        supabase.removeChannel(subscription);
+      };
+    })();
   }, [toast, selectedTab]);
   
   const fetchNewVibe = async (id: string) => {

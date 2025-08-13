@@ -98,44 +98,68 @@ const Map = ({ vibes: initialVibes = [], initialCenter = [40.7128, -74.006], rad
   // Fetch nearby vibes from Supabase
   const fetchNearbyVibes = async (lat: number, lng: number, radius: number) => {
     try {
-      // Convert radius from km to degrees (approximate)
-      // 1 degree of latitude = ~111km
-      const radiusDegrees = radius / 111;
-      
-      // Fetch vibe reports near this location
-      const { data: vibeReports, error } = await supabase
-        .from('vibe_reports')
-        .select(`
-          id,
-          title,
-          description,
-          latitude,
-          longitude,
-          vibe_type: vibe_type_id (
-            id,
-            name,
-            color
-          )
-        `)
-        .gte('latitude', (lat - radiusDegrees).toString())
-        .lte('latitude', (lat + radiusDegrees).toString())
-        .gte('longitude', (lng - radiusDegrees).toString())
-        .lte('longitude', (lng + radiusDegrees).toString());
+      const { data: authData } = await supabase.auth.getUser();
+      const user = authData?.user;
 
-      if (error) throw error;
-      
-      if (vibeReports) {
-        // Transform to our Vibe interface
-        const formattedVibes = vibeReports.map(report => ({
-          id: report.id.toString(),
-          lat: parseFloat(report.latitude),
-          lng: parseFloat(report.longitude),
-          type: report.vibe_type?.name || "unknown",
-          radius: 400, // Default pulse radius in map units
-          color: report.vibe_type?.color || "#888888",
-          title: report.title
+      // Convert radius from km to degrees (approximate)
+      const radiusDegrees = radius / 111; // 1 degree of latitude ≈ 111km
+
+      if (user) {
+        const { data: vibeReports, error } = await supabase
+          .from('vibe_reports')
+          .select(`
+            id,
+            title,
+            description,
+            latitude,
+            longitude,
+            vibe_type: vibe_type_id (
+              id,
+              name,
+              color
+            )
+          `)
+          .gte('latitude', (lat - radiusDegrees).toString())
+          .lte('latitude', (lat + radiusDegrees).toString())
+          .gte('longitude', (lng - radiusDegrees).toString())
+          .lte('longitude', (lng + radiusDegrees).toString());
+
+        if (error) throw error;
+
+        if (vibeReports) {
+          const formattedVibes = vibeReports.map(report => ({
+            id: report.id.toString(),
+            lat: parseFloat(report.latitude),
+            lng: parseFloat(report.longitude),
+            type: report.vibe_type?.name || "unknown",
+            radius: 400,
+            color: report.vibe_type?.color || "#888888",
+            title: report.title
+          }));
+          setVibes(formattedVibes);
+        }
+      } else {
+        // Public: use anonymized RPC then filter client-side to bounding box
+        const { data, error } = await supabase.rpc('get_public_vibe_reports', { _limit: 200 });
+        if (error) throw error as any;
+        const filtered = (data || []).filter((r: any) => {
+          const rLat = parseFloat(r.latitude || '');
+          const rLng = parseFloat(r.longitude || '');
+          if (isNaN(rLat) || isNaN(rLng)) return false;
+          return (
+            rLat >= lat - radiusDegrees && rLat <= lat + radiusDegrees &&
+            rLng >= lng - radiusDegrees && rLng <= lng + radiusDegrees
+          );
+        });
+        const formattedVibes = filtered.map((r: any) => ({
+          id: r.id.toString(),
+          lat: parseFloat(r.latitude),
+          lng: parseFloat(r.longitude),
+          type: r.vibe_type_name || 'unknown',
+          radius: 400,
+          color: r.vibe_type_color || '#888888',
+          title: r.title
         }));
-        
         setVibes(formattedVibes);
       }
     } catch (error) {
@@ -146,41 +170,38 @@ const Map = ({ vibes: initialVibes = [], initialCenter = [40.7128, -74.006], rad
   useEffect(() => {
     // Set map as initialized
     setMapInitialized(true);
-    
+
     // Get initial user location automatically
     getUserLocation();
-    
-    // Set up real-time subscription for new vibes
-    if (userLocation) {
-      const subscription = supabase
-        .channel('public:vibe_reports')
-        .on('postgres_changes', { 
-          event: 'INSERT', 
-          schema: 'public', 
-          table: 'vibe_reports' 
-        }, (payload) => {
-          // When a new vibe is added, check if it's within our radius and fetch it
-          const newVibeLat = parseFloat(payload.new.latitude);
-          const newVibeLng = parseFloat(payload.new.longitude);
-          
-          if (userLocation) {
-            // Approximate distance check (in degrees)
-            const distanceDegLat = Math.abs(newVibeLat - userLocation[0]);
-            const distanceDegLng = Math.abs(newVibeLng - userLocation[1]);
-            
-            // Rough check if it's within our radius (1 degree ~ 111km at equator)
-            if (distanceDegLat < radiusKm / 111 && distanceDegLng < radiusKm / 111) {
-              // Fetch complete vibe data with joins
-              fetchNewVibe(payload.new.id.toString());
+
+    // Set up real-time subscription for new vibes (authenticated only)
+    (async () => {
+      const { data: authData } = await supabase.auth.getUser();
+      const isAuthed = !!authData?.user;
+      if (userLocation && isAuthed) {
+        const subscription = supabase
+          .channel('public:vibe_reports')
+          .on('postgres_changes', { 
+            event: 'INSERT', 
+            schema: 'public', 
+            table: 'vibe_reports' 
+          }, (payload) => {
+            const newVibeLat = parseFloat(payload.new.latitude);
+            const newVibeLng = parseFloat(payload.new.longitude);
+            if (userLocation) {
+              const distanceDegLat = Math.abs(newVibeLat - userLocation[0]);
+              const distanceDegLng = Math.abs(newVibeLng - userLocation[1]);
+              if (distanceDegLat < radiusKm / 111 && distanceDegLng < radiusKm / 111) {
+                fetchNewVibe(payload.new.id.toString());
+              }
             }
-          }
-        })
-        .subscribe();
-      
-      return () => {
-        supabase.removeChannel(subscription);
-      };
-    }
+          })
+          .subscribe();
+        return () => {
+          supabase.removeChannel(subscription);
+        };
+      }
+    })();
   }, [userLocation, radiusKm]);
   
   // Fetch a single new vibe by ID
@@ -290,7 +311,7 @@ const Map = ({ vibes: initialVibes = [], initialCenter = [40.7128, -74.006], rad
       <button 
         onClick={getUserLocation}
         disabled={isLocating}
-        className="absolute bottom-24 right-4 bg-primary text-white p-3 rounded-full shadow-lg z-10 hover:bg-primary/80 transition-colors"
+        className="absolute bottom-24 right-4 bg-primary text-primary-foreground p-3 rounded-full shadow-lg z-10 hover:bg-primary/80 transition-colors"
         aria-label="Go to my location"
       >
         <Compass className={`h-6 w-6 ${isLocating ? 'animate-spin' : ''}`} />

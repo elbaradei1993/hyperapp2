@@ -98,8 +98,13 @@ const NotificationDropdown = () => {
   React.useEffect(() => {
     const load = async () => {
       try {
+        const { data: authData } = await supabase.auth.getUser();
+        const user = authData?.user;
+
         const [vibesRes, sosRes] = await Promise.all([
-          supabase.from('vibe_reports').select('id,title,description,latitude,longitude,created_at').order('created_at', { ascending: false }).limit(5),
+          user
+            ? supabase.from('vibe_reports').select('id,title,description,latitude,longitude,created_at').order('created_at', { ascending: false }).limit(5)
+            : supabase.rpc('get_public_vibe_reports', { _limit: 5 }),
           supabase.from('sos_alerts').select('id,type,latitude,longitude,created_at').order('created_at', { ascending: false }).limit(5)
         ]);
         const toRel = (d?: string | null) => {
@@ -112,14 +117,14 @@ const NotificationDropdown = () => {
           const days = Math.floor(h / 24);
           return `${days}d ago`;
         };
-        const vibes = (vibesRes.data || []).map(v => ({
-          id: v.id.toString(),
+        const vibes = (vibesRes.data || []).map((v: any) => ({
+          id: (v.id ?? '').toString(),
           type: 'vibe' as const,
           title: v.title || 'New Vibe',
           message: v.description || 'A vibe was reported near you',
           time: toRel(v.created_at as any),
-          lat: parseFloat(v.latitude || '0'),
-          lng: parseFloat(v.longitude || '0')
+          lat: parseFloat((v.latitude ?? '0') as string),
+          lng: parseFloat((v.longitude ?? '0') as string)
         }));
         const soses = (sosRes.data || []).map(s => ({
           id: s.id as string,
@@ -132,7 +137,6 @@ const NotificationDropdown = () => {
         }));
         const combined = [...vibes, ...soses]
           .filter(i => !isNaN(i.lat) && !isNaN(i.lng) && (i.lat !== 0 || i.lng !== 0))
-          .sort((a,b) => (a.time > b.time ? -1 : 1))
           .slice(0, 8);
         setNotifications(combined);
         setNotificationCount(combined.length);

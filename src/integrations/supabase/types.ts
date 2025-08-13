@@ -478,6 +478,21 @@ export type Database = {
         Args: { user_uuid: string }
         Returns: number
       }
+      get_public_vibe_reports: {
+        Args: { _limit?: number }
+        Returns: {
+          id: number
+          title: string
+          description: string
+          latitude: string
+          longitude: string
+          created_at: string
+          confirmed_count: number
+          vibe_type_id: number
+          vibe_type_name: string
+          vibe_type_color: string
+        }[]
+      }
       get_user_integer_id: {
         Args: { user_uuid: string }
         Returns: number

@@ -45,8 +45,13 @@ export const useVibeData = (options: UseVibeDataOptions = {}) => {
   useEffect(() => {
     loadVibes();
 
-    if (enableRealtime) {
-      // Set up real-time subscription with debouncing
+    // Setup realtime only for authenticated users
+    (async () => {
+      if (!enableRealtime) return;
+      const { data: authData } = await supabase.auth.getUser();
+      const user = authData?.user;
+      if (!user) return;
+
       channelRef.current = supabase
         .channel('vibe_reports_optimized')
         .on('postgres_changes', { 
@@ -54,11 +59,9 @@ export const useVibeData = (options: UseVibeDataOptions = {}) => {
           schema: 'public', 
           table: 'vibe_reports' 
         }, (payload) => {
-          // Add new vibe if it has valid coordinates
           const newVibe = payload.new as any;
           const lat = parseFloat(newVibe.latitude);
           const lng = parseFloat(newVibe.longitude);
-          
           if (!isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
             setVibes(prev => [newVibe, ...prev.slice(0, limit - 1)]);
           }
@@ -68,14 +71,13 @@ export const useVibeData = (options: UseVibeDataOptions = {}) => {
           schema: 'public', 
           table: 'vibe_reports' 
         }, (payload) => {
-          // Update existing vibe
           const updatedVibe = payload.new as any;
           setVibes(prev => prev.map(vibe => 
             vibe.id === updatedVibe.id ? updatedVibe : vibe
           ));
         })
         .subscribe();
-    }
+    })();
 
     return () => {
       if (channelRef.current) {
