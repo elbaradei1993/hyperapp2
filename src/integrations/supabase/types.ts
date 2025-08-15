@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.12 (cd3cf9e)"
@@ -481,16 +481,16 @@ export type Database = {
       get_public_vibe_reports: {
         Args: { _limit?: number }
         Returns: {
-          id: number
-          title: string
+          confirmed_count: number
+          created_at: string
           description: string
+          id: number
           latitude: string
           longitude: string
-          created_at: string
-          confirmed_count: number
+          title: string
+          vibe_type_color: string
           vibe_type_id: number
           vibe_type_name: string
-          vibe_type_color: string
         }[]
       }
       get_user_integer_id: {
@@ -502,7 +502,7 @@ export type Database = {
         Returns: undefined
       }
       is_community_member: {
-        Args: { _user_id: string; _community_id: string }
+        Args: { _community_id: string; _user_id: string }
         Returns: boolean
       }
     }

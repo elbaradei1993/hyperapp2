@@ -37,9 +37,14 @@ export function usePulseMetrics({ radiusKm = 10 }: UsePulseMetricsOptions = {}) 
   const fetchData = async () => {
     setLoading(true);
     try {
+      const { data: authData } = await supabase.auth.getUser();
+      const user = authData?.user;
+
       const [vibes, sos] = await Promise.all([
         VibeReportsService.getVibeReports(0, 1000),
-        supabase.from('sos_alerts').select('created_at, latitude, longitude').order('created_at', { ascending: false }).limit(1000)
+        user
+          ? supabase.from('sos_alerts').select('created_at, latitude, longitude').order('created_at', { ascending: false }).limit(1000)
+          : Promise.resolve({ data: [] })
       ]);
 
       const center = position;

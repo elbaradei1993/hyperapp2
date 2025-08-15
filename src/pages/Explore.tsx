@@ -122,6 +122,11 @@ export const Explore = () => {
 
   const loadSOSAlerts = async () => {
     try {
+      const { data: authData } = await supabase.auth.getUser();
+      if (!authData?.user) {
+        return []; // No SOS alerts visible to unauthenticated users
+      }
+
       const { data, error } = await supabase
         .from('sos_alerts')
         .select('*')

@@ -105,7 +105,9 @@ const NotificationDropdown = () => {
           user
             ? supabase.from('vibe_reports').select('id,title,description,latitude,longitude,created_at').order('created_at', { ascending: false }).limit(5)
             : supabase.rpc('get_public_vibe_reports', { _limit: 5 }),
-          supabase.from('sos_alerts').select('id,type,latitude,longitude,created_at').order('created_at', { ascending: false }).limit(5)
+          user
+            ? supabase.from('sos_alerts').select('id,type,latitude,longitude,created_at').order('created_at', { ascending: false }).limit(5)
+            : Promise.resolve({ data: [] })
         ]);
         const toRel = (d?: string | null) => {
           if (!d) return 'now';
