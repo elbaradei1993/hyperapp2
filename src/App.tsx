@@ -14,7 +14,7 @@ import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import Trending from "./pages/Trending";
-import EventCreate from "./pages/EventCreate";
+
 import Services from "./pages/Services";
 import Activity from "./pages/Activity";
 import Account from "./pages/Account";
@@ -88,7 +88,7 @@ const App = () => {
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/trending" element={<Trending />} />
-                    <Route path="/events/create" element={<EventCreate />} />
+                    
                     <Route path="/services" element={<Services />} />
                     <Route path="/activity" element={<Activity />} />
                     <Route path="/account" element={<Account />} />

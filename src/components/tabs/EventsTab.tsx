@@ -42,18 +42,6 @@ const EventsTab = () => {
     fetchEvents();
   }, [toast, t]);
 
-  const handleCreateEvent = () => {
-    if (!user) {
-      toast({
-        title: "Authentication required",
-        description: "You must be signed in to create events",
-      });
-      navigate("/auth");
-      return;
-    }
-    
-    navigate("/events/create");
-  };
 
   const viewEventOnMap = (event: EventResponse) => {
     if (event.latitude && event.longitude) {
@@ -73,10 +61,6 @@ const EventsTab = () => {
     <div className="h-full flex flex-col">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold">{t("events")}</h2>
-        <Button onClick={handleCreateEvent} size="sm" className="gap-1">
-          <Plus className="h-4 w-4" />
-          {t("createEvent")}
-        </Button>
       </div>
 
       {loading ? (
@@ -103,10 +87,7 @@ const EventsTab = () => {
           <p className="text-muted-foreground mb-4">
             Be the first to create an event for the community!
           </p>
-          <Button onClick={handleCreateEvent}>
-            <Plus className="h-4 w-4 mr-2" />
-            {t("createEvent")}
-          </Button>
+          <p className="text-sm text-muted-foreground">Check back later for upcoming events!</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-auto pb-4">

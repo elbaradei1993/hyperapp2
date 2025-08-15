@@ -113,7 +113,7 @@ function HeatMapLayer({ vibes }: { vibes: VibeReport[] }) {
 function MapControls({ userLocation, onToggleLegend }: { userLocation: [number, number] | null, onToggleLegend: () => void }) {
   const map = useMap();
   return (
-    <div className="absolute bottom-4 right-4 z-10 flex flex-col space-y-2">
+    <div className="absolute bottom-4 right-4 z-[1000] flex flex-col space-y-2">
       <button
         onClick={onToggleLegend}
         className="bg-background/90 border border-border/40 text-foreground p-3 rounded-full shadow-lg hover:bg-muted/90 transition-colors"
@@ -194,7 +194,7 @@ const HeatMapTab = () => {
   return (
     <div className="h-full w-full rounded-lg overflow-hidden border border-border/40 relative">
       <MapContainer 
-        className="h-full w-full z-0"
+        className="h-full w-full z-[1]"
         // Fix the typescript errors by adding these props as part of the any object
         {...{
           center: mapCenter,
@@ -223,7 +223,7 @@ const HeatMapTab = () => {
 
       {/* Enhanced Heat Map Legend */}
       {showLegend && (
-        <div className="absolute top-4 left-4 z-10 bg-background/95 backdrop-blur-sm rounded-lg p-4 border border-border/40 shadow-lg animate-fade-in">
+        <div className="absolute top-4 left-4 z-[1000] bg-background/95 backdrop-blur-sm rounded-lg p-4 border border-border/40 shadow-lg animate-fade-in">
           <h4 className="text-sm font-semibold mb-3">Activity Heatmap</h4>
           
           {/* Gradient Legend */}

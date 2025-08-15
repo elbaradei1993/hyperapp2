@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AddVibeModal } from "@/components/modals/AddVibeModal";
-import { CreateEventModal } from "@/components/modals/CreateEventModal";
+
 import SosModal from "@/components/SosModal";
 
 const services = [
@@ -30,13 +30,6 @@ const services = [
     color: "text-red-500",
     action: "send-sos"
   },
-  {
-    icon: Calendar,
-    title: "Create Event",
-    description: "Organize community gatherings and activities",
-    color: "text-green-500",
-    action: "create-event"
-  }
 ];
 
 const features = [
@@ -155,10 +148,6 @@ export const Services = () => {
         />
       )}
 
-      <CreateEventModal 
-        isOpen={activeModal === "create-event"}
-        onClose={() => setActiveModal(null)}
-      />
 
       {/* Mobile spacing */}
       {isMobile && <div className="h-16" />}

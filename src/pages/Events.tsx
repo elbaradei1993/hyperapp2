@@ -14,7 +14,7 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Input } from "@/components/ui/input";
 import { EventService } from "@/services/EventService";
-import { CreateEventModal } from "@/components/modals/CreateEventModal";
+
 
 interface Event {
   id: string;
@@ -195,13 +195,6 @@ export const Events = () => {
       {isMobile && <div className="h-16" />}
 
       {/* Create Event Modal */}
-      <CreateEventModal 
-        isOpen={showCreateModal} 
-        onClose={() => {
-          setShowCreateModal(false);
-          loadEvents(); // Reload events after creation
-        }} 
-      />
     </div>
   );
 };

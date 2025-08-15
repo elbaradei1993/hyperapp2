@@ -884,14 +884,7 @@ const Profile = () => {
                   <div className="py-8 text-center">
                     <Calendar className="h-8 w-8 mx-auto text-muted-foreground opacity-50" />
                     <p className="mt-2 text-sm text-muted-foreground">You haven't created any events yet</p>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="mt-4"
-                      onClick={() => navigate('/events/create')}
-                    >
-                      Create Event
-                    </Button>
+                    <p className="mt-4 text-xs text-muted-foreground">Start organizing community events!</p>
                   </div>
                 )}
               </CardContent>
