@@ -34,7 +34,7 @@ const Index = () => {
               Everything you need for community safety
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Discover trending vibes, create events, explore your neighborhood, 
+              Discover trending vibes, explore your neighborhood, 
               and track community pulse — all in one place.
             </p>
           </div>
