@@ -35,6 +35,8 @@ import {
   UserEvent,
   SavedVibe
 } from "@/services/ProfileService";
+import CreativeInsights from "@/components/CreativeInsights";
+import VibeStreakTracker from "@/components/VibeStreakTracker";
 
 const ROLES = [
   { value: "individual", label: "Individual", icon: User },
@@ -181,13 +183,12 @@ const Profile = () => {
   const [uploadingImage, setUploadingImage] = useState(false);
   
   const [reportedVibes, setReportedVibes] = useState<UserReportedVibe[]>([]);
-  const [createdEvents, setCreatedEvents] = useState<UserEvent[]>([]);
   const [savedVibes, setSavedVibes] = useState<SavedVibe[]>([]);
   
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
-  const [selectedItemType, setSelectedItemType] = useState<'vibe' | 'event' | 'saved' | null>(null);
+  const [selectedItemType, setSelectedItemType] = useState<'vibe' | 'saved' | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [interests, setInterests] = useState<string[]>([]);
@@ -215,10 +216,6 @@ const Profile = () => {
           // Fetch user's reported vibes
           const vibes = await ProfileService.getUserReportedVibes(user.id);
           setReportedVibes(vibes);
-          
-          // Fetch user's created events
-          const events = await ProfileService.getUserCreatedEvents(user.id);
-          setCreatedEvents(events);
           
           // Fetch user's saved vibes
           const saved = await ProfileService.getUserSavedVibes(user.id);
@@ -365,7 +362,7 @@ const Profile = () => {
     }
   };
   
-  const handleViewItem = (item: any, type: 'vibe' | 'event' | 'saved') => {
+  const handleViewItem = (item: any, type: 'vibe' | 'saved') => {
     setSelectedItem(item);
     setSelectedItemType(type);
     setViewDialogOpen(true);
@@ -666,10 +663,9 @@ const Profile = () => {
         </div>
         
         <Tabs defaultValue="bio" className="w-full">
-          <TabsList className="grid grid-cols-4 mb-4">
+          <TabsList className="grid grid-cols-3 mb-4">
             <TabsTrigger value="bio">Bio</TabsTrigger>
             <TabsTrigger value="reports">Vibes</TabsTrigger>
-            <TabsTrigger value="events">Events</TabsTrigger>
             <TabsTrigger value="saved">Saved</TabsTrigger>
           </TabsList>
           
@@ -773,6 +769,12 @@ const Profile = () => {
             
             {/* Notification Preferences Section */}
             {renderNotificationPreferences()}
+
+            {/* Creative Insights */}
+            <CreativeInsights />
+
+            {/* Vibe Streak Tracker */}
+            <VibeStreakTracker />
           </TabsContent>
           
           {/* Reported Vibes Tab */}
@@ -834,62 +836,6 @@ const Profile = () => {
             </Card>
           </TabsContent>
           
-          {/* Created Events Tab */}
-          <TabsContent value="events" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Created Events</CardTitle>
-                <CardDescription>Events you've organized</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {createdEvents.length > 0 ? (
-                  <div className="space-y-3">
-                    {createdEvents.map(event => (
-                      <div 
-                        key={event.id} 
-                        className="p-3 border rounded-md cursor-pointer hover:bg-accent/50 transition-colors"
-                        onClick={() => handleViewItem(event, 'event')}
-                      >
-                        <div className="flex justify-between items-start mb-1">
-                          <h3 className="font-medium text-sm">{event.title}</h3>
-                          {event.vibe_type && (
-                            <div 
-                              className="w-3 h-3 rounded-full" 
-                              style={{ backgroundColor: event.vibe_type.color }}
-                            ></div>
-                          )}
-                        </div>
-                        
-                        <p className="text-xs text-muted-foreground line-clamp-1 mb-2">
-                          {event.description || 'No description'}
-                        </p>
-                        
-                        <div className="flex justify-between items-center text-xs text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            <span>{new Date(event.start_date_time).toLocaleDateString()}</span>
-                          </div>
-                          
-                          {event.address && (
-                            <div className="flex items-center gap-1">
-                              <MapPin className="h-3 w-3" />
-                              <span className="truncate max-w-[100px]">{event.address}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="py-8 text-center">
-                    <Calendar className="h-8 w-8 mx-auto text-muted-foreground opacity-50" />
-                    <p className="mt-2 text-sm text-muted-foreground">You haven't created any events yet</p>
-                    <p className="mt-4 text-xs text-muted-foreground">Start organizing community events!</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
           
           {/* Saved Vibes Tab */}
           {savedVibesTabContent()}
@@ -948,53 +894,16 @@ const Profile = () => {
             <>
               <DialogHeader>
                 <DialogTitle>
-                  {selectedItemType === 'event' && selectedItem.title}
                   {selectedItemType === 'vibe' && (selectedItem.title || 'Untitled Vibe')}
                   {selectedItemType === 'saved' && selectedItem.vibe && (selectedItem.vibe.title || 'Untitled Vibe')}
                 </DialogTitle>
                 <DialogDescription>
-                  {selectedItemType === 'event' && (
-                    <>Event on {new Date(selectedItem.start_date_time).toLocaleDateString()}</>
-                  )}
                   {selectedItemType === 'vibe' && 'Reported vibe details'}
                   {selectedItemType === 'saved' && 'Saved vibe details'}
                 </DialogDescription>
               </DialogHeader>
               
               <div className="py-4">
-                {selectedItemType === 'event' && (
-                  <div className="space-y-4">
-                    {selectedItem.description && (
-                      <div>
-                        <h4 className="text-sm font-medium">Description</h4>
-                        <p className="text-sm text-muted-foreground">{selectedItem.description}</p>
-                      </div>
-                    )}
-                    
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div>
-                        <h4 className="font-medium">Start</h4>
-                        <p className="text-muted-foreground">
-                          {new Date(selectedItem.start_date_time).toLocaleString()}
-                        </p>
-                      </div>
-                      <div>
-                        <h4 className="font-medium">End</h4>
-                        <p className="text-muted-foreground">
-                          {new Date(selectedItem.end_date_time).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    {selectedItem.address && (
-                      <div>
-                        <h4 className="text-sm font-medium">Location</h4>
-                        <p className="text-sm text-muted-foreground">{selectedItem.address}</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-                
                 {selectedItemType === 'vibe' && (
                   <div className="space-y-4">
                     {selectedItem.description && (

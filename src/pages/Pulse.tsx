@@ -22,6 +22,7 @@ import HeatMapTab from "@/components/tabs/HeatMapTab";
 import { useSearchParams } from "react-router-dom";
 import { usePulseMetrics } from "@/hooks/usePulseMetrics";
 import CommunitiesInline from "@/components/pulse/CommunitiesInline";
+import { CommunityStatsService } from "@/services/CommunityStatsService";
 
 const moodOptions = [
   { id: 'great', label: '😊 Great', icon: Smile, color: 'text-green-500' },
@@ -37,7 +38,25 @@ export const Pulse = () => {
   const [activeTab, setActiveTab] = useState(initialTab);
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
   const { metrics: communityStats, loading: statsLoading, areaLabel } = usePulseMetrics({ radiusKm: 10 });
+  const [realCommunityStats, setRealCommunityStats] = useState<any>(null);
+  const [loadingRealStats, setLoadingRealStats] = useState(true);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchRealStats = async () => {
+      try {
+        setLoadingRealStats(true);
+        const stats = await CommunityStatsService.getCommunityStats();
+        setRealCommunityStats(stats);
+      } catch (error) {
+        console.error('Error fetching real community stats:', error);
+      } finally {
+        setLoadingRealStats(false);
+      }
+    };
+
+    fetchRealStats();
+  }, []);
 
   const handleMoodSubmit = async (moodId: string) => {
     try {
@@ -145,23 +164,87 @@ export const Pulse = () => {
               <Card>
                 <CardContent className="p-6 text-center">
                   <div className="text-3xl font-bold text-blue-500 mb-2">
-                    {communityStats.activeUsers}
+                    {realCommunityStats?.activeUsersToday || communityStats.activeUsers}
                   </div>
-                  <p className="text-muted-foreground">Active Users</p>
-                  <Badge variant="secondary" className="mt-2">Online Now</Badge>
+                  <p className="text-muted-foreground">Active Users Today</p>
+                  <Badge variant="secondary" className="mt-2">Real Data</Badge>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardContent className="p-6 text-center">
                   <div className="text-3xl font-bold text-primary mb-2">
-                    {communityStats.totalReports}
+                    {realCommunityStats?.totalVibeReports || communityStats.totalReports}
                   </div>
-                  <p className="text-muted-foreground">Total Reports</p>
-                  <Badge variant="secondary" className="mt-2">This Week</Badge>
+                  <p className="text-muted-foreground">Total Vibe Reports</p>
+                  <Badge variant="secondary" className="mt-2">All Time</Badge>
                 </CardContent>
               </Card>
             </div>
+
+            {/* Enhanced Community Stats */}
+            {realCommunityStats && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <div className="text-2xl font-bold text-purple-500 mb-1">
+                      {realCommunityStats.totalCommunities}
+                    </div>
+                    <p className="text-sm text-muted-foreground">Total Communities</p>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <div className="text-2xl font-bold text-orange-500 mb-1">
+                      {realCommunityStats.totalMembers}
+                    </div>
+                    <p className="text-sm text-muted-foreground">Community Members</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <div className="text-2xl font-bold text-teal-500 mb-1">
+                      {realCommunityStats.totalSosAlerts}
+                    </div>
+                    <p className="text-sm text-muted-foreground">Safety Alerts</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <div className="text-2xl font-bold text-pink-500 mb-1">
+                      {realCommunityStats.averageVibesPerCommunity}
+                    </div>
+                    <p className="text-sm text-muted-foreground">Avg Vibes/Community</p>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Most Active Community Highlight */}
+            {realCommunityStats?.mostActiveCommnuity && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <TrendingUp className="text-primary" size={24} />
+                    <span>Most Active Community</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center p-4">
+                    <h3 className="text-xl font-bold mb-2">{realCommunityStats.mostActiveCommnuity.name}</h3>
+                    <p className="text-muted-foreground">
+                      {realCommunityStats.mostActiveCommnuity.memberCount} active members
+                    </p>
+                    <Badge variant="outline" className="mt-2">
+                      Community Leader
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Mood Distribution */}
             <Card>
