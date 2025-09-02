@@ -22,7 +22,7 @@ import HeatMapTab from "@/components/tabs/HeatMapTab";
 import { useSearchParams } from "react-router-dom";
 import { usePulseMetrics } from "@/hooks/usePulseMetrics";
 import CommunitiesInline from "@/components/pulse/CommunitiesInline";
-import { CommunityStatsService } from "@/services/CommunityStatsService";
+import { CommunityStatsService } from '@/services/CommunityStatsService';
 
 const moodOptions = [
   { id: 'great', label: '😊 Great', icon: Smile, color: 'text-green-500' },

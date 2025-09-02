@@ -32,7 +32,7 @@ import {
   ProfileService,
   UserProfile,
   UserReportedVibe,
-  UserEvent,
+  
   SavedVibe
 } from "@/services/ProfileService";
 import CreativeInsights from "@/components/CreativeInsights";

@@ -1,47 +1,36 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { 
   TrendingUp, 
-  TrendingDown, 
-  Shield, 
   Clock, 
-  Calendar,
-  Trophy,
+  Calendar, 
+  Users, 
+  Trophy, 
   Activity,
   Sparkles,
-  Target,
-  Users
+  BarChart3
 } from 'lucide-react';
 import { CommunityStatsService, CreativeInsights as InsightsType } from '@/services/CommunityStatsService';
-import { useToast } from '@/hooks/use-toast';
 
-export const CreativeInsights: React.FC = () => {
+const CreativeInsights = () => {
   const [insights, setInsights] = useState<InsightsType | null>(null);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
 
   useEffect(() => {
     const fetchInsights = async () => {
       try {
-        setLoading(true);
         const data = await CommunityStatsService.getCreativeInsights();
         setInsights(data);
       } catch (error) {
-        console.error('Error fetching creative insights:', error);
-        toast({
-          title: 'Error loading insights',
-          description: 'Could not load community insights',
-          variant: 'destructive'
-        });
+        console.error('Error fetching insights:', error);
       } finally {
         setLoading(false);
       }
     };
 
     fetchInsights();
-  }, [toast]);
+  }, []);
 
   if (loading) {
     return (
@@ -49,14 +38,14 @@ export const CreativeInsights: React.FC = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5" />
-            Community Insights
+            Creative Insights
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="animate-pulse space-y-3">
+          <div className="animate-pulse space-y-4">
             <div className="h-4 bg-muted rounded w-3/4"></div>
             <div className="h-4 bg-muted rounded w-1/2"></div>
-            <div className="h-4 bg-muted rounded w-2/3"></div>
+            <div className="h-4 bg-muted rounded w-5/6"></div>
           </div>
         </CardContent>
       </Card>
@@ -65,117 +54,113 @@ export const CreativeInsights: React.FC = () => {
 
   if (!insights) return null;
 
-  const getTrendIcon = (trend: string) => {
-    switch (trend) {
-      case 'improving':
-        return <TrendingUp className="h-4 w-4 text-green-500" />;
-      case 'declining':
-        return <TrendingDown className="h-4 w-4 text-red-500" />;
-      default:
-        return <Activity className="h-4 w-4 text-blue-500" />;
-    }
-  };
-
-  const getTrendColor = (trend: string) => {
-    switch (trend) {
-      case 'improving':
-        return 'text-green-600 dark:text-green-400';
-      case 'declining':
-        return 'text-red-600 dark:text-red-400';
-      default:
-        return 'text-blue-600 dark:text-blue-400';
-    }
-  };
-
-  const formatHour = (hour: number) => {
-    if (hour === 0) return '12 AM';
-    if (hour < 12) return `${hour} AM`;
-    if (hour === 12) return '12 PM';
-    return `${hour - 12} PM`;
-  };
-
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5" />
-          Community Insights
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Mood Trend */}
-        <div className="flex items-center justify-between p-3 border rounded-md">
-          <div className="flex items-center gap-2">
-            {getTrendIcon(insights.moodTrend)}
-            <span className="text-sm font-medium">Community Mood</span>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Mood Trends */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <TrendingUp className="h-4 w-4" />
+            Trending Moods
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {insights.moodTrends.map((mood, index) => (
+              <Badge key={index} variant="outline" className="mr-1 mb-1">
+                {mood}
+              </Badge>
+            ))}
           </div>
-          <Badge variant="outline" className={getTrendColor(insights.moodTrend)}>
-            {insights.moodTrend}
-          </Badge>
-        </div>
+        </CardContent>
+      </Card>
 
-        {/* Safest Hour */}
-        <div className="flex items-center justify-between p-3 border rounded-md">
-          <div className="flex items-center gap-2">
-            <Shield className="h-4 w-4 text-green-500" />
-            <span className="text-sm font-medium">Safest Time</span>
+      {/* Safest Hours */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Clock className="h-4 w-4" />
+            Safest Hours
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {insights.safestHours.map((hour, index) => (
+              <div key={index} className="text-sm font-medium text-green-600 dark:text-green-400">
+                {hour}
+              </div>
+            ))}
           </div>
-          <Badge variant="outline" className="text-green-600 dark:text-green-400">
-            {formatHour(insights.safestHour)}
-          </Badge>
-        </div>
+        </CardContent>
+      </Card>
 
-        {/* Most Active Day */}
-        <div className="flex items-center justify-between p-3 border rounded-md">
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-purple-500" />
-            <span className="text-sm font-medium">Most Active Day</span>
+      {/* Most Active Days */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Calendar className="h-4 w-4" />
+            Active Days
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {insights.mostActiveDays.map((day, index) => (
+              <div key={index} className="text-sm font-medium">
+                {day}
+              </div>
+            ))}
           </div>
-          <Badge variant="outline" className="text-purple-600 dark:text-purple-400">
-            {insights.mostActiveDay}
-          </Badge>
-        </div>
+        </CardContent>
+      </Card>
 
-        {/* Community Growth */}
-        <div className="flex items-center justify-between p-3 border rounded-md">
-          <div className="flex items-center gap-2">
-            <Users className="h-4 w-4 text-blue-500" />
-            <span className="text-sm font-medium">Growth Rate</span>
+      {/* Community Growth */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <BarChart3 className="h-4 w-4" />
+            Community Growth
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">
+            {insights.communityGrowth > 0 ? '+' : ''}{insights.communityGrowth}%
           </div>
-          <Badge variant="outline" className="text-blue-600 dark:text-blue-400">
-            {insights.communityGrowthRate}%
-          </Badge>
-        </div>
+          <p className="text-xs text-muted-foreground">This week vs last week</p>
+        </CardContent>
+      </Card>
 
-        {/* User Rank */}
-        <div className="flex items-center justify-between p-3 border rounded-md">
-          <div className="flex items-center gap-2">
-            <Trophy className="h-4 w-4 text-yellow-500" />
-            <span className="text-sm font-medium">Your Rank</span>
+      {/* User Rank */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Trophy className="h-4 w-4" />
+            Your Rank
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">
+            Top {insights.userRank}%
           </div>
-          <Badge variant="outline" className="text-yellow-600 dark:text-yellow-400">
-            #{insights.yourRank}
-          </Badge>
-        </div>
+          <p className="text-xs text-muted-foreground">Community contributor</p>
+        </CardContent>
+      </Card>
 
-        {/* Nearby Activity */}
-        <div className="flex items-center justify-between p-3 border rounded-md">
-          <div className="flex items-center gap-2">
-            <Target className="h-4 w-4 text-orange-500" />
-            <span className="text-sm font-medium">Nearby Activity</span>
+      {/* Nearby Activity */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Activity className="h-4 w-4" />
+            Nearby Activity
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">
+            {insights.nearbyActivity}
           </div>
-          <Badge variant="outline" className="text-orange-600 dark:text-orange-400">
-            {insights.nearbyActivity} vibes
-          </Badge>
-        </div>
-
-        <div className="pt-2 border-t">
-          <p className="text-xs text-muted-foreground text-center">
-            Insights updated based on recent community activity
-          </p>
-        </div>
-      </CardContent>
-    </Card>
+          <p className="text-xs text-muted-foreground">Reports in 24hrs</p>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

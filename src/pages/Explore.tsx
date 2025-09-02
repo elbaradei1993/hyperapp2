@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { VibeReportsService } from "@/services/vibes/vibeReportsService";
-import { EventService } from "@/services/EventService";
+
 import { supabase } from "@/integrations/supabase/client";
 import { useAccurateLocation } from "@/hooks/useAccurateLocation";
 
@@ -59,11 +59,10 @@ export const Explore = () => {
   const loadActivities = async () => {
     try {
       setLoading(true);
-      const [vibeReports, events, sosAlerts] = await Promise.all([
-        VibeReportsService.getVibeReports(0, 50),
-        EventService.getEvents(50),
-        loadSOSAlerts()
-      ]);
+        const [vibeReports, sosAlerts] = await Promise.all([
+          VibeReportsService.getVibeReports(0, 50),
+          loadSOSAlerts()
+        ]);
 
       const allActivities: NearbyActivity[] = [
         ...vibeReports.map(vibe => ({
@@ -79,19 +78,6 @@ export const Explore = () => {
           timestamp: new Date(vibe.created_at).toLocaleString(),
           location: `${parseFloat(vibe.latitude).toFixed(4)}, ${parseFloat(vibe.longitude).toFixed(4)}`,
           vibe_type: vibe.vibe_type
-        })),
-        ...events.map(event => ({
-          id: event.id,
-          type: 'event' as const,
-          title: event.title,
-          description: event.description || undefined,
-          distance: (() => {
-            const lat = event.latitude ? parseFloat(event.latitude) : NaN;
-            const lng = event.longitude ? parseFloat(event.longitude) : NaN;
-            return position && !isNaN(lat) && !isNaN(lng) ? haversineKm(position[0], position[1], lat, lng) : 0;
-          })(),
-          timestamp: new Date(event.start_date_time).toLocaleString(),
-          location: event.location || event.address || 'Unknown location'
         })),
         ...sosAlerts.map(sos => ({
           id: sos.id,
@@ -183,9 +169,7 @@ export const Explore = () => {
   const filters = [
     { id: 'all', label: 'All', count: activities.length },
     { id: 'vibe', label: 'Vibes', count: activities.filter(a => a.type === 'vibe').length },
-    { id: 'sos', label: 'SOS', count: activities.filter(a => a.type === 'sos').length },
-    { id: 'event', label: 'Events', count: activities.filter(a => a.type === 'event').length },
-    { id: 'user', label: 'Users', count: activities.filter(a => a.type === 'user').length }
+    { id: 'sos', label: 'SOS', count: activities.filter(a => a.type === 'sos').length }
   ];
 
   return (
@@ -315,7 +299,7 @@ export const Explore = () => {
         )}
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-8">
           <Card>
             <CardContent className="p-4 text-center">
               <div className="text-2xl font-bold text-primary mb-1">
@@ -331,15 +315,6 @@ export const Explore = () => {
                 {activities.filter(a => a.type === 'sos').length}
               </div>
               <div className="text-xs text-muted-foreground">SOS Alerts</div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-green-500 mb-1">
-                {activities.filter(a => a.type === 'event').length}
-              </div>
-              <div className="text-xs text-muted-foreground">Live Events</div>
             </CardContent>
           </Card>
           
