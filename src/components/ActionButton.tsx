@@ -1,8 +1,7 @@
 
 import React, { useState } from 'react';
-import { PlusCircle, AlertTriangle, MapPin, Calendar, X } from 'lucide-react';
+import { PlusCircle, AlertTriangle, MapPin, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { NavLink } from 'react-router-dom';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,12 +39,6 @@ const ActionButton = ({ isMobile }: ActionButtonProps) => {
               </DropdownMenuItem>
             } 
           />
-          <DropdownMenuItem asChild>
-            <NavLink to="/events" className="cursor-pointer">
-              <Calendar className="mr-2 h-4 w-4" />
-              <span>View Events</span>
-            </NavLink>
-          </DropdownMenuItem>
           <DropdownMenuItem 
             className="text-red-500 hover:text-red-600 cursor-pointer"
             onClick={() => setIsSosDialogOpen(true)}
@@ -69,12 +62,6 @@ const ActionButton = ({ isMobile }: ActionButtonProps) => {
           </Button>
         } 
       />
-      <Button size="sm" variant="outline" className="flex items-center gap-1" asChild>
-        <NavLink to="/events">
-          <Calendar className="h-4 w-4" />
-          View Events
-        </NavLink>
-      </Button>
       <Button 
         size="sm" 
         variant="destructive" 

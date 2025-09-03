@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { TrendingUp, Calendar, MapPin, BarChart3 } from "lucide-react";
+import { TrendingUp, MapPin, BarChart3 } from "lucide-react";
 
 const features = [
   {
@@ -9,13 +9,6 @@ const features = [
     description: "See what's happening in your area right now",
     href: "/trending",
     color: "text-red-500"
-  },
-  {
-    icon: Calendar,
-    title: "Events",
-    description: "Discover and create community events",
-    href: "/events",
-    color: "text-blue-500"
   },
   {
     icon: MapPin,
@@ -35,7 +28,7 @@ const features = [
 
 export const FeatureGrid = () => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {features.map((feature) => {
         const Icon = feature.icon;
         
