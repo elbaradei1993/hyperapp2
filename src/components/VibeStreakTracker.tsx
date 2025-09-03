@@ -39,10 +39,23 @@ const VibeStreakTracker = () => {
 
     try {
       setLoading(true);
+      
+      // First get the user mapping to integer ID
+      const { data: userMapping } = await supabase
+        .from('user_mapping')
+        .select('integer_id')
+        .eq('uuid_id', user.id)
+        .maybeSingle();
+
+      if (!userMapping) {
+        setLoading(false);
+        return;
+      }
+
       const { data: vibes } = await supabase
         .from('vibe_reports')
         .select('created_at')
-        .eq('user_id', user.id)
+        .eq('user_id', userMapping.integer_id)
         .order('created_at', { ascending: false });
 
       if (!vibes || vibes.length === 0) {

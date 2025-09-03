@@ -88,11 +88,31 @@ export class CommunityStatsService {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('No authenticated user');
 
+      // First get the user mapping to integer ID
+      const { data: userMapping } = await supabase
+        .from('user_mapping')
+        .select('integer_id')
+        .eq('uuid_id', user.id)
+        .maybeSingle();
+
+      if (!userMapping) {
+        return {
+          vibeReports: 0,
+          communitiesJoined: 0,
+          communitiesOwned: 0,
+          savedVibes: 0,
+          points: 0,
+          reputation: 0,
+          joinDate: 'Unknown',
+          lastActive: 'Unknown'
+        };
+      }
+
       // Get user's vibe reports count
       const { count: vibeReports } = await supabase
         .from('vibe_reports')
         .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id);
+        .eq('user_id', userMapping.integer_id);
 
       // For now, return basic stats with available data
       return {
