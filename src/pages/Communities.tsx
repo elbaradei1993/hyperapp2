@@ -7,7 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { CommunitiesService, Community } from "@/services/communities";
-import { Loader2, Users } from "lucide-react";
+import { Loader2, Users, MessageSquare } from "lucide-react";
+import { CommunityFeed } from "@/components/community/CommunityFeed";
 
 const Communities = () => {
   const { toast } = useToast();
@@ -16,6 +17,7 @@ const Communities = () => {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [form, setForm] = useState({ name: "", description: "", isPublic: true });
+  const [selectedCommunity, setSelectedCommunity] = useState<Community | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -79,6 +81,21 @@ const Communities = () => {
     }
   };
 
+  // If a community is selected, show the feed
+  if (selectedCommunity) {
+    return (
+      <div className="min-h-screen bg-background">
+        <UberNavbar />
+        <div className="container mx-auto px-4 py-8 max-w-6xl">
+          <CommunityFeed 
+            community={selectedCommunity} 
+            onBack={() => setSelectedCommunity(null)} 
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <UberNavbar />
@@ -126,12 +143,15 @@ const Communities = () => {
                   <div className="text-sm text-muted-foreground">You haven't joined any communities yet.</div>
                 ) : (
                   my.map((c) => (
-                    <div key={c.id} className="flex items-center justify-between border rounded-md p-3">
-                      <div>
-                        <div className="font-medium">{c.name}</div>
+                    <div key={c.id} className="flex items-center justify-between border rounded-md p-3 hover:bg-accent/50 transition-colors cursor-pointer" onClick={() => setSelectedCommunity(c)}>
+                      <div className="flex-1">
+                        <div className="font-medium flex items-center gap-2">
+                          {c.name}
+                          <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                        </div>
                         {c.description && <div className="text-sm text-muted-foreground line-clamp-1">{c.description}</div>}
                       </div>
-                      <Button variant="outline" size="sm" onClick={() => leave(c.id)}>Leave</Button>
+                      <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); leave(c.id); }}>Leave</Button>
                     </div>
                   ))
                 )}
@@ -147,12 +167,15 @@ const Communities = () => {
                   <div className="text-sm text-muted-foreground">No public communities found.</div>
                 ) : (
                   discover.map((c) => (
-                    <div key={c.id} className="flex items-center justify-between border rounded-md p-3">
-                      <div>
-                        <div className="font-medium">{c.name}</div>
+                    <div key={c.id} className="flex items-center justify-between border rounded-md p-3 hover:bg-accent/50 transition-colors cursor-pointer" onClick={() => setSelectedCommunity(c)}>
+                      <div className="flex-1">
+                        <div className="font-medium flex items-center gap-2">
+                          {c.name}
+                          <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                        </div>
                         {c.description && <div className="text-sm text-muted-foreground line-clamp-1">{c.description}</div>}
                       </div>
-                      <Button size="sm" onClick={() => join(c.id)}>Join</Button>
+                      <Button size="sm" onClick={(e) => { e.stopPropagation(); join(c.id); }}>Join</Button>
                     </div>
                   ))
                 )}
