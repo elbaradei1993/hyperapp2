@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { CommunitiesService, Community } from '@/services/communities';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { LogIn } from 'lucide-react';
 
 const CommunitiesInline: React.FC = () => {
   const [myCommunities, setMyCommunities] = useState<Community[]>([]);
@@ -13,9 +15,18 @@ const CommunitiesInline: React.FC = () => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [isPublic, setIsPublic] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
+  const checkAuth = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    setIsAuthenticated(!!session);
+    setLoading(false);
+  };
+
   const load = async () => {
+    if (!isAuthenticated) return;
     try {
       const [mine, pub] = await Promise.all([
         CommunitiesService.getMyCommunities(),
@@ -30,9 +41,21 @@ const CommunitiesInline: React.FC = () => {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { 
+    checkAuth();
+  }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      load();
+    }
+  }, [isAuthenticated]);
 
   const createCommunity = async () => {
+    if (!isAuthenticated) {
+      toast({ title: 'Please sign in to create communities', variant: 'destructive' });
+      return;
+    }
     try {
       setCreating(true);
       await CommunitiesService.createCommunity(name, description, isPublic);
@@ -50,6 +73,10 @@ const CommunitiesInline: React.FC = () => {
   };
 
   const joinCommunity = async (id: string) => {
+    if (!isAuthenticated) {
+      toast({ title: 'Please sign in to join communities', variant: 'destructive' });
+      return;
+    }
     try {
       await CommunitiesService.joinCommunity(id);
       await load();
@@ -61,6 +88,10 @@ const CommunitiesInline: React.FC = () => {
   };
 
   const leaveCommunity = async (id: string) => {
+    if (!isAuthenticated) {
+      toast({ title: 'Please sign in to manage communities', variant: 'destructive' });
+      return;
+    }
     try {
       await CommunitiesService.leaveCommunity(id);
       await load();
@@ -70,6 +101,29 @@ const CommunitiesInline: React.FC = () => {
       toast({ title: 'Failed to leave', variant: 'destructive' });
     }
   };
+
+  if (loading) {
+    return (
+      <Card className="lg:col-span-2">
+        <CardContent className="py-8 text-center">
+          <div className="text-muted-foreground">Loading communities...</div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <Card className="lg:col-span-2">
+        <CardContent className="py-8 text-center">
+          <LogIn className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+          <h3 className="text-lg font-semibold mb-2">Join Communities</h3>
+          <p className="text-muted-foreground mb-4">Sign in to discover, join, and create communities</p>
+          <Button onClick={() => window.location.href = '/auth'}>Sign In</Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
