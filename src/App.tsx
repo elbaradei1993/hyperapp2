@@ -25,6 +25,7 @@ import Explore from "./pages/Explore";
 import NotFound from "./pages/NotFound";
 import { useTheme } from "./hooks/use-theme";
 import Communities from "./pages/Communities";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -85,18 +86,53 @@ const App = () => {
                     <Route path="/welcome" element={<Welcome />} />
                     <Route path="/" element={<Index />} />
                     <Route path="/auth" element={<Auth />} />
-                    <Route path="/profile" element={<Profile />} />
-                    <Route path="/settings" element={<Settings />} />
+                    <Route 
+                      path="/profile" 
+                      element={
+                        <ProtectedRoute>
+                          <Profile />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/settings" 
+                      element={
+                        <ProtectedRoute>
+                          <Settings />
+                        </ProtectedRoute>
+                      } 
+                    />
                     <Route path="/trending" element={<Trending />} />
                     
                     <Route path="/services" element={<Services />} />
-                    <Route path="/activity" element={<Activity />} />
-                    <Route path="/account" element={<Account />} />
+                    <Route 
+                      path="/activity" 
+                      element={
+                        <ProtectedRoute>
+                          <Activity />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/account" 
+                      element={
+                        <ProtectedRoute>
+                          <Account />
+                        </ProtectedRoute>
+                      } 
+                    />
                     <Route path="/terms" element={<Terms />} />
                     <Route path="/pulse" element={<Pulse />} />
                     
                     <Route path="/explore" element={<Explore />} />
-                    <Route path="/communities" element={<Communities />} />
+                    <Route 
+                      path="/communities" 
+                      element={
+                        <ProtectedRoute>
+                          <Communities />
+                        </ProtectedRoute>
+                      } 
+                    />
                     {/* Legacy redirects */}
                     <Route path="/alerts" element={<Navigate to="/trending" replace />} />
                     <Route path="/notifications" element={<Navigate to="/trending" replace />} />

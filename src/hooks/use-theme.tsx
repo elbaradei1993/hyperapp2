@@ -19,11 +19,11 @@ export function useTheme() {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
-          const { data: profileData, error } = await supabase
-            .from('profiles')
-            .select('settings')
-            .eq('id', session.user.id)
-            .single();
+        const { data: profileData, error } = await supabase
+          .from('profiles')
+          .select('settings')
+          .eq('id', session.user.id)
+          .maybeSingle();
           
           if (!error && profileData?.settings) {
             // Parse settings if it's a string

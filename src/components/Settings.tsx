@@ -133,7 +133,7 @@ const Settings = () => {
             .from('profiles')
             .select('settings')
             .eq('id', session.user.id)
-            .single();
+            .maybeSingle();
           
           if (error && error.code !== 'PGRST116') {
             throw error;
