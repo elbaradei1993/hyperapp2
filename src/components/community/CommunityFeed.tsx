@@ -6,24 +6,41 @@ import { Community, CommunitiesService } from "@/services/communities";
 import { CommunityPost, CommunityPostsService } from "@/services/communityPosts";
 import { CreatePostForm } from "./CreatePostForm";
 import { CommunityPostComponent } from "./CommunityPost";
+import { CommunityManagement } from "./CommunityManagement";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CommunityFeedProps {
   community: Community;
   onBack: () => void;
+  onCommunityUpdate?: (updated: Community) => void;
 }
 
-export const CommunityFeed: React.FC<CommunityFeedProps> = ({ community, onBack }) => {
+export const CommunityFeed: React.FC<CommunityFeedProps> = ({ community, onBack, onCommunityUpdate }) => {
   const { toast } = useToast();
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [isMember, setIsMember] = useState(false);
   const [joining, setJoining] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
+  const [currentCommunity, setCurrentCommunity] = useState<Community>(community);
 
   useEffect(() => {
     loadPosts();
     checkMembership();
+    checkOwnership();
   }, [community.id]);
+
+  const checkOwnership = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setIsOwner(currentCommunity.owner_id === user.id);
+      }
+    } catch (error) {
+      setIsOwner(false);
+    }
+  };
 
   const loadPosts = async () => {
     try {
@@ -83,22 +100,22 @@ export const CommunityFeed: React.FC<CommunityFeedProps> = ({ community, onBack 
               <div>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="h-5 w-5" />
-                  {community.name}
+                  {currentCommunity.name}
                 </CardTitle>
-                {community.description && (
-                  <p className="text-sm text-muted-foreground mt-1">{community.description}</p>
+                {currentCommunity.description && (
+                  <p className="text-sm text-muted-foreground mt-1">{currentCommunity.description}</p>
                 )}
               </div>
             </div>
             
             <div className="flex items-center gap-2">
-              {community.is_public && !isMember && (
+              {currentCommunity.is_public && !isMember && (
                 <Button onClick={handleJoin} disabled={joining}>
                   {joining ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                   Join Community
                 </Button>
               )}
-              {isMember && (
+              {isMember && !isOwner && (
                 <Button variant="outline" onClick={handleLeave}>
                   Leave Community
                 </Button>
@@ -108,9 +125,20 @@ export const CommunityFeed: React.FC<CommunityFeedProps> = ({ community, onBack 
         </CardHeader>
       </Card>
 
+      {/* Community Management - only for owners */}
+      <CommunityManagement
+        community={currentCommunity}
+        onUpdate={(updated) => {
+          setCurrentCommunity(updated);
+          onCommunityUpdate?.(updated);
+        }}
+        onDelete={onBack}
+        isOwner={isOwner}
+      />
+
       {/* Create Post Form - only for members */}
       {isMember && (
-        <CreatePostForm communityId={community.id} onPostCreated={loadPosts} />
+        <CreatePostForm communityId={currentCommunity.id} onPostCreated={loadPosts} />
       )}
 
       {/* Posts Feed */}

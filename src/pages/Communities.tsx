@@ -90,6 +90,12 @@ const Communities = () => {
           <CommunityFeed 
             community={selectedCommunity} 
             onBack={() => setSelectedCommunity(null)} 
+            onCommunityUpdate={(updated) => {
+              setSelectedCommunity(updated);
+              // Update the community in our lists too
+              setMy(my.map(c => c.id === updated.id ? updated : c));
+              setDiscover(discover.map(c => c.id === updated.id ? updated : c));
+            }}
           />
         </div>
       </div>
@@ -143,16 +149,20 @@ const Communities = () => {
                   <div className="text-sm text-muted-foreground">You haven't joined any communities yet.</div>
                 ) : (
                   my.map((c) => (
-                    <div key={c.id} className="flex items-center justify-between border rounded-md p-3 hover:bg-accent/50 transition-colors cursor-pointer" onClick={() => setSelectedCommunity(c)}>
-                      <div className="flex-1">
-                        <div className="font-medium flex items-center gap-2">
-                          {c.name}
-                          <MessageSquare className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                        {c.description && <div className="text-sm text-muted-foreground line-clamp-1">{c.description}</div>}
-                      </div>
-                      <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); leave(c.id); }}>Leave</Button>
-                    </div>
+                     <div key={c.id} className="flex items-center justify-between border rounded-md p-3 hover:bg-accent/50 transition-colors cursor-pointer" onClick={() => setSelectedCommunity(c)}>
+                       <div className="flex-1">
+                         <div className="font-medium flex items-center gap-2">
+                           {c.name}
+                           <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                           {c.owner_id && <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">Owner</span>}
+                         </div>
+                         {c.description && <div className="text-sm text-muted-foreground line-clamp-1">{c.description}</div>}
+                       </div>
+                       <div className="flex gap-2">
+                         <Button size="sm" onClick={(e) => { e.stopPropagation(); setSelectedCommunity(c); }}>Open</Button>
+                         <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); leave(c.id); }}>Leave</Button>
+                       </div>
+                     </div>
                   ))
                 )}
               </CardContent>

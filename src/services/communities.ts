@@ -90,5 +90,39 @@ export const CommunitiesService = {
 
     if (error) throw error;
     return (data || []).map((r: any) => ({ role: r.role as string, community: r.communities as Community }));
+  },
+
+  updateCommunity: async (communityId: string, updates: { name: string; description: string; is_public: boolean }): Promise<Community> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Must be authenticated');
+
+    const { data, error } = await supabase
+      .from('communities')
+      .update({
+        name: updates.name.trim(),
+        description: updates.description.trim(),
+        is_public: updates.is_public,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', communityId)
+      .eq('owner_id', user.id)
+      .select('*')
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  deleteCommunity: async (communityId: string): Promise<void> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Must be authenticated');
+
+    const { error } = await supabase
+      .from('communities')
+      .delete()
+      .eq('id', communityId)
+      .eq('owner_id', user.id);
+
+    if (error) throw error;
   }
 };

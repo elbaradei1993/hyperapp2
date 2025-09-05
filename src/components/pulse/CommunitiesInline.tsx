@@ -137,12 +137,15 @@ const CommunitiesInline: React.FC = () => {
           )}
           {myCommunities.map(c => (
             <div key={c.id} className="flex items-center justify-between">
-              <div>
-                <div className="font-medium">{c.name}</div>
+              <div className="cursor-pointer flex-1" onClick={() => window.location.href = '/communities'}>
+                <div className="font-medium hover:text-primary transition-colors">{c.name}</div>
                 {c.description && <div className="text-sm text-muted-foreground">{c.description}</div>}
                 <Badge variant="secondary" className="mt-1">{c.is_public ? 'Public' : 'Private'}</Badge>
               </div>
-              <Button variant="outline" size="sm" onClick={() => leaveCommunity(c.id)}>Leave</Button>
+              <div className="flex gap-2">
+                <Button size="sm" onClick={() => window.location.href = '/communities'}>Open</Button>
+                <Button variant="outline" size="sm" onClick={() => leaveCommunity(c.id)}>Leave</Button>
+              </div>
             </div>
           ))}
         </CardContent>
@@ -158,11 +161,14 @@ const CommunitiesInline: React.FC = () => {
           )}
           {publicCommunities.map(c => (
             <div key={c.id} className="flex items-center justify-between">
-              <div>
-                <div className="font-medium">{c.name}</div>
+              <div className="cursor-pointer flex-1" onClick={() => window.location.href = '/communities'}>
+                <div className="font-medium hover:text-primary transition-colors">{c.name}</div>
                 {c.description && <div className="text-sm text-muted-foreground">{c.description}</div>}
               </div>
-              <Button size="sm" onClick={() => joinCommunity(c.id)}>Join</Button>
+              <div className="flex gap-2">
+                <Button size="sm" onClick={() => window.location.href = '/communities'}>View</Button>
+                <Button size="sm" onClick={() => joinCommunity(c.id)}>Join</Button>
+              </div>
             </div>
           ))}
         </CardContent>
