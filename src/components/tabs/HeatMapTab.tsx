@@ -1,13 +1,13 @@
 import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { MapPin, Activity, Loader2 } from 'lucide-react';
-import { VibeReport } from '@/services/vibes';
+import { MapPin, Activity, Loader2, RefreshCw } from 'lucide-react';
+import { VibeDataPoint } from '@/services/externalVibeAPI';
 import L from 'leaflet';
 import 'leaflet.heat';
 import { useIsMobile } from '@/hooks/use-mobile';
 import UserLocationMarker from '@/components/map/UserLocationMarker';
-import { useVibeData } from '@/hooks/useVibeData';
+import { useVibeDataContext } from '@/contexts/VibeDataContext';
 import { useAccurateLocation } from '@/hooks/useAccurateLocation';
 
 // Fix Leaflet icon issues
@@ -26,7 +26,7 @@ declare global {
 }
 
 // Heat map component with performance optimizations
-function HeatMapLayer({ vibes }: { vibes: VibeReport[] }) {
+function HeatMapLayer({ vibes }: { vibes: VibeDataPoint[] }) {
   const map = useMap();
   const heatLayerRef = useRef<any>(null);
 
@@ -34,40 +34,18 @@ function HeatMapLayer({ vibes }: { vibes: VibeReport[] }) {
   const heatData = useMemo(() => {
     if (!vibes.length) return [];
 
-    // Improved vibe type mapping for better heat visualization
-    const vibeTypeIntensities = {
-      'dangerous': 1.0,
-      'suspicious': 0.9,
-      'crowded': 0.7,
-      'party': 0.6,
-      'social': 0.5,
-      'calm': 0.3,
-      'safe': 0.2,
-      'peaceful': 0.1
-    };
-
-    // Enhanced heat data calculation with vibe type consideration
+    // Convert external API data to heatmap format
     const data: [number, number, number][] = vibes
       .filter(vibe => {
-        const lat = parseFloat(vibe.latitude);
-        const lng = parseFloat(vibe.longitude);
-        return !isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0;
+        return !isNaN(vibe.lat) && !isNaN(vibe.lng) && 
+               vibe.lat !== 0 && vibe.lng !== 0 &&
+               vibe.lat >= -90 && vibe.lat <= 90 &&
+               vibe.lng >= -180 && vibe.lng <= 180;
       })
       .map(vibe => {
-        const lat = parseFloat(vibe.latitude);
-        const lng = parseFloat(vibe.longitude);
-        
-        // Get base intensity from confirmed count
-        const baseIntensity = Math.min((vibe.confirmed_count || 0) + 1, 10) / 10;
-        
-        // Get vibe type intensity modifier
-        const vibeTypeName = vibe.vibe_type?.name?.toLowerCase() || 'calm';
-        const typeIntensity = vibeTypeIntensities[vibeTypeName as keyof typeof vibeTypeIntensities] || 0.5;
-        
-        // Combine base intensity with type intensity
-        const finalIntensity = Math.min(baseIntensity * typeIntensity * 2, 1.0);
-        
-        return [lat, lng, finalIntensity] as [number, number, number];
+        // Use intensity directly from external API (should be 0-1)
+        const intensity = Math.max(0.1, Math.min(1.0, vibe.intensity));
+        return [vibe.lat, vibe.lng, intensity] as [number, number, number];
       });
 
     return data;
@@ -110,7 +88,17 @@ function HeatMapLayer({ vibes }: { vibes: VibeReport[] }) {
 }
 
 // Map controls component
-function MapControls({ userLocation, onToggleLegend }: { userLocation: [number, number] | null, onToggleLegend: () => void }) {
+function MapControls({ 
+  userLocation, 
+  onToggleLegend, 
+  onRefresh, 
+  isRefreshing 
+}: { 
+  userLocation: [number, number] | null;
+  onToggleLegend: () => void;
+  onRefresh: () => void;
+  isRefreshing: boolean;
+}) {
   const map = useMap();
   return (
     <div className="absolute bottom-4 right-4 z-[1000] flex flex-col space-y-2">
@@ -120,6 +108,14 @@ function MapControls({ userLocation, onToggleLegend }: { userLocation: [number, 
         title="Toggle legend"
       >
         <Activity size={16} />
+      </button>
+      <button
+        onClick={onRefresh}
+        disabled={isRefreshing}
+        className="bg-secondary text-secondary-foreground p-3 rounded-full shadow-lg hover:bg-secondary/90 transition-colors disabled:opacity-50"
+        title="Refresh data"
+      >
+        <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
       </button>
       <button
         onClick={() => {
@@ -157,13 +153,17 @@ const HeatMapTab = () => {
   const [showLegend, setShowLegend] = useState(true);
   const isMobile = useIsMobile();
 
-  // Use optimized hooks for data and location
-  const { vibes, loading: vibesLoading } = useVibeData({ limit: 200, enableRealtime: true });
+  // Use global vibe data context and location
+  const { vibes, loading: vibesLoading, refetch, error: vibesError } = useVibeDataContext();
   const { position: userLocation, loading: locationLoading, error: locationError } = useAccurateLocation({
     enableHighAccuracy: true,
     timeout: 15000,
     maximumAge: 300000
   });
+
+  const handleRefresh = useCallback(async () => {
+    await refetch();
+  }, [refetch]);
 
   // Set default location from stored data
   const mapCenter = useMemo(() => {
@@ -185,7 +185,9 @@ const HeatMapTab = () => {
       <div className="flex flex-col items-center justify-center h-full">
         <Loader2 className="h-10 w-10 animate-spin text-primary" />
         <p className="mt-4 text-sm text-muted-foreground">
-          {locationError ? "Using default location..." : "Loading heat map..."}
+          {vibesError ? `Error: ${vibesError}` : 
+           locationError ? "Using default location..." : 
+           "Loading heat map..."}
         </p>
       </div>
     );
@@ -217,7 +219,12 @@ const HeatMapTab = () => {
         
         <LocationMarker />
         <HeatMapLayer vibes={vibes} />
-        <MapControls userLocation={userLocation} onToggleLegend={() => setShowLegend(!showLegend)} />
+        <MapControls 
+          userLocation={userLocation} 
+          onToggleLegend={() => setShowLegend(!showLegend)}
+          onRefresh={handleRefresh}
+          isRefreshing={vibesLoading}
+        />
       </MapContainer>
       
 
@@ -259,6 +266,7 @@ const HeatMapTab = () => {
             <div className="text-xs text-muted-foreground">
               <div>Total Points: {vibes.length}</div>
               <div>Active Areas: {Math.max(1, Math.floor(vibes.length / 5))}</div>
+              <div>Avg Intensity: {vibes.length > 0 ? (vibes.reduce((sum, v) => sum + v.intensity, 0) / vibes.length).toFixed(2) : '0.00'}</div>
             </div>
           </div>
         </div>

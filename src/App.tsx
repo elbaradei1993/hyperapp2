@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { VibeDataProvider } from "@/contexts/VibeDataContext";
 import { useState, useEffect } from "react";
 import { SplashScreen } from "@/components/SplashScreen";
 import Welcome from "./pages/Welcome";
@@ -77,10 +78,11 @@ const App = () => {
       <ThemeProvider>
         <AuthProvider>
           <LanguageProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
+            <VibeDataProvider enableRealtime={true} defaultUpdateInterval={30000}>
+              <TooltipProvider>
+                <Toaster />
+                <Sonner />
+                <BrowserRouter>
                 <div className="min-h-screen app-gradient-bg">
                   <Routes>
                     <Route path="/welcome" element={<Welcome />} />
@@ -141,7 +143,8 @@ const App = () => {
                   </Routes>
                 </div>
               </BrowserRouter>
-            </TooltipProvider>
+              </TooltipProvider>
+            </VibeDataProvider>
           </LanguageProvider>
         </AuthProvider>
       </ThemeProvider>

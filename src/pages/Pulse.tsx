@@ -23,6 +23,7 @@ import { useSearchParams } from "react-router-dom";
 import { usePulseMetrics } from "@/hooks/usePulseMetrics";
 import CommunitiesInline from "@/components/pulse/CommunitiesInline";
 import { CommunityStatsService } from '@/services/CommunityStatsService';
+import { VibeDataStats } from "@/components/VibeDataStats";
 
 const moodOptions = [
   { id: 'great', label: '😊 Great', icon: Smile, color: 'text-green-500' },
@@ -282,6 +283,9 @@ export const Pulse = () => {
 
             {/* Communities */}
             <CommunitiesInline />
+            
+            {/* Live Vibe Data Stats */}
+            <VibeDataStats />
           </TabsContent>
 
           {/* Heatmap Tab */}
