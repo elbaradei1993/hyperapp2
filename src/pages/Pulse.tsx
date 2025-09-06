@@ -38,6 +38,7 @@ export const Pulse = () => {
   const initialTab = searchParams.get('tab') || 'pulse';
   const [activeTab, setActiveTab] = useState(initialTab);
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
   const { metrics: communityStats, loading: statsLoading, areaLabel } = usePulseMetrics({ radiusKm: 10 });
   const [realCommunityStats, setRealCommunityStats] = useState<any>(null);
   const [loadingRealStats, setLoadingRealStats] = useState(true);
@@ -74,6 +75,17 @@ export const Pulse = () => {
         variant: "destructive"
       });
     }
+  };
+
+  const handleLocationClick = (location: { lat: number; lng: number }) => {
+    // Store location for the heatmap
+    sessionStorage.setItem('mapLocation', JSON.stringify(location));
+    setSelectedLocation(location);
+    setActiveTab('heatmap');
+    toast({
+      title: "Location Selected",
+      description: "Switching to heatmap view..."
+    });
   };
 
   return (
@@ -285,7 +297,7 @@ export const Pulse = () => {
             <CommunitiesInline />
             
             {/* Live Vibe Data Stats */}
-            <VibeDataStats />
+            <VibeDataStats onLocationClick={handleLocationClick} />
           </TabsContent>
 
           {/* Heatmap Tab */}
@@ -302,7 +314,7 @@ export const Pulse = () => {
               </CardHeader>
               <CardContent className="p-0">
                 <div style={{ height: isMobile ? "400px" : "600px" }} className="rounded-lg overflow-hidden">
-                  <HeatMapTab />
+                  <HeatMapTab highlightLocation={selectedLocation} />
                 </div>
               </CardContent>
             </Card>

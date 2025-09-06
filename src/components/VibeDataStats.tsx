@@ -2,10 +2,16 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Activity, MapPin, RefreshCw, Clock, TrendingUp } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Activity, MapPin, RefreshCw, Clock, TrendingUp, Eye } from 'lucide-react';
 import { useVibeDataContext } from '@/contexts/VibeDataContext';
+import { VibeDataPoint } from '@/services/externalVibeAPI';
 
-export const VibeDataStats: React.FC = () => {
+interface VibeDataStatsProps {
+  onLocationClick?: (location: { lat: number; lng: number }) => void;
+}
+
+export const VibeDataStats: React.FC<VibeDataStatsProps> = ({ onLocationClick }) => {
   const { vibes, loading, error, refetch, updateInterval, setUpdateInterval } = useVibeDataContext();
 
   const stats = React.useMemo(() => {
@@ -40,57 +46,133 @@ export const VibeDataStats: React.FC = () => {
     { value: 300000, label: '5m' }
   ];
 
+  const handleLocationClick = (vibe: VibeDataPoint) => {
+    if (onLocationClick) {
+      onLocationClick({ lat: vibe.lat, lng: vibe.lng });
+    }
+  };
+
+  const getVibesByCategory = () => {
+    const now = new Date();
+    const thirtyMinutesAgo = new Date(now.getTime() - 30 * 60 * 1000);
+    
+    return {
+      all: vibes,
+      highIntensity: vibes.filter(vibe => vibe.intensity > 0.7),
+      recent: vibes.filter(vibe => 
+        vibe.timestamp && new Date(vibe.timestamp) > thirtyMinutesAgo
+      )
+    };
+  };
+
+  const vibeCategories = getVibesByCategory();
+
+  const StatCard = ({ 
+    icon: Icon, 
+    title, 
+    value, 
+    color, 
+    vibeList 
+  }: { 
+    icon: any; 
+    title: string; 
+    value: number | string; 
+    color: string;
+    vibeList?: VibeDataPoint[];
+  }) => (
+    <Card className="feature-card">
+      <CardContent className="p-4 text-center">
+        <div className="flex items-center justify-center mb-2">
+          <Icon className={`h-5 w-5 ${color}`} />
+        </div>
+        <div className={`text-2xl font-bold ${color} mb-1`}>
+          {value}
+        </div>
+        <div className="text-xs text-muted-foreground mb-2">{title}</div>
+        {vibeList && vibeList.length > 0 && (
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button size="sm" variant="outline" className="text-xs">
+                <Eye className="h-3 w-3 mr-1" />
+                View Details
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="flex items-center space-x-2">
+                  <Icon className={`h-5 w-5 ${color}`} />
+                  <span>{title} - {vibeList.length} Locations</span>
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-2 mt-4">
+                {vibeList.map((vibe, index) => (
+                  <Card key={vibe.id || index} className="p-3 hover:bg-muted/50 cursor-pointer transition-colors" onClick={() => handleLocationClick(vibe)}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <MapPin className="h-4 w-4 text-primary" />
+                          <span className="font-medium">
+                            {vibe.lat.toFixed(4)}, {vibe.lng.toFixed(4)}
+                          </span>
+                          <Badge variant={vibe.intensity > 0.7 ? 'destructive' : vibe.intensity > 0.4 ? 'default' : 'secondary'}>
+                            {(vibe.intensity * 100).toFixed(0)}%
+                          </Badge>
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          Type: {vibe.type || 'Activity'} • 
+                          Intensity: {vibe.intensity.toFixed(3)} •
+                          {vibe.timestamp && ` Time: ${new Date(vibe.timestamp).toLocaleTimeString()}`}
+                        </div>
+                      </div>
+                      <Button size="sm" variant="ghost" className="text-xs">
+                        View on Map →
+                      </Button>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
+      </CardContent>
+    </Card>
+  );
+
   return (
     <div className="space-y-4">
       {/* Main Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="feature-card">
-          <CardContent className="p-4 text-center">
-            <div className="flex items-center justify-center mb-2">
-              <MapPin className="h-5 w-5 text-primary" />
-            </div>
-            <div className="text-2xl font-bold text-primary mb-1">
-              {stats.total}
-            </div>
-            <div className="text-xs text-muted-foreground">Vibe Locations</div>
-          </CardContent>
-        </Card>
-
-        <Card className="feature-card">
-          <CardContent className="p-4 text-center">
-            <div className="flex items-center justify-center mb-2">
-              <Activity className="h-5 w-5 text-green-500" />
-            </div>
-            <div className="text-2xl font-bold text-green-500 mb-1">
-              {stats.avgIntensity}
-            </div>
-            <div className="text-xs text-muted-foreground">Activity Level</div>
-          </CardContent>
-        </Card>
-
-        <Card className="feature-card">
-          <CardContent className="p-4 text-center">
-            <div className="flex items-center justify-center mb-2">
-              <TrendingUp className="h-5 w-5 text-red-500" />
-            </div>
-            <div className="text-2xl font-bold text-red-500 mb-1">
-              {stats.highIntensity}
-            </div>
-            <div className="text-xs text-muted-foreground">Hot Spots</div>
-          </CardContent>
-        </Card>
-
-        <Card className="feature-card">
-          <CardContent className="p-4 text-center">
-            <div className="flex items-center justify-center mb-2">
-              <Clock className="h-5 w-5 text-blue-500" />
-            </div>
-            <div className="text-2xl font-bold text-blue-500 mb-1">
-              {stats.recentCount}
-            </div>
-            <div className="text-xs text-muted-foreground">Live Activity</div>
-          </CardContent>
-        </Card>
+        <StatCard
+          icon={MapPin}
+          title="Vibe Locations"
+          value={stats.total}
+          color="text-primary"
+          vibeList={vibeCategories.all}
+        />
+        
+        <StatCard
+          icon={Activity}
+          title="Activity Level"
+          value={stats.avgIntensity}
+          color="text-green-500"
+          vibeList={vibeCategories.all}
+        />
+        
+        <StatCard
+          icon={TrendingUp}
+          title="Hot Spots"
+          value={stats.highIntensity}
+          color="text-red-500"
+          vibeList={vibeCategories.highIntensity}
+        />
+        
+        <StatCard
+          icon={Clock}
+          title="Live Activity"
+          value={stats.recentCount}
+          color="text-blue-500"
+          vibeList={vibeCategories.recent}
+        />
       </div>
 
       {/* Controls */}

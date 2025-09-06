@@ -149,7 +149,11 @@ function LocationMarker() {
   );
 }
 
-const HeatMapTab = () => {
+interface HeatMapTabProps {
+  highlightLocation?: { lat: number; lng: number } | null;
+}
+
+const HeatMapTab: React.FC<HeatMapTabProps> = ({ highlightLocation }) => {
   const [showLegend, setShowLegend] = useState(true);
   const isMobile = useIsMobile();
 
@@ -165,8 +169,11 @@ const HeatMapTab = () => {
     await refetch();
   }, [refetch]);
 
-  // Set default location from stored data
+  // Set default location from stored data or highlight location
   const mapCenter = useMemo(() => {
+    if (highlightLocation) {
+      return [highlightLocation.lat, highlightLocation.lng] as [number, number];
+    }
     const storedLocation = sessionStorage.getItem('mapLocation');
     if (storedLocation) {
       try {
@@ -178,7 +185,7 @@ const HeatMapTab = () => {
       }
     }
     return userLocation || [30.0444, 31.2357]; // Default to Cairo, Egypt
-  }, [userLocation]);
+  }, [userLocation, highlightLocation]);
 
   if (vibesLoading || locationLoading || !mapCenter) {
     return (
