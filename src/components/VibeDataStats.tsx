@@ -52,7 +52,7 @@ export const VibeDataStats: React.FC = () => {
             <div className="text-2xl font-bold text-primary mb-1">
               {stats.total}
             </div>
-            <div className="text-xs text-muted-foreground">Total Points</div>
+            <div className="text-xs text-muted-foreground">Vibe Locations</div>
           </CardContent>
         </Card>
 
@@ -64,7 +64,7 @@ export const VibeDataStats: React.FC = () => {
             <div className="text-2xl font-bold text-green-500 mb-1">
               {stats.avgIntensity}
             </div>
-            <div className="text-xs text-muted-foreground">Avg Intensity</div>
+            <div className="text-xs text-muted-foreground">Activity Level</div>
           </CardContent>
         </Card>
 
@@ -76,7 +76,7 @@ export const VibeDataStats: React.FC = () => {
             <div className="text-2xl font-bold text-red-500 mb-1">
               {stats.highIntensity}
             </div>
-            <div className="text-xs text-muted-foreground">High Activity</div>
+            <div className="text-xs text-muted-foreground">Hot Spots</div>
           </CardContent>
         </Card>
 
@@ -88,7 +88,7 @@ export const VibeDataStats: React.FC = () => {
             <div className="text-2xl font-bold text-blue-500 mb-1">
               {stats.recentCount}
             </div>
-            <div className="text-xs text-muted-foreground">Recent (30m)</div>
+            <div className="text-xs text-muted-foreground">Live Activity</div>
           </CardContent>
         </Card>
       </div>
